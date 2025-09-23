@@ -129,8 +129,29 @@ TittleFoodApp/
 
 Khi triển khai một chức năng mới, hãy tuân theo các bước sau để đảm bảo sự nhất quán:
 
-1.  **Tạo Branch Mới**: Luôn bắt đầu từ branch `develop`, tạo một branch mới theo quy ước đặt tên trong mục Git.
-    -   Ví dụ: `git checkout -b feature/user-reviews`
+---
+
+#### 1. Tạo Branch Mới
+- Luôn bắt đầu từ branch `develop`.
+- Tạo một branch mới theo **quy tắc đặt tên chuẩn**:
+
+**Quy tắc đặt tên nhánh:**
+
+| Loại nhánh        | Prefix        | Ví dụ                                         |
+|------------------|---------------|-----------------------------------------------|
+| Tính năng mới     | `feature/`    | `feature/user-reviews`                        |
+| Sửa lỗi bug       | `bugfix/`     | `bugfix/login-validation`                     |
+| Cải thiện hiệu năng | `improve/`  | `improve/image-loading`                       |
+| Refactor code     | `refactor/`   | `refactor/order-module`                       |
+| Hotfix production | `hotfix/`     | `hotfix/payment-bug`                          |
+
+- Tên nhánh nên **ngắn gọn, dễ hiểu**, sử dụng dấu `-` để phân tách từ, không viết hoa.
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/user-reviews
+```
 
 2.  **Xác định Vị Trí**:
     -   **Màn hình mới?**: Tạo file trong `app/` theo nhóm route phù hợp. Ví dụ, màn hình đánh giá sản phẩm có thể đặt tại `app/(main)/food/ReviewScreen.tsx`.
