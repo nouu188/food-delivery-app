@@ -125,7 +125,7 @@ TittleFoodApp/
 
 ### 2.2. Quy Trình Thêm Chức Năng Mới (Adding a New Feature)
 
-![Alt text](./assets/github-flow/github-flow.png)
+![Alt text](./frontend/assets/github-flow/github-flow.png)
 
 Khi triển khai một chức năng mới, hãy tuân theo các bước sau để đảm bảo sự nhất quán:
 
