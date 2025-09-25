@@ -12,8 +12,9 @@ const ButtonComponent = ({ title, onPress, background }: ButtonProps) => {
 
   return (
     <TouchableOpacity
-      className={`w-[207px] h-[45px] rounded-[30px] flex justify-center items-center my-1`}
-      style={{ backgroundColor: isPressed ? "Yellow_2" : background }}
+      className={`w-[207px] h-[45px] rounded-[30px] flex justify-center items-center my-1 ${
+        isPressed ? "bg-Yellow_2" : "bg-YellowBase"
+      }`}
       onPress={onPress}
       onPressIn={() => setIsPressed(true)}
       onPressOut={() => setIsPressed(false)}
