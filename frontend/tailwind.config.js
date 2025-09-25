@@ -9,10 +9,11 @@ module.exports = {
     extend: {
       colors: {
         YellowBase: "#F5CB58",
+        Yellow_2: "#F3E9B5",
         OrangeBase: "#E95322",
-        Yellow2: "#F3E9B5",
         Font: "#391713",
-        Orange2: "#FFDECF",
+        Orange_2: "#FFDECF",
+        Font_2: "#F8F8F8",
       },
     },
   },

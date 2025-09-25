@@ -4,8 +4,8 @@ import React from "react";
 const _layout = () => {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="welcome" />
+      <Stack.Screen name="Welcome" />
+      <Stack.Screen name="First" />
     </Stack>
   );
 };
