@@ -3,10 +3,11 @@ import React from "react";
 
 const _layout = () => {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Welcome" />
-      <Stack.Screen name="First" />
-    </Stack>
+    <Stack screenOptions={{ headerShown: false }} />
+    // <Stack screenOptions={{ headerShown: false }}>
+    //   <Stack.Screen name="Welcome" />
+    //   <Stack.Screen name="First" />
+    // </Stack>
   );
 };
 
