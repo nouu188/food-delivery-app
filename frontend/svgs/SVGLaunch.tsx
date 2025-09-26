@@ -1,7 +1,7 @@
 import React from "react";
 import Svg, { Path, SvgProps } from "react-native-svg";
 
-interface Props extends SvgProps {}
+type Props = SvgProps;
 
 export const Logo_orange: React.FC<Props> = (props) => (
   <Svg

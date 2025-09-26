@@ -15,6 +15,9 @@ module.exports = {
         Orange_2: "#FFDECF",
         Font_2: "#F8F8F8",
       },
+      fontFamily: {
+        LeagueSpartan: ["LeagueSpartan-Regular", "sans-serif"],
+      },
     },
   },
   presets: [require("nativewind/preset")],
