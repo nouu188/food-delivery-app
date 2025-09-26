@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 import First from "./launch/First";
 
