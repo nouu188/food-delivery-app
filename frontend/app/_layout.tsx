@@ -7,7 +7,8 @@ export default function RootLayout() {
     <>
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="IndexScreen" />
+        {/* <Stack.Screen name="IndexScreen" /> */}
+        <Stack.Screen name="auth" />
         {/* <Stack.Screen name="onboarding" /> */}
       </Stack>
     </>

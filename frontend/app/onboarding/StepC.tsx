@@ -67,7 +67,7 @@ const StepC = () => {
           <View className="mt-8 w-full px-8 items-center">
             <MainButton
               title="Get Started"
-              onPress={() => router.replace("/login/login")}
+              onPress={() => router.replace("/auth/login")}
             />
           </View>
         </View>
