@@ -1,30 +1,32 @@
-import homeIcon from "@/assets/icon/home.png";
-import menuIcon from "@/assets/icon/menu.png";
-import favouriteIcon from "@/assets/icon/favourite.png";
-import ordersIcon from "@/assets/icon/orders.png";
-import contactIcon from "@/assets/icon/contact.png";
-import userIcon from "@/assets/icon/person.png";
+// Importing SVG icons
+import BellIcon from "@/assets/icons/svg/BellIcon.svg";
+import CartIcon from "@/assets/icons/svg/CartIcon.svg";
+import ContactIcon from "@/assets/icons/svg/ContactIcon.svg";
+import DessertIcon from "@/assets/icons/svg/Dessert.svg";
+import DrinksIcon from "@/assets/icons/svg/Drinks.svg";
+import FavourIcon from "@/assets/icons/svg/FavourIcon.svg";
+import FilterIcon from "@/assets/icons/svg/FilterIcon.svg";
+import HomeIcon from "@/assets/icons/svg/HomeIcon.svg";
+import MealIcon from "@/assets/icons/svg/MealIcon.svg";
+import MenuIcon from "@/assets/icons/svg/MenuIcon.svg";
+import OrderIcon from "@/assets/icons/svg/OrderIcon.svg";
+import SnacksIcon from "@/assets/icons/svg/SnacksIcon.svg";
+import UserIcon from "@/assets/icons/svg/UserIcon.svg";
+import VeganIcon from "@/assets/icons/svg/VeganIcon.svg";
 
-// Categories icons
-import snack from "@/assets/icon/home/Snacks.png";
-import meals from "@/assets/icon/home/Meals.png";
-import vegan from "@/assets/icon/home/Vegan.png";
-import drinks from "@/assets/icon/home/Drinks.png";
-import desserts from "@/assets/icon/home/Desserts.png";
-
-export const icons = {
-    home: homeIcon,
-    menu: menuIcon,
-    favourite: favouriteIcon,
-    orders: ordersIcon,
-    contact: contactIcon,
-    user: userIcon,
-};
-
-export const categories = {
-    snack,
-    meals,
-    vegan,
-    drinks,
-    desserts,
+export {
+    BellIcon,
+    CartIcon,
+    ContactIcon,
+    DessertIcon,
+    DrinksIcon,
+    FavourIcon,
+    FilterIcon,
+    HomeIcon,
+    MealIcon,
+    MenuIcon,
+    OrderIcon,
+    SnacksIcon,
+    UserIcon,
+    VeganIcon,
 };

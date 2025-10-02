@@ -1,9 +1,9 @@
+import Categories from "@/components/Common/Categories";
+import SearchBar from "@/components/Common/SearchBar";
 import { bestSeller } from "@/constants/images";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import Categories from "@/components/Common/Categories";
-import SearchBar from "@/components/Common/SearchBar";
 
 const RESULTS = [
     {

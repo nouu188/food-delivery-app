@@ -1,13 +1,13 @@
-import { icons } from "@/constants/icons";
+import { CartIcon, FavourIcon, UserIcon } from "@/constants/icons";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import React from "react";
 import { TextInput, TouchableOpacity, View } from "react-native";
 
 const RIGHT_ACTIONS = [
-    { key: "cart", icon: icons.orders },
-    { key: "bell", icon: icons.favourite },
-    { key: "user", icon: icons.user },
+    { key: "cart", icon: CartIcon },
+    { key: "bell", icon: FavourIcon },
+    { key: "user", icon: UserIcon },
 ];
 
 const SearchBar = () => {

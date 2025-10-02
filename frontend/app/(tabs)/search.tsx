@@ -1,10 +1,9 @@
+import SearchBar from "@/components/Common/SearchBar";
 import { bestSeller } from "@/constants/images";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import Categories from "@/components/Common/Categories";
-import SearchBar from "@/components/Common/SearchBar";
 
 const RESULTS = [
     {
@@ -31,6 +30,14 @@ const RESULTS = [
         image: bestSeller.BS3,
         desc: "Marinated and grilled to perfection, served with a spicy dipping sauce.",
     },
+    {
+        id: "p4",
+        title: "Pork Skewer 3",
+        price: 12.99,
+        rating: 4.0,
+        image: bestSeller.BS1,
+        desc: "Marinated and grilled to perfection, served with a spicy dipping sauce.",
+    },
 ];
 
 export default function SearchScreen() {
@@ -38,41 +45,27 @@ export default function SearchScreen() {
     const [sortBy, setSortBy] = React.useState<"popular" | "price" | "rating">("popular");
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-[#F9CF63]">
             {/* Header + Search + Categories */}
-            <View className="bg-[#F9CF63] px-5 pt-10 pb-4">
-                <View className="flex-row items-center pb-3">
+            <View className="px-5 pt-10 pb-4">
+                <View className="flex-row items-center">
                     <TouchableOpacity onPress={() => router.back()} className="mr-3" activeOpacity={0.7}>
                         <Ionicons name="arrow-back" size={24} color="#914025" />
                     </TouchableOpacity>
                     <Text className="text-xl font-bold text-[#914025]">Search</Text>
                 </View>
                 <SearchBar />
-                <View
-                    className="bg-[#F15A24] rounded-t-3xl pb-10 pt-3 mt-5 -mx-5"
-                    style={{
-                        shadowColor: "#000",
-                        shadowOpacity: 0.1,
-                        shadowOffset: { width: 0, height: 6 },
-                        shadowRadius: 12,
-                        elevation: 2,
-                    }}
-                >
-                    <Categories />
-                </View>
             </View>
 
-            {/* Phần màu trắng bo góc trên, đè lên phần cam */}
             <View
                 className="flex-1 pl-5 pr-10"
                 style={{
                     backgroundColor: "#fff",
                     borderTopRightRadius: 32,
-                    marginTop: -40,
                     paddingTop: 24,
                 }}
             >
-                <ScrollView contentContainerStyle={{ paddingBottom: 28 }}>
+                <ScrollView contentContainerStyle={{ paddingBottom: 28 }} showsVerticalScrollIndicator={false}>
                     {/* Dòng Search Result For / Sort By */}
                     <View className="flex-row items-center justify-between px-1">
                         <Text className="text-[#6B7280]">

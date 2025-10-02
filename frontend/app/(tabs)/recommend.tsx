@@ -45,7 +45,7 @@ const DATA: Reco[] = [
         desc: "Lorem ipsum dolor sit amet, consectetur…",
         price: 15,
         rating: 4.8,
-        image: "https://images.unsplash.com/photo-1604908554007-89e7fdbd0180?q=80&w=1200&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1560807707-8cc77767d783?q=80&w=1200&auto=format&fit=crop",
     },
     {
         id: "5",
@@ -141,7 +141,7 @@ export default function RecommendScreen() {
                     keyExtractor={(it) => it.id}
                     numColumns={2}
                     renderItem={renderItem}
-                    contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 }}
+                    contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 90 }}
                     showsVerticalScrollIndicator={false}
                 />
             </View>

@@ -1,20 +1,20 @@
-import { categories } from "@/constants/icons";
+import { DessertIcon, DrinksIcon, MealIcon, SnacksIcon, VeganIcon } from "@/constants/icons";
 import React from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 const CATEGORIES = [
-    { key: "snacks", label: "Snacks", icon: categories.snack },
-    { key: "meal", label: "Meal", icon: categories.meals },
-    { key: "vegan", label: "Vegan", icon: categories.vegan },
-    { key: "dessert", label: "Dessert", icon: categories.desserts },
-    { key: "drinks", label: "Drinks", icon: categories.drinks },
+    { key: "snacks", label: "Snacks", icon: SnacksIcon },
+    { key: "meal", label: "Meal", icon: MealIcon },
+    { key: "vegan", label: "Vegan", icon: VeganIcon },
+    { key: "dessert", label: "Dessert", icon: DessertIcon },
+    { key: "drinks", label: "Drinks", icon: DrinksIcon },
 ];
 
 const Categories = () => {
     const [activeCategory, setActiveCategory] = React.useState("");
     return (
         <View className="px-5 pt-4">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-1">
+            <View className="flex-row justify-between">
                 {CATEGORIES.map((c) => {
                     const active = c.key === activeCategory;
                     return (
@@ -22,32 +22,24 @@ const Categories = () => {
                             key={c.key}
                             onPress={() => setActiveCategory(c.key)}
                             activeOpacity={0.9}
-                            className={`mx-1 items-center`}
+                            className="items-center"
                         >
                             <View
-                                className={`w-16 h-16 rounded-2xl border ${
-                                    active ? "bg-[#F9E6A8] border-[#F15A24]" : "bg-white border-[#F2DFA2]"
+                                className={`w-16 h-20 rounded-full ${
+                                    active ? "bg-[#F9E6A8]" : "bg-[#FFF9E6]"
                                 } items-center justify-center`}
-                                style={{
-                                    shadowColor: "#000",
-                                    shadowOpacity: 0.08,
-                                    shadowRadius: 6,
-                                    elevation: 2,
-                                }}
                             >
                                 {typeof c.icon === "string" ? (
-                                    <Image source={{ uri: c.icon }} className="w-8 h-8" resizeMode="contain" />
+                                    <Image source={{ uri: c.icon }} className="w-10 h-10" resizeMode="contain" />
                                 ) : (
-                                    <Image source={c.icon} className="w-8 h-8" resizeMode="contain" />
+                                    <c.icon width={40} height={40} />
                                 )}
                             </View>
-                            <Text className={`mt-1 ${active ? "text-[#391713] font-semibold" : "text-[#391713]"}`}>
-                                {c.label}
-                            </Text>
+                            <Text className="mt-2 text-xs text-[#391713]">{c.label}</Text>
                         </TouchableOpacity>
                     );
                 })}
-            </ScrollView>
+            </View>
         </View>
     );
 };
