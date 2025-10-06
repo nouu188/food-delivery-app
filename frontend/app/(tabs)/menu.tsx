@@ -1,6 +1,6 @@
 import Categories from "@/components/Common/Categories";
 import SearchBar from "@/components/Common/SearchBar";
-import { bestSeller } from "@/constants/images";
+import { bestSeller } from "@/assets/images/index";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
@@ -64,7 +64,7 @@ export default function MenuScreen() {
                     paddingTop: 24,
                 }}
             >
-                <ScrollView contentContainerStyle={{ paddingBottom: 28 }}>
+                <ScrollView contentContainerStyle={{ paddingBottom: 70 }}>
                     {/* Dòng Search Result For / Sort By */}
                     <View className="flex-row items-center justify-between px-1">
                         <TouchableOpacity

@@ -1,4 +1,4 @@
-import { DessertIcon, DrinksIcon, MealIcon, SnacksIcon, VeganIcon } from "@/constants/icons";
+import { DessertIcon, DrinksIcon, MealIcon, SnacksIcon, VeganIcon } from "@/assets/icons/index";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
@@ -26,7 +26,7 @@ const Categories = () => {
                         >
                             <View
                                 className={`w-16 h-20 rounded-full ${
-                                    active ? "bg-[#F9E6A8]" : "bg-[#FFF9E6]"
+                                    active ? "bg-[#F5CB58]" : "bg-[#F3E9B5]"
                                 } items-center justify-center`}
                             >
                                 {typeof c.icon === "string" ? (

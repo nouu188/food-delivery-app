@@ -1,4 +1,4 @@
-import { CartIcon, FavourIcon, UserIcon } from "@/constants/icons";
+import { CartIcon, FavourIcon, UserIcon } from "@/assets/icons/index";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import React from "react";

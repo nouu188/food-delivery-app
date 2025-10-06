@@ -1,6 +1,6 @@
+import { CartIcon, UserIcon } from "@/assets/icons";
 import Categories from "@/components/Common/Categories";
 import StarIcon from "@/components/Common/StarIcon";
-import { CartIcon, UserIcon } from "@/constants/icons";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { router } from "expo-router";
@@ -25,9 +25,9 @@ const FOOD_TAGS = [
 ];
 
 const Filter = () => {
-    const [rating, setRating] = React.useState(4); // 4/5 sao như hình
+    const [rating, setRating] = React.useState(4);
     const [selectedTags, setSelectedTags] = React.useState<string[]>(["Skewers", "Salmon"]);
-    const [price, setPrice] = React.useState(10); // $1 -> $100 (ví dụ)
+    const [price, setPrice] = React.useState(10);
 
     const toggleTag = (tag: string) =>
         setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
@@ -120,6 +120,7 @@ const Filter = () => {
                         <Text className="text-lg font-semibold text-[#E95322] px-1">Price</Text>
                         <View className="mt-4 px-1 pr-5">
                             <Slider
+                                style={{ height: 80 }}
                                 minimumValue={1}
                                 maximumValue={100}
                                 step={1}

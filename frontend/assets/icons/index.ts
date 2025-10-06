@@ -1,4 +1,3 @@
-// Importing SVG icons
 import BellIcon from "@/assets/icons/svg/BellIcon.svg";
 import CartIcon from "@/assets/icons/svg/CartIcon.svg";
 import ContactIcon from "@/assets/icons/svg/ContactIcon.svg";
@@ -11,6 +10,8 @@ import MealIcon from "@/assets/icons/svg/MealIcon.svg";
 import MenuIcon from "@/assets/icons/svg/MenuIcon.svg";
 import OrderIcon from "@/assets/icons/svg/OrderIcon.svg";
 import SnacksIcon from "@/assets/icons/svg/SnacksIcon.svg";
+import StarActiveIcon from "@/assets/icons/svg/StarActiveIcon.svg";
+import StarIcon from "@/assets/icons/svg/StarIcon.svg";
 import UserIcon from "@/assets/icons/svg/UserIcon.svg";
 import VeganIcon from "@/assets/icons/svg/VeganIcon.svg";
 
@@ -27,6 +28,8 @@ export {
     MenuIcon,
     OrderIcon,
     SnacksIcon,
+    StarActiveIcon,
+    StarIcon,
     UserIcon,
     VeganIcon,
 };

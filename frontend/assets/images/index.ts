@@ -9,6 +9,9 @@ import banner1 from "@/assets/images/Banners/Frame 71.png";
 
 import rcm2 from "@/assets/images/Recommend/Rectangle 128 (1).png";
 import rcm1 from "@/assets/images/Recommend/Rectangle 128.png";
+import rcm3 from "@/assets/images/Recommend/Snacks_2.png";
+
+import search1 from "@/assets/images/Search/Rectangle 138.png";
 
 export const images = {
     highlight,
@@ -28,4 +31,9 @@ export const banners = {
 export const recommend = {
     rcm1,
     rcm2,
+    rcm3,
+};
+
+export const search = {
+    search1,
 };

@@ -1,8 +1,7 @@
-import { ContactIcon, FavourIcon, HomeIcon, MenuIcon, OrderIcon } from "@/constants/icons";
-import { images } from "@/constants/images";
+import { ContactIcon, FavourIcon, HomeIcon, MenuIcon, OrderIcon } from "@/assets/icons/index";
 import { Tabs } from "expo-router";
 import React from "react";
-import { ImageBackground, View } from "react-native";
+import { View } from "react-native";
 import { SvgProps } from "react-native-svg";
 
 interface TabIconProps {
@@ -11,22 +10,20 @@ interface TabIconProps {
 }
 
 const TabIcon = ({ focused, Icon }: TabIconProps) => {
-    if (!focused) {
-        return (
-            <View className="size-full items-center justify-center mt-4 rounded-full">
-                <Icon width={24} height={24} />
-            </View>
-        );
-    }
     return (
-        <>
-            <ImageBackground
-                source={images.highlight}
-                className="flex flex-row items-center justify-center flex-1 w-full min-w-[90px] min-h-16 mt-4 rounded-full overflow-hidden"
-            >
-                <Icon width={28} height={28} />
-            </ImageBackground>
-        </>
+        <View className="flex-1 items-center justify-center relative">
+            {focused && (
+                <View
+                    className="absolute min-w-[80px] h-[55px] rounded-full -top-2"
+                    style={{
+                        backgroundColor: "#E95322",
+                    }}
+                />
+            )}
+            <View className="size-full items-center justify-center mt-4 rounded-full">
+                <Icon width={26} height={26} />
+            </View>
+        </View>
     );
 };
 
@@ -37,6 +34,8 @@ const TabsLayout = () => {
                 headerShown: false,
                 tabBarShowLabel: false,
                 tabBarItemStyle: {
+                    width: "100%",
+                    height: "100%",
                     justifyContent: "center",
                     alignItems: "center",
                 },
@@ -44,11 +43,10 @@ const TabsLayout = () => {
                     height: 52,
                     borderRadius: 50,
                     borderTopWidth: 0,
-                    backgroundColor: "#914025",
+                    backgroundColor: "#8B3E26",
                     position: "absolute",
-                    marginHorizontal: 20,
-                    marginBottom: 36,
-                    paddingHorizontal: 12,
+                    marginHorizontal: 16,
+                    marginBottom: 32,
                     overflow: "hidden",
                 },
             }}
@@ -58,7 +56,6 @@ const TabsLayout = () => {
                 options={{
                     headerShown: false,
                     title: "Home",
-
                     tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={HomeIcon} />,
                 }}
             />
@@ -97,7 +94,7 @@ const TabsLayout = () => {
             <Tabs.Screen name="search" options={{ href: null, tabBarStyle: { display: "none" } }} />
             <Tabs.Screen name="filter" options={{ href: null, tabBarStyle: { display: "none" } }} />
             <Tabs.Screen name="recommend" options={{ href: null }} />
-            <Tabs.Screen name="bestSeller" options={{ href: null }} />
+            <Tabs.Screen name="bestSeller" options={{ href: null, tabBarStyle: { display: "none" } }} />
         </Tabs>
     );
 };
