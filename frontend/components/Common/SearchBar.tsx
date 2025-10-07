@@ -36,7 +36,7 @@ const SearchBar = ({ isSearchPage }: SearchBarProps) => {
                 />
                 <TouchableOpacity
                     activeOpacity={0.8}
-                    className="w-9 h-9 rounded-full bg-[#F15A24] items-center justify-center"
+                    className="w-9 h-9 rounded-full bg-[#E95322] items-center justify-center"
                     onPress={() => router.push("/filter")}
                 >
                     <Ionicons name="options-outline" size={18} color="#FFFFFF" />

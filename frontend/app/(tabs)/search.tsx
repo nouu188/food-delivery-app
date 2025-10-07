@@ -95,7 +95,7 @@ export default function SearchScreen() {
 
                 {/* Price and quantity controls */}
                 <View className="px-4 pb-4 flex-row items-center justify-between">
-                    <Text className="text-[#F15A24] text-2xl font-bold">${item.price.toFixed(2)}</Text>
+                    <Text className="text-[#E95322] text-2xl font-bold">${item.price.toFixed(2)}</Text>
 
                     <View className="flex-row items-center">
                         <View className="flex-row items-center bg-[#FFF5E6] rounded-full px-1 py-1 mr-2">
@@ -104,14 +104,14 @@ export default function SearchScreen() {
                                 className="w-7 h-7 rounded-full bg-white items-center justify-center"
                                 activeOpacity={0.7}
                             >
-                                <Ionicons name="remove" size={16} color="#F15A24" />
+                                <Ionicons name="remove" size={16} color="#E95322" />
                             </TouchableOpacity>
 
                             <Text className="mx-3 text-[#391713] font-semibold">{quantities[item.id]}</Text>
 
                             <TouchableOpacity
                                 onPress={() => handleIncrease(item.id)}
-                                className="w-7 h-7 rounded-full bg-[#F15A24] items-center justify-center"
+                                className="w-7 h-7 rounded-full bg-[#E95322] items-center justify-center"
                                 activeOpacity={0.7}
                             >
                                 <Ionicons name="add" size={16} color="#FFFFFF" />
@@ -120,7 +120,7 @@ export default function SearchScreen() {
 
                         {/* Add to cart button */}
                         <TouchableOpacity
-                            className="w-9 h-9 rounded-full bg-[#F15A24] items-center justify-center"
+                            className="w-9 h-9 rounded-full bg-[#E95322] items-center justify-center"
                             activeOpacity={0.8}
                         >
                             <Ionicons name="cart" size={18} color="#FFFFFF" />
@@ -158,7 +158,7 @@ export default function SearchScreen() {
                                 {sortBy === "popular" ? "Popular" : sortBy === "price" ? "Price" : "Rating"}
                             </Text>
                         </Text>
-                        <Ionicons name="chevron-down" size={16} color="#F15A24" />
+                        <Ionicons name="chevron-down" size={16} color="#E95322" />
                     </TouchableOpacity>
                 </View>
 

@@ -138,18 +138,22 @@ export default function MenuScreen() {
     };
 
     return (
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-[#F9CF63]">
             {/* Header + Search + Categories */}
             <View className="bg-[#F9CF63] px-5 pt-14 pb-4">
                 <SearchBar isSearchPage={true} />
                 <View
-                    className="bg-[#F15A24] rounded-t-3xl pb-10 pt-3 mt-5 -mx-5"
+                    className="bg-[#E95322] pb-10 z-1"
                     style={{
                         shadowColor: "#000",
                         shadowOpacity: 0.1,
                         shadowOffset: { width: 0, height: 6 },
                         shadowRadius: 12,
                         elevation: 2,
+                        zIndex: 1,
+                        transform: [{ translateY: 30 }],
+                        borderTopRightRadius: 32,
+                        borderTopLeftRadius: 32,
                     }}
                 >
                     <Categories />
@@ -162,8 +166,8 @@ export default function MenuScreen() {
                 style={{
                     backgroundColor: "#fff",
                     borderTopRightRadius: 32,
-                    marginTop: -40,
-                    paddingTop: 24,
+                    borderTopLeftRadius: 32,
+                    zIndex: 100,
                 }}
             >
                 {/* Dòng Sort By */}
