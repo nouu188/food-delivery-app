@@ -1,30 +1,38 @@
-import { CartIcon, FavourIcon, UserIcon } from "@/assets/icons/index";
+import { BellIcon, CartIcon, HomeIcon, UserIcon } from "@/assets/icons/index";
 import { Ionicons } from "@expo/vector-icons";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
 import { TextInput, TouchableOpacity, View } from "react-native";
 
 const RIGHT_ACTIONS = [
     { key: "cart", icon: CartIcon },
-    { key: "bell", icon: FavourIcon },
+    { key: "bell", icon: BellIcon },
     { key: "user", icon: UserIcon },
 ];
 
-const SearchBar = () => {
+interface SearchBarProps {
+    isSearchPage: boolean;
+}
+
+const SearchBar = ({ isSearchPage }: SearchBarProps) => {
+    const [searchQuery, setSearchQuery] = React.useState("");
+
+    const handleSearch = () => {
+        router.push(`/search`);
+    };
+
     return (
         <View className="flex-row items-center gap-3 mt-8">
             {/* Search box */}
             <View className="flex-1 flex-row items-center bg-white rounded-full h-11 pl-3 pr-2">
-                <Link href="/search" asChild>
-                    <TouchableOpacity activeOpacity={0.8}>
-                        <Ionicons name="search-outline" size={20} color="#9AA0A6" />
-                    </TouchableOpacity>
-                </Link>
                 <TextInput
                     placeholder="Search"
                     placeholderTextColor="#9AA0A6"
                     className="flex-1 ml-2 text-base text-black"
                     returnKeyType="search"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    onSubmitEditing={handleSearch}
                 />
                 <TouchableOpacity
                     activeOpacity={0.8}
@@ -36,25 +44,25 @@ const SearchBar = () => {
             </View>
 
             {/* Right actions */}
-            {RIGHT_ACTIONS.map((a) => (
+            {!isSearchPage ? (
+                RIGHT_ACTIONS.map((a) => (
+                    <TouchableOpacity
+                        key={a.key}
+                        activeOpacity={0.7}
+                        className="w-10 h-10 rounded-xl bg-white items-center justify-center"
+                    >
+                        <a.icon />
+                    </TouchableOpacity>
+                ))
+            ) : (
                 <TouchableOpacity
-                    key={a.key}
-                    activeOpacity={0.7}
-                    className="w-10 h-10 rounded-xl bg-white items-center justify-center"
+                    activeOpacity={0.8}
+                    className="w-10 h-10 bg-[#E8B931] rounded-xl items-center justify-center"
+                    onPress={() => router.push("/home")}
                 >
-                    <Ionicons
-                        name={
-                            a.key === "cart"
-                                ? "cart-outline"
-                                : a.key === "bell"
-                                  ? "notifications-outline"
-                                  : "person-outline"
-                        }
-                        size={20}
-                        color="#F15A24"
-                    />
+                    <HomeIcon />
                 </TouchableOpacity>
-            ))}
+            )}
         </View>
     );
 };

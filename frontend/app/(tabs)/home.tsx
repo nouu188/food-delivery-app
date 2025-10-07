@@ -1,6 +1,8 @@
+import { HeartActiveIcon, HeartDefaultIcon } from "@/assets/icons";
 import { banners, bestSeller, recommend } from "@/assets/images/index";
 import Categories from "@/components/Common/Categories";
 import SearchBar from "@/components/Common/SearchBar";
+import StarIcon from "@/components/Common/StarIcon";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import React from "react";
@@ -37,14 +39,27 @@ const RECOMMEND = [
 
 const HomeScreen = () => {
     const [activeBanner, setActiveBanner] = React.useState(0);
+    const [favorites, setFavorites] = React.useState<Set<string>>(new Set());
     const { width } = useWindowDimensions();
     const bannerWidth = width - 40;
+
+    const toggleFavorite = (id: string) => {
+        setFavorites((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
 
     return (
         <View className="flex-1 bg-[#F9CF63]">
             <View className="px-5 pt-12 pb-4">
                 {/* Phần thanh search và icon */}
-                <SearchBar />
+                <SearchBar isSearchPage={false} />
 
                 {/* Greeting texts */}
                 <View className="mt-5">
@@ -84,7 +99,13 @@ const HomeScreen = () => {
                                             />
                                         </TouchableOpacity>
                                     </Link>
-                                    <View className="absolute right-3 top-3 bg-[#F15A24] rounded-full px-2 py-1">
+                                    <View
+                                        className="absolute bottom-12 -right-0 bg-[#F15A24] px-3 py-2 shadow-md"
+                                        style={{
+                                            borderTopLeftRadius: 20,
+                                            borderBottomLeftRadius: 20,
+                                        }}
+                                    >
                                         <Text className="text-white text-xs">${p.price.toFixed(2)}</Text>
                                     </View>
                                     <Text className="mt-2 font-medium text-[#151312]" numberOfLines={1}>
@@ -161,26 +182,49 @@ const HomeScreen = () => {
                         </View>
                         <View className="flex-row flex-wrap -mx-2">
                             {RECOMMEND.map((p) => (
-                                <View key={p.id} className="w-1/2 px-2 mb-4">
-                                    <Link href={{ pathname: "/food/[id]", params: { id: p.id } }} asChild>
-                                        <TouchableOpacity activeOpacity={0.8}>
-                                            <Image
-                                                source={p.image}
-                                                className="rounded-2xl h-32 w-full"
-                                                resizeMode="cover"
-                                            />
+                                <View key={p.id} className="w-1/2 px-2 mb-6">
+                                    <View className="relative">
+                                        <Link href={{ pathname: "/food/[id]", params: { id: p.id } }} asChild>
+                                            <TouchableOpacity activeOpacity={0.8}>
+                                                <Image
+                                                    source={p.image}
+                                                    className="rounded-3xl h-40 w-full"
+                                                    resizeMode="cover"
+                                                />
+                                            </TouchableOpacity>
+                                        </Link>
+
+                                        {/* Rating badge - top left */}
+                                        <View className="absolute left-3 top-3 bg-white/95 rounded-full px-2.5 py-1.5 flex-row items-center shadow-sm">
+                                            <Text className="text-[#151312] text-xs font-semibold mr-1">
+                                                {p.rating.toFixed(1)}
+                                            </Text>
+                                            <StarIcon size={12} color="#F4BA1B" />
+                                        </View>
+
+                                        {/* Heart icon - top right */}
+                                        <TouchableOpacity
+                                            onPress={() => toggleFavorite(p.id)}
+                                            className="absolute right-3 top-3 bg-white/95 rounded-full p-2 shadow-sm"
+                                            activeOpacity={0.7}
+                                        >
+                                            {favorites.has(p.id) ? <HeartActiveIcon /> : <HeartDefaultIcon />}
                                         </TouchableOpacity>
-                                    </Link>
-                                    <View className="absolute left-4 top-3 bg-white/95 rounded-full px-2 py-1 flex-row items-center">
-                                        <Text className="text-[#151312] text-[11px] mr-1">{p.rating.toFixed(1)}</Text>
-                                        <Ionicons name="star" size={12} color="#F6B100" />
+
+                                        {/* Price badge - bottom right, outside image */}
+                                        <View
+                                            className="absolute bottom-5 -right-0 bg-[#F15A24] px-3 py-2 shadow-md"
+                                            style={{
+                                                borderTopLeftRadius: 20,
+                                                borderBottomLeftRadius: 20,
+                                            }}
+                                        >
+                                            <Text className="text-white text-sm font-bold">${p.price.toFixed(1)}</Text>
+                                        </View>
                                     </View>
-                                    <View className="absolute right-4 top-3 bg-white/90 rounded-full px-2 py-1">
-                                        <Text className="text-[#F15A24] text-xs font-semibold">
-                                            ${p.price.toFixed(2)}
-                                        </Text>
-                                    </View>
-                                    <Text className="mt-2 font-medium text-[#151312]" numberOfLines={1}>
+
+                                    {/* Title */}
+                                    <Text className="mt-4 font-semibold text-[#151312] text-base" numberOfLines={1}>
                                         {p.title}
                                     </Text>
                                 </View>

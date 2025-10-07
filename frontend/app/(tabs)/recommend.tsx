@@ -1,5 +1,6 @@
 import { SnacksIcon } from "@/assets/icons";
 import { recommend } from "@/assets/images";
+import StarIcon from "@/components/Common/StarIcon";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import React from "react";
@@ -65,7 +66,7 @@ const DATA: Reco[] = [
     },
     {
         id: "6",
-        title: "Salmon don",
+        title: "Salmon don 2",
         desc: "Lorem ipsum dolor sit amet, consectetur…",
         price: 15,
         rating: 4.7,
@@ -101,72 +102,72 @@ export default function RecommendScreen() {
             >
                 <Link href={{ pathname: "/food/[id]", params: { id: item.id } }} asChild>
                     <Pressable>
-                        <View className="flex-row">
-                            {/* Image section */}
-                            <View className="relative w-32 h-32">
-                                <Image source={item.image} className="w-full h-full" resizeMode="cover" />
-                                {/* Icon */}
-                                <View className="absolute left-2 top-2 bg-white w-8 h-8 rounded-full items-center justify-center">
-                                    {React.createElement(item.icon, { width: 20, height: 20 })}
-                                </View>
-                                {/* New tag */}
-                                {item.isNew && (
-                                    <View className="absolute right-2 top-2 bg-[#F15A24] rounded-full px-2 py-1">
-                                        <Text className="text-white text-[10px] font-semibold">New</Text>
-                                    </View>
-                                )}
+                        <View className="relative">
+                            <Image source={item.image} className="w-full h-52" resizeMode="cover" />
+                            {/* Icon */}
+                            <View className="absolute left-3 top-3 bg-white w-10 h-10 rounded-full items-center justify-center">
+                                {React.createElement(item.icon, { width: 24, height: 24 })}
                             </View>
-
-                            {/* Content section */}
-                            <View className="flex-1 px-4 py-3 justify-between">
-                                <View>
-                                    <Text numberOfLines={2} className="text-[#391713] text-base font-bold leading-5">
-                                        {item.title}
-                                    </Text>
-                                    <Text numberOfLines={2} className="text-[#9CA3AF] text-xs mt-1 leading-4">
-                                        {item.desc}
+                            {/* New tag hoặc Rating badge */}
+                            {item.isNew ? (
+                                <View className="absolute right-3 top-3 bg-[#F15A24] rounded-full px-3 py-1">
+                                    <Text className="text-white text-xs font-semibold">New</Text>
+                                </View>
+                            ) : (
+                                <View className="absolute right-3 top-3 bg-white/90 rounded-full px-2 py-1 flex-row items-center">
+                                    <StarIcon size={12} color="#F15A24" />
+                                    <Text className="text-[#F15A24] text-xs font-bold ml-1">
+                                        {item.rating.toFixed(1)}
                                     </Text>
                                 </View>
+                            )}
+                        </View>
 
-                                {/* Price and controls */}
-                                <View className="flex-row items-center justify-between mt-2">
-                                    <Text className="text-[#F15A24] text-xl font-bold">${item.price.toFixed(2)}</Text>
-
-                                    <View className="flex-row items-center bg-[#FFF5E6] rounded-full px-1 py-1">
-                                        <TouchableOpacity
-                                            onPress={() => handleDecrease(item.id)}
-                                            className="w-6 h-6 rounded-full bg-white items-center justify-center"
-                                            activeOpacity={0.7}
-                                        >
-                                            <Ionicons name="remove" size={14} color="#F15A24" />
-                                        </TouchableOpacity>
-
-                                        <Text className="mx-2 text-[#391713] font-semibold text-sm">
-                                            {quantities[item.id]}
-                                        </Text>
-
-                                        <TouchableOpacity
-                                            onPress={() => handleIncrease(item.id)}
-                                            className="w-6 h-6 rounded-full bg-[#F15A24] items-center justify-center"
-                                            activeOpacity={0.7}
-                                        >
-                                            <Ionicons name="add" size={14} color="#FFFFFF" />
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            </View>
+                        <View className="px-4 py-3">
+                            <Text numberOfLines={1} className="text-[#391713] text-lg font-bold leading-5">
+                                {item.title}
+                            </Text>
+                            <Text numberOfLines={2} className="text-[#9CA3AF] text-sm mt-1 leading-4">
+                                {item.desc}
+                            </Text>
                         </View>
                     </Pressable>
                 </Link>
 
-                {/* Add to cart button */}
-                <TouchableOpacity
-                    className="mx-4 mb-4 mt-4 bg-[#F15A24] rounded-full py-2.5 flex-row items-center justify-center"
-                    activeOpacity={0.8}
-                >
-                    <Ionicons name="cart" size={16} color="#FFFFFF" />
-                    <Text className="text-white font-semibold ml-2 text-sm">Add to Cart</Text>
-                </TouchableOpacity>
+                {/* Price and quantity controls */}
+                <View className="px-4 pb-4 flex-row items-center justify-between">
+                    <Text className="text-[#F15A24] text-2xl font-bold">${item.price.toFixed(2)}</Text>
+
+                    <View className="flex-row items-center">
+                        <View className="flex-row items-center bg-[#FFF5E6] rounded-full px-1 py-1 mr-2">
+                            <TouchableOpacity
+                                onPress={() => handleDecrease(item.id)}
+                                className="w-7 h-7 rounded-full bg-white items-center justify-center"
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="remove" size={16} color="#F15A24" />
+                            </TouchableOpacity>
+
+                            <Text className="mx-3 text-[#391713] font-semibold">{quantities[item.id]}</Text>
+
+                            <TouchableOpacity
+                                onPress={() => handleIncrease(item.id)}
+                                className="w-7 h-7 rounded-full bg-[#F15A24] items-center justify-center"
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="add" size={16} color="#FFFFFF" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Add to cart button */}
+                        <TouchableOpacity
+                            className="w-9 h-9 rounded-full bg-[#F15A24] items-center justify-center"
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="cart" size={18} color="#FFFFFF" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </View>
         );
     };
@@ -174,22 +175,22 @@ export default function RecommendScreen() {
     return (
         <View className="flex-1 bg-[#F9CF63]">
             {/* Header */}
-            <View className="px-5 pt-20 pb-10">
+            <View className="px-5 pt-16 pb-8">
                 <View className="flex-row items-center justify-between">
                     <Pressable
                         onPress={() => router.back()}
                         className="w-10 h-10 rounded-full items-center justify-center"
                     >
-                        <Ionicons name="chevron-back" size={20} color="#E95322" />
+                        <Ionicons name="chevron-back" size={24} color="#914025" />
                     </Pressable>
-                    <Text className="text-white text-3xl font-extrabold">Recommendations</Text>
+                    <Text className="text-[#914025] text-xl font-bold">Recommendations</Text>
                     <View className="w-10" />
                 </View>
             </View>
 
             {/* Body */}
-            <View className="flex-1 bg-white rounded-t-3xl -mt-2 pt-4">
-                <Text className="text-[#E95322] text-xl font-semibold text-center">
+            <View className="flex-1 bg-white rounded-t-3xl -mt-2 -mb-20 pt-6">
+                <Text className="text-[#E95322] text-lg font-semibold text-center px-5 mb-4">
                     Discover the dishes{"\n"}recommended by the chef.
                 </Text>
 
@@ -197,7 +198,7 @@ export default function RecommendScreen() {
                     data={DATA}
                     keyExtractor={(it) => it.id}
                     renderItem={renderItem}
-                    contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 90 }}
+                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
                     showsVerticalScrollIndicator={false}
                 />
             </View>

@@ -1,8 +1,8 @@
 import { SnacksIcon } from "@/assets/icons";
-import { search } from "@/assets/images/index";
+import { recommend } from "@/assets/images/index";
 import SearchBar from "@/components/Common/SearchBar";
 import { Ionicons } from "@expo/vector-icons";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 import React from "react";
 import { FlatList, Image, Pressable, Text, TouchableOpacity, View } from "react-native";
 
@@ -12,7 +12,7 @@ const RESULTS = [
         title: "Mexican Appetizer",
         price: 15.0,
         rating: 6.0,
-        image: search.search1,
+        image: recommend.rcm1,
         desc: "Tortilla Chips With Toppings",
         icon: SnacksIcon,
     },
@@ -21,7 +21,7 @@ const RESULTS = [
         title: "Pork Skewer",
         price: 12.99,
         rating: 4.0,
-        image: search.search1,
+        image: recommend.rcm2,
         desc: "Marinated and grilled to perfection, served with a spicy dipping sauce.",
         icon: SnacksIcon,
     },
@@ -30,7 +30,7 @@ const RESULTS = [
         title: "Pork Skewer 2",
         price: 12.99,
         rating: 4.0,
-        image: search.search1,
+        image: recommend.rcm3,
         desc: "Marinated and grilled to perfection, served with a spicy dipping sauce.",
         icon: SnacksIcon,
     },
@@ -39,7 +39,7 @@ const RESULTS = [
         title: "Pork Skewer 3",
         price: 12.99,
         rating: 4.0,
-        image: search.search1,
+        image: recommend.rcm2,
         desc: "Marinated and grilled to perfection, served with a spicy dipping sauce.",
         icon: SnacksIcon,
     },
@@ -74,16 +74,11 @@ export default function SearchScreen() {
             >
                 <Link href={{ pathname: "/food/[id]", params: { id: item.id } }} asChild>
                     <Pressable>
-                        <View className="relative">
+                        <View className="relative overflow-hidden rounded-t-3xl">
                             <Image source={item.image} className="w-full h-52" resizeMode="cover" />
                             {/* Icon */}
                             <View className="absolute left-3 top-3 bg-white w-10 h-10 rounded-full items-center justify-center">
                                 {React.createElement(item.icon, { width: 24, height: 24 })}
-                            </View>
-                            {/* Rating badge */}
-                            <View className="absolute right-3 top-3 bg-white/90 rounded-full px-2 py-1 flex-row items-center">
-                                <Ionicons name="star" size={12} color="#F15A24" />
-                                <Text className="text-[#F15A24] text-xs font-bold ml-1">{item.rating.toFixed(1)}</Text>
                             </View>
                         </View>
 
@@ -139,18 +134,12 @@ export default function SearchScreen() {
     return (
         <View className="flex-1 bg-[#F9CF63]">
             {/* Header + Search */}
-            <View className="px-5 pt-10 pb-4">
-                <View className="flex-row items-center">
-                    <TouchableOpacity onPress={() => router.back()} className="mr-3" activeOpacity={0.7}>
-                        <Ionicons name="arrow-back" size={24} color="#914025" />
-                    </TouchableOpacity>
-                    <Text className="text-xl font-bold text-[#914025]">Search</Text>
-                </View>
-                <SearchBar />
+            <View className="px-5 pt-16 pb-8">
+                <SearchBar isSearchPage={true} />
             </View>
 
             {/* Body */}
-            <View className="flex-1 bg-white rounded-t-3xl -mt-2 pt-6">
+            <View className="flex-1 bg-white rounded-t-3xl -mt-2 -mb-12 pt-6">
                 {/* Search Result For / Sort By */}
                 <View className="flex-row items-center justify-between px-5 mb-4">
                     <Text className="text-[#6B7280] text-sm">

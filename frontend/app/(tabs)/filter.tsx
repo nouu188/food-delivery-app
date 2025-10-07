@@ -52,11 +52,7 @@ const Filter = () => {
                                 activeOpacity={0.7}
                                 className="w-10 h-10 rounded-xl bg-white items-center justify-center"
                             >
-                                <Ionicons
-                                    name={a.key === "cart" ? "cart-outline" : "person-outline"}
-                                    size={20}
-                                    color="#F15A24"
-                                />
+                                <a.icon />
                             </TouchableOpacity>
                         ))}
                     </View>
