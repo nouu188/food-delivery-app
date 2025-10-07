@@ -111,7 +111,7 @@ export default function RecommendScreen() {
                                 </View>
                                 {/* New tag */}
                                 {item.isNew && (
-                                    <View className="absolute right-2 top-2 bg-[#F15A24] rounded-full px-2 py-1">
+                                    <View className="absolute right-2 top-2 bg-[#E95322] rounded-full px-2 py-1">
                                         <Text className="text-white text-[10px] font-semibold">New</Text>
                                     </View>
                                 )}
@@ -130,7 +130,7 @@ export default function RecommendScreen() {
 
                                 {/* Price and controls */}
                                 <View className="flex-row items-center justify-between mt-2">
-                                    <Text className="text-[#F15A24] text-xl font-bold">${item.price.toFixed(2)}</Text>
+                                    <Text className="text-[#E95322] text-xl font-bold">${item.price.toFixed(2)}</Text>
 
                                     <View className="flex-row items-center bg-[#FFF5E6] rounded-full px-1 py-1">
                                         <TouchableOpacity
@@ -138,7 +138,7 @@ export default function RecommendScreen() {
                                             className="w-6 h-6 rounded-full bg-white items-center justify-center"
                                             activeOpacity={0.7}
                                         >
-                                            <Ionicons name="remove" size={14} color="#F15A24" />
+                                            <Ionicons name="remove" size={14} color="#E95322" />
                                         </TouchableOpacity>
 
                                         <Text className="mx-2 text-[#391713] font-semibold text-sm">
@@ -147,7 +147,7 @@ export default function RecommendScreen() {
 
                                         <TouchableOpacity
                                             onPress={() => handleIncrease(item.id)}
-                                            className="w-6 h-6 rounded-full bg-[#F15A24] items-center justify-center"
+                                            className="w-6 h-6 rounded-full bg-[#E95322] items-center justify-center"
                                             activeOpacity={0.7}
                                         >
                                             <Ionicons name="add" size={14} color="#FFFFFF" />
@@ -161,7 +161,7 @@ export default function RecommendScreen() {
 
                 {/* Add to cart button */}
                 <TouchableOpacity
-                    className="mx-4 mb-4 mt-4 bg-[#F15A24] rounded-full py-2.5 flex-row items-center justify-center"
+                    className="mx-4 mb-4 mt-4 bg-[#E95322] rounded-full py-2.5 flex-row items-center justify-center"
                     activeOpacity={0.8}
                 >
                     <Ionicons name="cart" size={16} color="#FFFFFF" />

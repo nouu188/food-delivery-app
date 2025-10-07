@@ -13,7 +13,7 @@ const CATEGORIES = [
 const Categories = () => {
     const [activeCategory, setActiveCategory] = React.useState("");
     return (
-        <View className="px-5 pt-4">
+        <View className="px-9 pt-4">
             <View className="flex-row justify-between">
                 {CATEGORIES.map((c) => {
                     const active = c.key === activeCategory;
@@ -35,7 +35,7 @@ const Categories = () => {
                                     <c.icon width={40} height={40} />
                                 )}
                             </View>
-                            <Text className="mt-2 text-xs text-[#391713]">{c.label}</Text>
+                            <Text className="mt-2 text-[12px] text-[#391713]">{c.label}</Text>
                         </TouchableOpacity>
                     );
                 })}

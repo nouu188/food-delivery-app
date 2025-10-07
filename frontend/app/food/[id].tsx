@@ -110,7 +110,7 @@ export default function FoodDetail() {
                             <Text className="mx-3 text-[#391713] font-semibold text-base">{qty}</Text>
                             <TouchableOpacity
                                 onPress={() => setQty((q) => q + 1)}
-                                className="w-8 h-8 rounded-full bg-[#F15A24] items-center justify-center"
+                                className="w-8 h-8 rounded-full bg-[#E95322] items-center justify-center"
                                 activeOpacity={0.8}
                             >
                                 <Ionicons name="add" size={16} color="#fff" />
@@ -150,7 +150,7 @@ export default function FoodDetail() {
                                                 </Text>
                                                 <TouchableOpacity
                                                     className={`w-5 h-5 rounded-full border-2 items-center justify-center ${
-                                                        selected ? "border-[#F15A24] bg-[#F15A24]" : "border-[#D1D5DB]"
+                                                        selected ? "border-[#E95322] bg-[#E95322]" : "border-[#D1D5DB]"
                                                     }`}
                                                     activeOpacity={0.8}
                                                 >
@@ -184,7 +184,7 @@ export default function FoodDetail() {
                                                 <TouchableOpacity
                                                     onPress={() => toggleAddOn(a)}
                                                     className={`w-7 h-7 rounded-full items-center justify-center ${
-                                                        selected ? "bg-[#F15A24]" : "bg-[#FFE3D6]"
+                                                        selected ? "bg-[#E95322]" : "bg-[#FFE3D6]"
                                                     }`}
                                                     activeOpacity={0.8}
                                                 >
@@ -207,7 +207,7 @@ export default function FoodDetail() {
                 {/* Add to Cart Button */}
                 <TouchableOpacity
                     activeOpacity={0.85}
-                    className="bg-[#F15A24] rounded-full py-4 items-center flex-row justify-center mb-8"
+                    className="bg-[#E95322] rounded-full py-4 items-center flex-row justify-center mb-8"
                     onPress={() => {
                         router.back();
                     }}

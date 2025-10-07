@@ -55,7 +55,7 @@ const Filter = () => {
                                 <Ionicons
                                     name={a.key === "cart" ? "cart-outline" : "person-outline"}
                                     size={20}
-                                    color="#F15A24"
+                                    color="#E95322"
                                 />
                             </TouchableOpacity>
                         ))}
@@ -103,7 +103,7 @@ const Filter = () => {
                                         key={tag}
                                         onPress={() => toggleTag(tag)}
                                         activeOpacity={0.8}
-                                        className={`px-4 py-2 rounded-full ${active ? "bg-[#F15A24]" : "bg-[#FFE3D6]"}`}
+                                        className={`px-4 py-2 rounded-full ${active ? "bg-[#E95322]" : "bg-[#FFE3D6]"}`}
                                     >
                                         <Text className={`${active ? "text-white" : "text-[#E95322]"} font-semibold`}>
                                             {tag}
@@ -126,9 +126,9 @@ const Filter = () => {
                                 step={1}
                                 value={price}
                                 onValueChange={(v: number | number[]) => setPrice(Array.isArray(v) ? v[0] : v)}
-                                minimumTrackTintColor="#F15A24"
+                                minimumTrackTintColor="#E95322"
                                 maximumTrackTintColor="#E5E7EB"
-                                thumbTintColor="#F15A24"
+                                thumbTintColor="#E95322"
                             />
                             <View className="flex-row justify-between mt-2 pl-5">
                                 <Text className="text-[#391713]">$1</Text>
@@ -141,7 +141,7 @@ const Filter = () => {
 
                     {/* Apply button */}
                     <TouchableOpacity
-                        className="bg-[#F15A24] rounded-full items-center mt-16 mb-2 self-center px-20  py-3"
+                        className="bg-[#E95322] rounded-full items-center mt-16 mb-2 self-center px-20  py-3"
                         activeOpacity={0.8}
                         onPress={() => {
                             router.push("/search");
