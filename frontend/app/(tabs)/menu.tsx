@@ -140,8 +140,10 @@ export default function MenuScreen() {
     return (
         <View className="flex-1 bg-[#F9CF63]">
             {/* Header + Search + Categories */}
-            <View className="bg-[#F9CF63] px-5 pt-14 pb-4">
-                <SearchBar isSearchPage={true} />
+            <View className="bg-[#F9CF63] pt-14 pb-2">
+                <View className="px-5 mb-4">
+                    <SearchBar isSearchPage={true} />
+                </View>
                 <View
                     className="bg-[#E95322] pb-10 z-1"
                     style={{
@@ -162,11 +164,12 @@ export default function MenuScreen() {
 
             {/* Phần màu trắng bo góc trên */}
             <View
-                className="flex-1"
+                className="flex-1 pt-3"
                 style={{
                     backgroundColor: "#fff",
                     borderTopRightRadius: 32,
                     borderTopLeftRadius: 32,
+
                     zIndex: 100,
                 }}
             >

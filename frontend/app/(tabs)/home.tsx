@@ -5,9 +5,9 @@ import SearchBar from "@/components/Common/SearchBar";
 import StarIcon from "@/components/Common/StarIcon";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import { Image, ImageBackground, ScrollView, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
-import Carousel from 'react-native-reanimated-carousel';
+import Carousel from "react-native-reanimated-carousel";
 
 // Fake data
 const BEST_SELLERS = [
@@ -39,7 +39,7 @@ const RECOMMEND = [
 ];
 
 const HomeScreen = () => {
-    const [activeBanner, setActiveBanner] = React.useState(0);
+    const [activeIndex, setActiveIndex] = React.useState(0);
     const [favorites, setFavorites] = React.useState<Set<string>>(new Set());
     const { width } = useWindowDimensions();
     const bannerWidth = width - 40;
@@ -163,8 +163,9 @@ const HomeScreen = () => {
                             {BANNERS.map((_, i) => (
                                 <View
                                     key={i}
-                                    className={`h-1.5 rounded-full mx-1 ${i === activeIndex ? 'bg-[#E95322] w-6' : 'bg-[#F5D8B8] w-3'
-                                        }`}
+                                    className={`h-1.5 rounded-full mx-1 ${
+                                        i === activeIndex ? "bg-[#E95322] w-6" : "bg-[#F5D8B8] w-3"
+                                    }`}
                                 />
                             ))}
                         </View>

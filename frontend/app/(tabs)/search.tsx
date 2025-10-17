@@ -48,16 +48,46 @@ const RESULTS = [
 export default function SearchScreen() {
     const [query] = React.useState("ABC");
     const [sortBy, setSortBy] = React.useState<"popular" | "price" | "rating">("popular");
+
+    // Mặc định số lượng mỗi sản phẩm là 0
     const [quantities, setQuantities] = React.useState<{ [key: string]: number }>(
-        RESULTS.reduce((acc, item) => ({ ...acc, [item.id]: 1 }), {})
+        RESULTS.reduce((acc, item) => ({ ...acc, [item.id]: 0 }), {})
     );
 
+    // Tổng tiền
+    const [totalPrice, setTotalPrice] = React.useState(0);
+
+    // Hàm tính tổng tiền khi thay đổi số lượng
+    const calculateTotalPrice = (newQuantities: { [key: string]: number }) => {
+        let total = 0;
+        for (const id in newQuantities) {
+            const product = RESULTS.find((p) => p.id === id);
+            if (product) {
+                total += product.price * newQuantities[id];
+            }
+        }
+        setTotalPrice(total);
+    };
+
     const handleIncrease = (id: string) => {
-        setQuantities((prev) => ({ ...prev, [id]: prev[id] + 1 }));
+        setQuantities((prev) => {
+            const updated = { ...prev, [id]: prev[id] + 1 };
+            calculateTotalPrice(updated);
+            return updated;
+        });
     };
 
     const handleDecrease = (id: string) => {
-        setQuantities((prev) => ({ ...prev, [id]: Math.max(1, prev[id] - 1) }));
+        setQuantities((prev) => {
+            const updated = { ...prev, [id]: Math.max(0, prev[id] - 1) };
+            calculateTotalPrice(updated);
+            return updated;
+        });
+    };
+
+    const handleCheckout = () => {
+        // Xử lý thanh toán ở đây
+        alert(`Tổng thanh toán: ${totalPrice.toLocaleString("vi-VN")} ₫`);
     };
 
     const renderItem = ({ item }: { item: (typeof RESULTS)[0] }) => {
@@ -139,7 +169,7 @@ export default function SearchScreen() {
             </View>
 
             {/* Body */}
-            <View className="flex-1 bg-white rounded-t-3xl -mt-2 -mb-12 pt-6">
+            <View className="flex-1 bg-white rounded-t-3xl -mt-2 pt-6">
                 {/* Search Result For / Sort By */}
                 <View className="flex-row items-center justify-between px-5 mb-4">
                     <Text className="text-[#6B7280] text-sm">
@@ -167,9 +197,24 @@ export default function SearchScreen() {
                     data={RESULTS}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 70 }}
                     showsVerticalScrollIndicator={false}
                 />
+            </View>
+
+            {/* Thanh tổng tiền & nút thanh toán */}
+            <View className="absolute bottom-0 left-0 right-0 bg-white p-5 border-t border-gray-200 flex-row justify-between items-center">
+                <View>
+                    <Text className="text-lg font-semibold text-[#391713]">Total</Text>
+                    <Text className="text-2xl font-bold text-[#E95322]">{totalPrice.toLocaleString("vi-VN")} ₫</Text>
+                </View>
+                <TouchableOpacity
+                    onPress={handleCheckout}
+                    disabled={totalPrice === 0}
+                    className={`${totalPrice === 0 ? "bg-gray-300" : "bg-[#E95322]"} rounded-full px-6 py-3`}
+                >
+                    <Text className="text-white font-bold text-base">Checkout</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
