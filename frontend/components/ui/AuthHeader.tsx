@@ -14,7 +14,7 @@ export default function AuthHeader({
   onBack,
 }: AuthHeaderProps) {
   return (
-    <View className="flex-row items-center justify-center px-8 py-14 m-3">
+    <View className="flex-row items-center justify-center px-8 py-10 m-3">
       {showBackButton && (
         <TouchableOpacity
           onPress={onBack}
