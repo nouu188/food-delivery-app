@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Animated } from "react-native";
-import First from "./launch/first";
+import First from "./launch/First";
 
 export default function IndexScreen() {
   const router = useRouter();

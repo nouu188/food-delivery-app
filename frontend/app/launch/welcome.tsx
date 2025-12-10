@@ -30,13 +30,13 @@ const Welcome = () => {
 
   const handleLoginPress = async () => {
     const seen = await AsyncStorage.getItem("hasSeenOnboarding");
-    if (seen === "true") router.replace("/login/login");
+    if (seen === "true") router.replace("/auth/login");
     else router.replace("/onboarding/StepA");
   };
 
   const handleSignUpPress = async () => {
     const seen = await AsyncStorage.getItem("hasSeenOnboarding");
-    if (seen === "true") router.replace("/login/signup");
+    if (seen === "true") router.replace("/auth/signup");
     else router.replace("/onboarding/StepA");
   };
 
@@ -57,11 +57,13 @@ const Welcome = () => {
         <ButtonComponent
           title="Log In"
           background="YellowBase"
+          color="OrangeBase"
           onPress={handleLoginPress}
         />
         <ButtonComponent
           title="Sign Up"
           background="YellowBase"
+          color="OrangeBase"
           onPress={handleSignUpPress}
         />
 
