@@ -29,7 +29,7 @@ const ForgotPassword = () => {
     setTimeout(() => {
       setLoading(false);
       router.replace({
-        pathname: "/auth/verifyOTP",
+        pathname: "/auth/setPassword",
         params: { emailOrPhone: email },
       });
     }, 1500);
