@@ -1,25 +1,27 @@
-import React, { useState } from "react";
+import React from "react";
 import { Text, TouchableOpacity } from "react-native";
 
 type ButtonProps = {
   title: string;
-  onPress?: () => void;
   background: string;
+  color?: string;
+  onPress?: () => void;
 };
 
-const ButtonComponent = ({ title, onPress, background }: ButtonProps) => {
-  const [isPressed, setIsPressed] = useState(false);
-
+const ButtonComponent = ({
+  title,
+  background,
+  color,
+  onPress,
+}: ButtonProps) => {
   return (
     <TouchableOpacity
-      className={`w-[207px] h-[45px] rounded-[30px] flex justify-center items-center my-1 ${
-        isPressed ? "bg-Yellow_2" : "bg-YellowBase"
-      }`}
+      className={`w-[207px] h-[45px] rounded-[30px] flex justify-center items-center my-1 bg-${background}`}
       onPress={onPress}
-      onPressIn={() => setIsPressed(true)}
-      onPressOut={() => setIsPressed(false)}
     >
-      <Text className="text-xl font-bold text-OrangeBase">{title}</Text>
+      <Text className={`text-xl font-bold text-${color || "white"}`}>
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 };

@@ -57,11 +57,13 @@ const Welcome = () => {
         <ButtonComponent
           title="Log In"
           background="YellowBase"
+          color="OrangeBase"
           onPress={handleLoginPress}
         />
         <ButtonComponent
           title="Sign Up"
           background="YellowBase"
+          color="OrangeBase"
           onPress={handleSignUpPress}
         />
 
