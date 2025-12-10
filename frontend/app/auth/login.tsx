@@ -1,64 +1,42 @@
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import ButtonComponent from "@/components/Button";
-import { ArrowLeftIcon } from "@/svgs/SVGAuth";
+import AuthHeader from "@/components/ui/AuthHeader";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-
 const Login = () => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleBack = () => {
-  router.back();
-};
-
-const handleForgotPassword = () => {
-  // Navigate to forgot password screen
-  router.push("/auth/forgotPassword");
-};
-
-  const handleSignUp = () => {
-    router.push("/auth/signup");
-  };
+  const handleForgotPassword = () => router.push("/auth/forgotPassword");
+  const handleSignUp = () => router.push("/auth/signup");
 
   return (
     <SafeAreaView className="flex-1 bg-YellowBase">
       {/* Header */}
-      <View className="flex-row items-center justify-center px-8 py-14 m-3">
-        <TouchableOpacity onPress={handleBack} className="mr-4">
-          <ArrowLeftIcon />
-        </TouchableOpacity>
-        <Text className="text-3xl font-bold text-Font_2 flex-1 text-center mr-8">
-          Log In
-        </Text>
-      </View>
+      <AuthHeader title="Log In" onBack={() => router.back()} />
 
       {/* Content */}
-      <View className="flex-1 flex bg-white rounded-t-3xl px-6 py-2">
-        {/* Welcome */}
-        <View className="pt-5 pb-6">
+      <View className="flex-1 bg-white rounded-t-3xl px-6 py-4 justify-between">
+        {/* Top Section */}
+        <View>
+          {/* Welcome */}
           <Text className="text-2xl font-bold mb-2">Welcome</Text>
-          <Text className="text-left font-light text-base">
+          <Text className="text-base font-light mb-6">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </Text>
-        </View>
 
-        {/* Form Section */}
-        <View className="mt-2">
           {/* Email Input */}
-          <View className="mb-4">
-            <Text className="font-medium text-xl mb-1">
-              Email or Mobile Number
-            </Text>
-            <View className="h-[45px] bg-Yellow_2 rounded-xl">
+          <View className="mb-3">
+            <Text className="text-lg font-medium mb-1">Email or Mobile Number</Text>
+            <View className="h-[45px] bg-Yellow_2 rounded-xl justify-center px-3">
               <TextInput
                 placeholder="example@example.com"
-                className="flex-1 text-lg font-semibold text-Font ml-3"
+                className="text-base font-semibold text-Font"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 placeholderTextColor="#6B7280"
@@ -67,22 +45,18 @@ const handleForgotPassword = () => {
           </View>
 
           {/* Password Input */}
-          <View className="mb-4">
-            <Text className="font-medium text-xl mb-1">Password</Text>
-            <View className="bg-Yellow_2 rounded-xl h-[45px] flex-row items-center justify-between">
+          <View className="mb-3">
+            <Text className="text-lg font-medium mb-1">Password</Text>
+            <View className="h-[45px] bg-Yellow_2 rounded-xl flex-row items-center justify-between px-3">
               <TextInput
-                className="ml-3 flex-1 text-lg font-semibold text-Font"
+                className="flex-1 text-base font-semibold text-Font"
                 secureTextEntry={!showPassword}
                 placeholder="Enter your password"
                 placeholderTextColor="#6B7280"
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                className="mr-3"
-                activeOpacity={0.7}
-              >
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 {showPassword ? (
                   <Eye size={20} color="#E95322" />
                 ) : (
@@ -91,46 +65,36 @@ const handleForgotPassword = () => {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
 
-        {/* Forgot Password */}
-        <TouchableOpacity
-          onPress={handleForgotPassword}
-          className="self-end mb-8"
-        >
-          <Text className="text-orange-500 font-medium text-base">
-            Forget Password
-          </Text>
-        </TouchableOpacity>
+          {/* Forgot Password */}
+          <TouchableOpacity onPress={handleForgotPassword} className="self-end mb-4">
+            <Text className="text-orange-500 font-medium text-sm">Forget Password</Text>
+          </TouchableOpacity>
 
-        {/* Login Button */}
-        <View className="flex items-center mt-4">
-          <ButtonComponent
-            title="Login"
-            background="OrangeBase"
-            color="white"
-            onPress={() => router.replace("/home/homepage")}
-          />
-        </View>
+          {/* Login Button */}
+          <View className="items-center mb-4">
+            <ButtonComponent
+              title="Login"
+              background="OrangeBase"
+              color="white"
+              onPress={() => router.replace("/home/homepage")}
+            />
+          </View>
 
-        {/* Social Login Section */}
-        <View className="items-center mt-4">
-          <Text className="text-base"> or sign up with</Text>
-          <SocialLoginButtons />
+          {/* Social Login */}
+          <View className="items-center mb-4">
+            <Text className="text-sm mb-2">or sign up with</Text>
+            <SocialLoginButtons />
+          </View>
         </View>
 
         {/* Sign Up Link */}
-        <View className="flex-row justify-center items-center mb-8 mt-8">
-            <Text className="text-gray-600 text-base">
-              Don't have an account? 
-            </Text>
-            <TouchableOpacity onPress={handleSignUp} className="ml-1">
-              <Text className="text-orange-500 font-medium text-base">
-                Sign Up
-              </Text>
-            </TouchableOpacity>
-          </View>
-
+        <View className="flex-row justify-center items-center mb-2">
+          <Text className="text-gray-600 text-sm">Don't have an account?</Text>
+          <TouchableOpacity onPress={handleSignUp} className="ml-1">
+            <Text className="text-orange-500 font-medium text-sm">Sign Up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
