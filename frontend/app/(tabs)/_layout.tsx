@@ -94,7 +94,7 @@ const TabsLayout = () => {
             <Tabs.Screen name="search" options={{ href: null, tabBarStyle: { display: "none" } }} />
             <Tabs.Screen name="filter" options={{ href: null, tabBarStyle: { display: "none" } }} />
             <Tabs.Screen name="recommend" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="bestSeller" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="bestSeller" options={{ href: "/bestSeller", tabBarStyle: { display: "none" } }} />
         </Tabs>
     );
 };
