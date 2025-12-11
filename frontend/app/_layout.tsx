@@ -1,7 +1,11 @@
 // app/_layout.tsx
+import { defaultConfig } from '@tamagui/config/v4';
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { createTamagui } from 'tamagui';
 import "./global.css";
+
+const config = createTamagui(defaultConfig)
 
 export default function RootLayout() {
   return (
@@ -11,11 +15,6 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="product/[id]" />   
-
-        {/* Các màn auth */}
-        <Stack.Screen name="auth/forgotPassword" />
-        <Stack.Screen name="auth/verifyOTP" />
-        <Stack.Screen name="auth/setPassword" />
 
         {/* Các màn khác */}
         <Stack.Screen name="IndexScreen" />

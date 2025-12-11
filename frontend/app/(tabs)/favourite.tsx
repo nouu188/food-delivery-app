@@ -1,28 +1,29 @@
 // app/(tabs)/favorites/index.tsx
+import { bestSeller } from "@/assets/images/index";
 import { FavoriteItem } from "@/components/favorites/FavoriteItem";
 import AuthHeader from "@/components/ui/AuthHeader";
 import { Heart } from "lucide-react-native";
 import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ImageSourcePropType, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Item = {
   id: number;
   name: string;
   price: number;
-  image: string;
+  image: ImageSourcePropType;
   liked: boolean;
 };
 
 const initialFavorites: Item[] = [
-  { id: 1, name: "Chicken Curry", price: 18.00, image: "https://i.imgur.com/curry.jpg", liked: true },
-  { id: 2, name: "Chicken Burger", price: 12.00, image: "https://i.imgur.com/burger.jpg", liked: true },
-  { id: 3, name: "Broccoli Lasagna", price: 15.00, image: "https://i.imgur.com/lasagna.jpg", liked: true },
-  { id: 4, name: "Mexican Appetizer", price: 10.00, image: "https://i.imgur.com/nachos.jpg", liked: true },
-  { id: 5, name: "Honey Glazed Wings", price: 14.00, image: "https://i.imgur.com/wings.jpg", liked: true },
-  { id: 6, name: "Milkshake Trio", price: 18.00, image: "https://i.imgur.com/milkshake.jpg", liked: true },
-  { id: 7, name: "Spicy Ramen", price: 16.00, image: "https://i.imgur.com/ramen.jpg", liked: true },
-  { id: 8, name: "Chocolate Cake", price: 8.00, image: "https://i.imgur.com/cake.jpg", liked: true },
+  { id: 1, name: "Chicken Curry", price: 18.00, image: bestSeller.BS1, liked: true },
+  { id: 2, name: "Chicken Burger", price: 12.00, image: bestSeller.BS2 , liked: true },
+  { id: 3, name: "Broccoli Lasagna", price: 15.00, image: bestSeller.BS3, liked: true },
+  { id: 4, name: "Mexican Appetizer", price: 10.00, image: bestSeller.BS4, liked: true },
+  { id: 5, name: "Honey Glazed Wings", price: 14.00, image: bestSeller.BS1, liked: true },
+  { id: 6, name: "Milkshake Trio", price: 18.00, image: bestSeller.BS2, liked: true },
+  { id: 7, name: "Spicy Ramen", price: 16.00, image: bestSeller.BS4, liked: true },
+  { id: 8, name: "Chocolate Cake", price: 8.00, image: bestSeller.BS3, liked: true },
 ];
 
 const FavoritesScreen = () => {

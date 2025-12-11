@@ -2,13 +2,13 @@
 import { useRouter } from "expo-router";
 import { Heart } from "lucide-react-native";
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageSourcePropType, Text, TouchableOpacity, View } from "react-native";
 
 type FavoriteItemProps = {
   id: number;
   name: string;
   price: number;
-  image: string;
+  image: ImageSourcePropType;
   liked: boolean;
   onToggleLike: (id: number) => void;
 };
@@ -32,7 +32,7 @@ export const FavoriteItem = ({
       {/* Ảnh món */}
       <View className="relative">
         <Image
-          source={{ uri: image }}
+          source={image} 
           className="w-full h-36 rounded-2xl"
           resizeMode="cover"
         />
