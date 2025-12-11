@@ -50,6 +50,7 @@ const SearchBar = ({ isSearchPage }: SearchBarProps) => {
                         key={a.key}
                         activeOpacity={0.7}
                         className="w-10 h-10 rounded-xl bg-white items-center justify-center"
+                        onPress={() => a.key === "cart" && router.push("/cart")}
                     >
                         <a.icon />
                     </TouchableOpacity>

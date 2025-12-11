@@ -1,8 +1,10 @@
 import { recommend } from "@/assets/images";
+import { useCartStore } from "@/store/useCartStore";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 type AddOn = { id: string; name: string; price: number };
 
@@ -14,6 +16,7 @@ const MOCK_ADDONS: AddOn[] = [
 ];
 
 export default function FoodDetail() {
+    const { addItem } = useCartStore();
     const router = useRouter();
 
     const title = "Pizza with Pepperoni and Cheese";
@@ -36,6 +39,24 @@ export default function FoodDetail() {
         .reduce((s, n) => s + n, 0);
 
     const total = (basePrice + addOnsTotal) * qty;
+
+    const handleAddToCart = () => {
+    addItem({
+      id: 1,
+      name: title,
+      price: basePrice + addOnsTotal,
+      qty: qty,
+      image: image,
+    });
+
+    Toast.show({
+      type: "success",
+      text1: "Added to cart!",
+      text2: `${qty} × ${title}`,
+      position: "bottom",
+      bottomOffset: 100,
+    });
+  };
 
     return (
         <View className="flex-1 bg-[#F9CF63]">
@@ -207,10 +228,8 @@ export default function FoodDetail() {
                 {/* Add to Cart Button */}
                 <TouchableOpacity
                     activeOpacity={0.85}
-                    className="bg-[#E95322] rounded-full py-4 items-center flex-row justify-center mb-8"
-                    onPress={() => {
-                        router.back();
-                    }}
+                    className="bg-[#E95322] rounded-full py-4 items-center flex-row justify-center mb-8 shadow-lg"
+                    onPress={handleAddToCart}
                 >
                     <Ionicons name="cart-outline" size={22} color="#fff" />
                     <Text className="text-white text-base font-semibold ml-2">Add to Cart</Text>
