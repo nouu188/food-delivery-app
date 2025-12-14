@@ -1,43 +1,41 @@
-import ButtonComponent from "@/components/Button";
-import { Logo_yellow } from "@/svgs/SVGLaunch";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
-import { Animated, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useEffect, useRef } from 'react';
+import { Animated, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useOnboarding } from '@/features/onboarding/hooks/useOnboarding';
+import { Yellow_Logo } from '@/assets/icons';
 
-const Welcome = () => {
+export default function WelcomeScreen() {
   const router = useRouter();
+  const { checkOnboardingStatus } = useOnboarding();
 
-  // Tạo animated values
-  const fadeAnim = useRef(new Animated.Value(0)).current; // opacity
-  const scaleAnim = useRef(new Animated.Value(0.8)).current; // scale bắt đầu nhỏ hơn 1
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
-        toValue: 1, // mờ dần ra
-        duration: 500,
+        toValue: 1,
+        duration: 600,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
-        toValue: 1, // phóng to từ 0.8 → 1
+        toValue: 1,
         friction: 6,
+        tension: 40,
         useNativeDriver: true,
       }),
     ]).start();
   }, []);
 
-  const handleLoginPress = async () => {
-    const seen = await AsyncStorage.getItem("hasSeenOnboarding");
-    if (seen === "true") router.replace("/login/login");
-    else router.replace("/onboarding/StepA");
-  };
+  const handleAuthNavigation = async (screen: 'login' | 'signup') => {
+    const hasSeenOnboarding = await checkOnboardingStatus();
 
-  const handleSignUpPress = async () => {
-    const seen = await AsyncStorage.getItem("hasSeenOnboarding");
-    if (seen === "true") router.replace("/login/signup");
-    else router.replace("/onboarding/StepA");
+    if (hasSeenOnboarding) {
+      router.replace(screen === 'login' ? '/(auth)/Login' : '/(auth)/SignUp');
+    } else {
+      router.replace('/(onboarding)');
+    }
   };
 
   return (
@@ -48,35 +46,46 @@ const Welcome = () => {
         transform: [{ scale: scaleAnim }],
       }}
     >
-      <SafeAreaView className="flex-1 bg-OrangeBase justify-center items-center">
-        <Logo_yellow />
-        <Text className="font-medium text-Font_2 my-10 text-center text-base px-4 leading-6">
-          Lorem ipsum dolor sit amet, consectetur{"\n"}adipiscing elit, sed do
-          eiusmod.
-        </Text>
-        <ButtonComponent
-          title="Log In"
-          background="YellowBase"
-          onPress={handleLoginPress}
-        />
-        <ButtonComponent
-          title="Sign Up"
-          background="YellowBase"
-          onPress={handleSignUpPress}
-        />
+      <SafeAreaView className="flex-1 bg-secondary-base">
+        <View className="flex-1 items-center justify-center px-8">
+          <View className="mb-12">
+            <Yellow_Logo />
+          </View>
 
-        {/* Reset Onboarding */}
-        {/* <ButtonComponent
-          title="Reset Onboarding"
-          background="YellowBase"
-          onPress={async () => {
-            await AsyncStorage.removeItem("hasSeenOnboarding");
-            alert("Onboarding sẽ xuất hiện lại khi mở app lần sau!");
-          }}
-        /> */}
+          <Text className="text-primary-light text-base text-center leading-6 mb-16 px-4">
+            Your favorite food delivered fast to your door
+          </Text>
+
+          <View className="w-full gap-y-4">
+            <TouchableOpacity
+              onPress={() => handleAuthNavigation('login')}
+              className="bg-primary-base h-14 rounded-full items-center justify-center active:bg-primary-dark"
+            >
+              <Text className="text-secondary-base text-lg font-bold">
+                Log In
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => handleAuthNavigation('signup')}
+              className="bg-primary-base h-14 rounded-full items-center justify-center active:bg-primary-dark"
+            >
+              <Text className="text-secondary-base text-lg font-bold">
+                Sign Up
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => router.replace('/(main)/(tabs)/Home')}
+            className="mt-6"
+          >
+            <Text className="text-primary-light text-sm">
+              Continue as Guest
+            </Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     </Animated.View>
   );
-};
-
-export default Welcome;
+}
