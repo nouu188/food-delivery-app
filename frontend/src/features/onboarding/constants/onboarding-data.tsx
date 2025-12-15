@@ -1,50 +1,50 @@
-import React, { ReactNode } from 'react';
-import { UtensilsCrossed, Truck, CreditCard } from '@tamagui/lucide-icons';
-import { YStack } from 'tamagui';
+import React, { ReactNode } from "react";
+import { UtensilsCrossed, Truck, CreditCard } from "@tamagui/lucide-icons";
+import { View } from "react-native";
 
-interface OnboardingSlide {
-  id: string;
-  title: string;
-  description: string;
-  illustration: ReactNode;
+export interface OnboardingSlide {
+    id: string;
+    title: string;
+    description: string;
+    illustration: ReactNode;
 }
 
 interface OnboardingConfig {
-  totalSteps: number;
-  storageKey: string;
+    totalSteps: number;
+    storageKey: string;
 }
 
 export const ONBOARDING_SLIDES: OnboardingSlide[] = [
-  {
-    id: 'step-1',
-    title: 'Discover Delicious Food',
-    description: 'Explore thousands of restaurants and dishes from around your city.',
-    illustration: (
-      <YStack justifyContent="center" alignItems="center" width={240} height={240}>
-        <UtensilsCrossed size={180} color="#E95322" strokeWidth={1.5} />
-      </YStack>
-    ),
-  },
-  {
-    id: 'step-2',
-    title: 'Fast Delivery',
-    description: 'Get your favorite meals delivered to your doorstep in minutes.',
-    illustration: (
-      <YStack justifyContent="center" alignItems="center" width={240} height={240}>
-        <Truck size={180} color="#E95322" strokeWidth={1.5} />
-      </YStack>
-    ),
-  },
-  {
-    id: 'step-3',
-    title: 'Easy Payment',
-    description: 'Pay securely with cash or card.',
-    illustration: (
-      <YStack justifyContent="center" alignItems="center" width={240} height={240}>
-        <CreditCard size={180} color="#E95322" strokeWidth={1.5} />
-      </YStack>
-    ),
-  },
+    {
+        id: "step-1",
+        title: "Discover Delicious Food",
+        description: "Explore thousands of restaurants and dishes from around your city.",
+        illustration: (
+            <View style={{ width: 240, height: 240, alignItems: "center", justifyContent: "center" }}>
+                <UtensilsCrossed size={180} color="#E95322" strokeWidth={1.5} />
+            </View>
+        ),
+    },
+    {
+        id: "step-2",
+        title: "Fast Delivery",
+        description: "Get your favorite meals delivered to your doorstep in minutes.",
+        illustration: (
+            <View style={{ width: 240, height: 240, alignItems: "center", justifyContent: "center" }}>
+                <Truck size={180} color="#E95322" strokeWidth={1.5} />
+            </View>
+        ),
+    },
+    {
+        id: "step-3",
+        title: "Easy Payment",
+        description: "Pay securely with cash or card.",
+        illustration: (
+            <View style={{ width: 240, height: 240, alignItems: "center", justifyContent: "center" }}>
+                <CreditCard size={180} color="#E95322" strokeWidth={1.5} />
+            </View>
+        ),
+    },
 ];
 
 /**
@@ -52,6 +52,6 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
  * Centralized config for onboarding flow
  */
 export const ONBOARDING_CONFIG: OnboardingConfig = {
-  totalSteps: ONBOARDING_SLIDES.length,
-  storageKey: '@food_delivery_app:onboarding_completed',
+    totalSteps: ONBOARDING_SLIDES.length,
+    storageKey: "@food_delivery_app:onboarding_completed",
 };

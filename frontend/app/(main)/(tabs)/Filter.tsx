@@ -25,7 +25,7 @@ const FOOD_TAGS = [
 ];
 
 const Filter = () => {
-    const [rating, setRating] = React.useState(4);
+    const [, setRating] = React.useState(4);
     const [selectedTags, setSelectedTags] = React.useState<string[]>(["Skewers", "Salmon"]);
     const [price, setPrice] = React.useState(10);
 

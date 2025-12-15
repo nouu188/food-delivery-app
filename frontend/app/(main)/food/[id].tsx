@@ -31,12 +31,6 @@ export default function FoodDetail() {
         setSelectedAddOns((prev) => (prev.includes(a.id) ? prev.filter((x) => x !== a.id) : [...prev, a.id]));
     };
 
-    const addOnsTotal = selectedAddOns
-        .map((id) => MOCK_ADDONS.find((a) => a.id === id)?.price ?? 0)
-        .reduce((s, n) => s + n, 0);
-
-    const total = (basePrice + addOnsTotal) * qty;
-
     return (
         <View className="flex-1 bg-[#F9CF63]">
             <View className="pt-12 px-5 pb-4">

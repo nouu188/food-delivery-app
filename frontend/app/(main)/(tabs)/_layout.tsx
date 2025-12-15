@@ -52,7 +52,7 @@ const TabsLayout = () => {
             }}
         >
             <Tabs.Screen
-                name="home"
+                name="Home"
                 options={{
                     headerShown: false,
                     title: "Home",
@@ -60,7 +60,7 @@ const TabsLayout = () => {
                 }}
             />
             <Tabs.Screen
-                name="menu"
+                name="Menu"
                 options={{
                     headerShown: false,
                     title: "Menu",
@@ -68,7 +68,7 @@ const TabsLayout = () => {
                 }}
             />
             <Tabs.Screen
-                name="favourite"
+                name="Favourite"
                 options={{
                     headerShown: false,
                     title: "Favourites",
@@ -76,7 +76,7 @@ const TabsLayout = () => {
                 }}
             />
             <Tabs.Screen
-                name="orders"
+                name="Orders"
                 options={{
                     headerShown: false,
                     title: "Orders",
@@ -84,17 +84,18 @@ const TabsLayout = () => {
                 }}
             />
             <Tabs.Screen
-                name="contact"
+                name="Contact"
                 options={{
                     headerShown: false,
                     title: "Contact",
                     tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={ContactIcon} />,
                 }}
             />
-            <Tabs.Screen name="search" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="filter" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="recommend" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="bestSeller" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="Search" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="Filter" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="Recommend" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="BestSeller" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="Profile" options={{ href: null, tabBarStyle: { display: "none" } }} />
         </Tabs>
     );
 };
