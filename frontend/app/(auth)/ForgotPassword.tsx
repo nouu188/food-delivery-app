@@ -1,9 +1,9 @@
-import AuthHeader from "@/components/common/auth/AuthHeader";
+import { Button } from "@/components/common";
+import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "@/components/common";
 
 const ForgotPassword = () => {
     const router = useRouter();
@@ -35,7 +35,7 @@ const ForgotPassword = () => {
 
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
-            <AuthHeader title="Forgot Password" onBack={() => router.back()} />
+            <Header title="Forgot Password" onBack={() => router.back()} />
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-8">
                 <Text className="text-base font-light text-gray-600 text-center mb-10 leading-6">

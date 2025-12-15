@@ -1,11 +1,11 @@
-import AuthHeader from "@/components/common/auth/AuthHeader";
+import { Button } from "@/components/common";
 import SocialLoginButtons from "@/components/common/auth/SocialLoginButtons";
+import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "@/components/common";
 
 const Login = () => {
     const router = useRouter();
@@ -16,7 +16,7 @@ const Login = () => {
 
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
-            <AuthHeader title="Log In" onBack={() => router.back()} />
+            <Header title="Log In" onBack={() => router.back()} />
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 py-4 justify-between">
                 <View>
