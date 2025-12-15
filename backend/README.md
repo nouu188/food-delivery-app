@@ -1,101 +1,210 @@
-# Backend
+# Food Delivery Application - Backend
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A NestJS-based microservices architecture for a comprehensive food delivery platform built with Nx monorepo.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## 📚 Documentation
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/nest?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+- **[PROGRESS_SUMMARY.md](./PROGRESS_SUMMARY.md)** - Current implementation status and completed work
+- **[IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md)** - Detailed guide for implementing remaining services
 
-## Run tasks
+## 🏗️ Architecture
 
-To run the dev server for your app, use:
+### Microservices
+- **Auth Service** (Port 3000, TCP 3001) ✅ COMPLETED
+- **User Service** (Port 3010, TCP 3002) ✅ COMPLETED
+- **Restaurant Service** (Port 3020, TCP 3003) ⏳ TO IMPLEMENT
+- **Order Service** (Port 3030, TCP 3004) ⏳ TO IMPLEMENT
+- **Payment Service** (Port 3040, TCP 3005) ⏳ TO IMPLEMENT
+- **Delivery Service** (Port 3050, TCP 3006) ⏳ TO IMPLEMENT
+- **Review Service** (Port 3060, TCP 3007) ⏳ TO IMPLEMENT
+- **Notification Service** (Port 3070, TCP 3008) ⏳ TO IMPLEMENT
+- **Promotion Service** (Port 3080, TCP 3009) ⏳ TO IMPLEMENT
+- **API Gateway** (Port 8000) ⏳ TO IMPLEMENT
 
-```sh
-npx nx serve api-gateway
+### Technology Stack
+- **Framework:** NestJS with Nx monorepo
+- **Database:** PostgreSQL with TypeORM
+- **Authentication:** JWT (Access & Refresh tokens)
+- **Communication:** TCP for inter-service, HTTP for clients
+- **Caching:** Redis (to be configured)
+- **Validation:** class-validator & class-transformer
+
+## 🚀 Quick Start
+
+### Installation
+```bash
+cd backend
+npm install
 ```
 
-To create a production bundle:
+### Database Setup
+```bash
+# Create PostgreSQL database
+createdb food_delivery
 
-```sh
-npx nx build api-gateway
+# Configure environment variables
+# Copy .env.example to .env and update values
 ```
 
-To see all available targets to run for a project, run:
+### Run Services
 
-```sh
-npx nx show project api-gateway
+```bash
+# Auth Service
+nx serve auth-service
+
+# User Service
+nx serve user-service
+
+# Build for production
+nx build auth-service
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## 📁 Project Structure
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/nest:app demo
+```
+backend/
+├── apps/                          # Microservices
+│   ├── auth-service/              ✅ Fully implemented
+│   ├── user-service/              ✅ Fully implemented
+│   ├── restaurant-service/        ⏳ To implement
+│   ├── order-service/             ⏳ To implement
+│   ├── payment-service/           ⏳ To implement
+│   ├── delivery-service/          ⏳ To implement
+│   ├── review-service/            ⏳ To implement
+│   ├── notification-service/      ⏳ To implement
+│   ├── promotion-service/         ⏳ To implement
+│   └── api-gateway/               ⏳ To implement
+│
+├── libs/                          # Shared libraries
+│   ├── common/                    ✅ Guards, decorators, filters, pipes
+│   ├── contracts/                 ✅ Events and message patterns
+│   ├── database/                  ✅ All entities created
+│   └── shared/                    ✅ All DTOs and enums
+│
+├── IMPLEMENTATION_GUIDE.md        # Detailed implementation guide
+├── PROGRESS_SUMMARY.md            # Current progress status
+└── README.md                      # This file
 ```
 
-To generate a new library, use:
+## 🎯 Current Implementation Status
 
-```sh
-npx nx g @nx/node:lib mylib
+**Completed (30%):**
+- ✅ Complete foundation (DTOs, Entities, Enums, Common utilities)
+- ✅ Auth Service - Full authentication & authorization
+- ✅ User Service - Profile, addresses, devices, favorites
+
+**Remaining (70%):**
+- ⏳ 7 additional microservices to implement
+- ⏳ API Gateway for request routing
+- ⏳ Redis configuration for caching & pub/sub
+- ⏳ TypeORM migrations
+
+## 🔧 Environment Variables
+
+Create `.env` file:
+
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE=food_delivery
+
+# JWT
+JWT_SECRET=your-secret-key-change-in-production
+JWT_REFRESH_SECRET=your-refresh-secret-change-in-production
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+## 🧪 Testing
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# Unit tests
+nx test auth-service
+nx test user-service
 
-## Set up CI!
+# E2E tests
+nx e2e auth-service-e2e
 
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+# Test with coverage
+nx test auth-service --coverage
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+## 📖 API Examples
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Auth Service
+```bash
+# Register
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123","full_name":"Test User"}'
 
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+# Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### User Service
+```bash
+# Get profile (replace TOKEN)
+curl -X GET http://localhost:3010/api/users/me \
+  -H "Authorization: Bearer TOKEN"
+```
 
-## Install Nx Console
+## 📝 Next Steps
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+1. **Read Documentation**
+   - Start with `PROGRESS_SUMMARY.md` to understand what's been done
+   - Review `IMPLEMENTATION_GUIDE.md` for implementation patterns
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+2. **Implement Remaining Services**
+   - Follow the established pattern from Auth & User services
+   - Use the comprehensive guide for each service
+   - Test incrementally as you build
 
-## Useful links
+3. **Integration**
+   - Implement API Gateway to route requests
+   - Configure Redis for caching and event pub/sub
+   - Create TypeORM migrations
 
-Learn more:
+4. **Production Ready**
+   - Add comprehensive tests
+   - Set up Docker Compose
+   - Configure CI/CD
+   - Add monitoring and logging
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/nest?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 💡 Tips for Implementation
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- **Use Reference Services:** Auth and User services are complete examples
+- **Follow the Pattern:** Each service has the same structure
+- **Reuse Shared Code:** All DTOs, entities, and utilities are ready
+- **Test Incrementally:** Don't wait until everything is done
+- **Check Port Assignments:** Each service has designated HTTP and TCP ports
+
+## 🤝 Contributing
+
+When implementing services:
+1. Follow the pattern in `IMPLEMENTATION_GUIDE.md`
+2. Use existing DTOs from `libs/shared`
+3. Use existing entities from `libs/database`
+4. Write tests for new functionality
+5. Update documentation
+
+## 📞 Support
+
+For implementation help:
+- Refer to `IMPLEMENTATION_GUIDE.md` for detailed examples
+- Check completed services (auth-service, user-service) for reference
+- Ensure PostgreSQL is running
+- Verify ports are not in use
+
+---
+
+**Overall Progress: ~30% Complete**
+
+**Last Updated:** December 2025

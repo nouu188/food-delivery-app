@@ -7,6 +7,7 @@
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "useDefineForClassFields": false,
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
@@ -19,7 +20,7 @@
       "@backend/shared": ["libs/shared/src/index.ts"],
       "@backend/common": ["libs/common/src/index.ts"],
       "@backend/contracts": ["libs/contracts/src/index.ts"]
-    }
+    },
   },
   "exclude": ["node_modules", "tmp"]
 }
