@@ -12,8 +12,9 @@ import OrderIcon from "./OrderIcon.svg";
 import SnacksIcon from "./SnacksIcon.svg";
 import UserIcon from "./UserIcon.svg";
 import VeganIcon from "./VeganIcon.svg";
-import Yellow_Logo from "./YellowLogo.svg"
-import Orange_Logo from "./OrangeLogo.svg"
+import Yellow_Logo from "./YellowLogo.svg";
+import Orange_Logo from "./OrangeLogo.svg";
+import EmptyOrder from "./EmptyOrder.svg";
 
 export {
     BellIcon,
@@ -31,5 +32,6 @@ export {
     UserIcon,
     VeganIcon,
     Yellow_Logo,
-    Orange_Logo
+    Orange_Logo,
+    EmptyOrder,
 };

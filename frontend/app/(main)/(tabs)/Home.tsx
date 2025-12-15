@@ -74,7 +74,7 @@ const HomeScreen = () => {
                     <View className="px-5">
                         <View className="flex-row items-center justify-between mb-3">
                             <Text className="text-lg font-semibold text-[#151312]">Best Seller</Text>
-                            <Link href="/bestSeller" asChild>
+                            <Link href="/BestSeller" asChild>
                                 <TouchableOpacity className="flex-row items-center">
                                     <Text className="text-[#E95322] mr-1">View All</Text>
                                     <ChevronRight size={16} color="#E95322" />
@@ -163,7 +163,7 @@ const HomeScreen = () => {
                     <View className="px-5 mt-6 pb-4">
                         <View className="flex-row items-center justify-between mb-3">
                             <Text className="text-lg font-semibold text-[#151312]">Recommend</Text>
-                            <Link href="/recommend" asChild>
+                            <Link href="/Recommend" asChild>
                                 <TouchableOpacity className="flex-row items-center">
                                     <Text className="text-[#E95322] mr-1">View All</Text>
                                     <ChevronRight size={16} color="#E95322" />
@@ -199,7 +199,7 @@ const HomeScreen = () => {
                                             <Heart
                                                 size={20}
                                                 color="#E95322"
-                                                fill={favorites.has(p.id) ? '#E95322' : 'none'}
+                                                fill={favorites.has(p.id) ? "#E95322" : "none"}
                                                 strokeWidth={2}
                                             />
                                         </TouchableOpacity>
