@@ -1,46 +1,30 @@
+import { DessertIcon, DrinksIcon, MealIcon, SnacksIcon, VeganIcon } from "@/assets/icons";
 import React from "react";
-import { ScrollView, TouchableOpacity, Text, View } from "react-native";
-import { LayoutGrid, Pizza, Beef, IceCream, Coffee, Salad, Dessert } from "@tamagui/lucide-icons";
+import { Text, TouchableOpacity, View } from "react-native"; // Bỏ ScrollView
+import { SvgProps } from "react-native-svg";
 
 interface Category {
     id: string;
     name: string;
-    icon: typeof LayoutGrid;
+    Icon: React.FC<SvgProps>;
 }
 
 const CATEGORIES: Category[] = [
-    { id: "all", name: "All", icon: LayoutGrid },
-    { id: "pizza", name: "Pizza", icon: Pizza },
-    { id: "burger", name: "Burger", icon: Beef },
-    { id: "dessert", name: "Dessert", icon: IceCream },
-    { id: "drinks", name: "Drinks", icon: Coffee },
-    { id: "salad", name: "Salad", icon: Salad },
-    { id: "snacks", name: "Snacks", icon: Dessert },
+    { id: "snacks", name: "Snacks", Icon: SnacksIcon },
+    { id: "meal", name: "Meal", Icon: MealIcon },
+    { id: "vegan", name: "Vegan", Icon: VeganIcon },
+    { id: "dessert", name: "Dessert", Icon: DessertIcon },
+    { id: "drinks", name: "Drinks", Icon: DrinksIcon },
 ];
 
 interface CategoriesProps {
-    /**
-     * Currently selected category ID
-     */
     selectedCategory?: string;
-
-    /**
-     * Callback when category is selected
-     */
     onSelectCategory?: (categoryId: string) => void;
-
-    /**
-     * Custom categories array
-     */
     categories?: Category[];
 }
 
-/**
- * Horizontal scrollable categories component
- * Displays category buttons with icons
- */
 const Categories: React.FC<CategoriesProps> = ({
-    selectedCategory = "all",
+    selectedCategory = "snacks",
     onSelectCategory,
     categories = CATEGORIES,
 }) => {
@@ -52,50 +36,32 @@ const Categories: React.FC<CategoriesProps> = ({
     };
 
     return (
-        <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 16 }}
-        >
-            <View className="flex-row">
-                {categories.map((category, index) => {
-                    const isActive = selected === category.id;
-                    const IconComponent = category.icon;
+        <View className="flex-row justify-between px-5 py-4 w-full">
+            {categories.map((category) => {
+                const isActive = selected === category.id;
+                const Icon = category.Icon;
 
-                    return (
-                        <View key={category.id} className={index === categories.length - 1 ? "" : "mr-3"}>
-                            <TouchableOpacity onPress={() => handleSelect(category.id)} activeOpacity={0.7}>
+                return (
+                    <View key={category.id}>
+                        <TouchableOpacity onPress={() => handleSelect(category.id)} activeOpacity={0.8}>
+                            <View className="items-center">
                                 <View
-                                    className={
-                                        isActive
-                                            ? "bg-OrangeBase rounded-[20px] px-4 py-2.5 items-center justify-center min-w-[80px]"
-                                            : "bg-white rounded-[20px] px-4 py-2.5 items-center justify-center min-w-[80px]"
-                                    }
+                                    className="w-16 h-20 rounded-full items-center justify-center"
                                     style={{
-                                        shadowColor: "#000",
-                                        shadowOffset: { width: 0, height: 2 },
-                                        shadowOpacity: 0.1,
-                                        shadowRadius: 4,
-                                        elevation: 2,
+                                        backgroundColor: isActive ? "#F5CB58" : "#F3E9B5",
                                     }}
                                 >
-                                    <IconComponent size={24} color={isActive ? "white" : "#E95322"} />
-                                    <Text
-                                        className={
-                                            isActive
-                                                ? "text-white text-xs font-semibold mt-1"
-                                                : "text-Font text-xs font-semibold mt-1"
-                                        }
-                                    >
-                                        {category.name}
-                                    </Text>
+                                    <Icon width={35} height={35} />
                                 </View>
-                            </TouchableOpacity>
-                        </View>
-                    );
-                })}
-            </View>
-        </ScrollView>
+                                <Text className="text-xs font-semibold mt-2" style={{ color: "#391713" }}>
+                                    {category.name}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                );
+            })}
+        </View>
     );
 };
 

@@ -91,11 +91,17 @@ const TabsLayout = () => {
                     tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={ContactIcon} />,
                 }}
             />
-            <Tabs.Screen name="Search" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="Filter" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="Recommend" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="BestSeller" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="Profile" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            {/* Hidden routes (reachable by navigation, but not shown as a tab) */}
+            <Tabs.Screen name="Search" options={{ href: null }} />
+            <Tabs.Screen name="Filter" options={{ href: null }} />
+            <Tabs.Screen name="Recommend" options={{ href: null }} />
+            <Tabs.Screen name="BestSeller" options={{ href: null }} />
+            <Tabs.Screen name="Profile" options={{ href: null }} />
+
+            {/* Stack-like pages that should still keep the bottom tab bar visible */}
+            <Tabs.Screen name="food/[id]" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="order-details/[id]" options={{ href: null }} />
+            <Tabs.Screen name="cart" options={{ href: null }} />
         </Tabs>
     );
 };

@@ -1,4 +1,3 @@
-import { CartIcon, UserIcon } from "@/assets/icons";
 import { Categories } from "@/components/common";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
@@ -6,11 +5,6 @@ import { Star } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-
-const RIGHT_ACTIONS = [
-    { key: "cart", icon: CartIcon },
-    { key: "user", icon: UserIcon },
-];
 
 const FOOD_TAGS = [
     "Bruschetta",
@@ -34,32 +28,22 @@ const Filter = () => {
 
     return (
         <View className="flex-1 bg-[#F9CF63]">
-            <View className="px-8 pt-16 pb-14">
+            <View className="px-8 pt-16 pb-10">
                 <View className="flex-row items-center gap-3 justify-between">
                     <TouchableOpacity onPress={() => router.back()} className="mr-3" activeOpacity={0.7}>
                         <Ionicons name="chevron-back-outline" size={20} color="#E95322" />
                     </TouchableOpacity>
 
                     <View>
-                        <Text className="text-3xl font-bold text-white">Filter</Text>
+                        <Text className="text-3xl font-bold text-white mr-8">Filter</Text>
                     </View>
 
-                    <View className="flex-row items-center gap-3">
-                        {RIGHT_ACTIONS.map((a) => (
-                            <TouchableOpacity
-                                key={a.key}
-                                activeOpacity={0.7}
-                                className="w-10 h-10 rounded-xl bg-white items-center justify-center"
-                            >
-                                <a.icon />
-                            </TouchableOpacity>
-                        ))}
-                    </View>
+                    <View></View>
                 </View>
             </View>
 
             <View className="flex-1 bg-white rounded-t-3xl pl-5 pt-5 -mt-3">
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 28 }}>
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
                     <Text className="text-2xl font-semibold text-[#391713] px-1">Categories</Text>
                     <View className="-ml-5">
                         <Categories />
@@ -109,10 +93,10 @@ const Filter = () => {
                     </View>
 
                     <View className="mt-4">
-                        <Text className="text-lg font-semibold text-[#E95322] px-1">Price</Text>
-                        <View className="mt-4 px-1 pr-5">
+                        <Text className="text-2xl font-semibold text-[#391713] px-1">Price</Text>
+                        <View className="mt-3 px-1 pr-6">
                             <Slider
-                                style={{ height: 80 }}
+                                style={{ height: 44 }}
                                 minimumValue={1}
                                 maximumValue={100}
                                 step={1}
@@ -122,11 +106,11 @@ const Filter = () => {
                                 maximumTrackTintColor="#E5E7EB"
                                 thumbTintColor="#E95322"
                             />
-                            <View className="flex-row justify-between mt-2 pl-5">
-                                <Text className="text-[#391713]">$1</Text>
-                                <Text className="text-[#391713]">$10</Text>
-                                <Text className="text-[#391713]">$50</Text>
-                                <Text className="text-[#391713]">$100 &gt;</Text>
+                            <View className="flex-row justify-between -mt-1">
+                                <Text className="text-[#6B7280] font-semibold">$1</Text>
+                                <Text className="text-[#6B7280] font-semibold">$10</Text>
+                                <Text className="text-[#6B7280] font-semibold">$50</Text>
+                                <Text className="text-[#6B7280] font-semibold">$100 &gt;</Text>
                             </View>
                         </View>
                     </View>
