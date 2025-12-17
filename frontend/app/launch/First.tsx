@@ -24,7 +24,7 @@ export default function SplashScreen() {
     }, [fadeAnim, scaleAnim]);
 
     return (
-        <SafeAreaView className="flex-1 bg-primary-base">
+        <SafeAreaView className="flex-1 bg-[#F5CB58]">
             <Animated.View
                 className="flex-1 justify-center items-center"
                 style={{

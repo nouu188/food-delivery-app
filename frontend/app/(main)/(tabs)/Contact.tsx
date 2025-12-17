@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ContactUs() {
   const handleGoToFAQ = () => {
-    router.push('./HelpFAQs'); 
+    router.push('/HelpFAQs');
   };
 
   return (

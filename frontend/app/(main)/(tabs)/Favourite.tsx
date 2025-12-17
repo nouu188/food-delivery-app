@@ -1,11 +1,11 @@
 // app/(tabs)/favorites/index.tsx
-import { bestSeller } from '@/assets/images/index';
-import { FavoriteItem } from '@/components/common/favourites/FavoriteItem';
-import Header from '@/components/common/Header';
-import { Heart } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { ImageSourcePropType, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { bestSeller } from "@/assets/images/index";
+import { FavoriteItem } from "@/components/common/favourites/FavoriteItem";
+import Header from "@/components/common/Header";
+import { Heart } from "lucide-react-native";
+import React, { useState } from "react";
+import { ImageSourcePropType, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Item = {
     id: number;
@@ -16,14 +16,14 @@ type Item = {
 };
 
 const initialFavorites: Item[] = [
-    { id: 1, name: 'Chicken Curry', price: 18.0, image: bestSeller.BS1, liked: false },
-    { id: 2, name: 'Chicken Burger', price: 12.0, image: bestSeller.BS2, liked: true },
-    { id: 3, name: 'Broccoli Lasagna', price: 15.0, image: bestSeller.BS3, liked: true },
-    { id: 4, name: 'Mexican Appetizer', price: 10.0, image: bestSeller.BS4, liked: false },
-    { id: 5, name: 'Honey Glazed Wings', price: 14.0, image: bestSeller.BS1, liked: true },
-    { id: 6, name: 'Milkshake Trio', price: 18.0, image: bestSeller.BS2, liked: true },
-    { id: 7, name: 'Spicy Ramen', price: 16.0, image: bestSeller.BS4, liked: true },
-    { id: 8, name: 'Chocolate Cake', price: 8.0, image: bestSeller.BS3, liked: false },
+    { id: 1, name: "Chicken Curry", price: 18.0, image: bestSeller.BS1, liked: false },
+    { id: 2, name: "Chicken Burger", price: 12.0, image: bestSeller.BS2, liked: true },
+    { id: 3, name: "Broccoli Lasagna", price: 15.0, image: bestSeller.BS3, liked: true },
+    { id: 4, name: "Mexican Appetizer", price: 10.0, image: bestSeller.BS4, liked: false },
+    { id: 5, name: "Honey Glazed Wings", price: 14.0, image: bestSeller.BS1, liked: true },
+    { id: 6, name: "Milkshake Trio", price: 18.0, image: bestSeller.BS2, liked: true },
+    { id: 7, name: "Spicy Ramen", price: 16.0, image: bestSeller.BS4, liked: true },
+    { id: 8, name: "Chocolate Cake", price: 8.0, image: bestSeller.BS3, liked: false },
 ];
 
 const FavoritesScreen = () => {
@@ -42,7 +42,7 @@ const FavoritesScreen = () => {
 
             <View className="flex-1 bg-white rounded-t-3xl px-5 pt-6">
                 <Text className="text-xl font-medium text-orange-600 text-center mb-6">
-                    It's time to buy your favorite dish.
+                    {"It's time to buy your favorite dish."}
                 </Text>
 
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="pb-6">

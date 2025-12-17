@@ -4,6 +4,7 @@ import { Link } from "expo-router";
 import React from "react";
 import { FlatList, Image, Pressable, Text, TouchableOpacity, View } from "react-native";
 import { SearchBar } from "@/components/common";
+import { useCartStore } from "@/store/useCartStore";
 
 const RESULTS = [
     {
@@ -48,36 +49,22 @@ export default function SearchScreen() {
     const [query] = React.useState("ABC");
     const [sortBy, setSortBy] = React.useState<"popular" | "price" | "rating">("popular");
 
+    const addItem = useCartStore((s) => s.addItem);
+    const openDrawer = useCartStore((s) => s.openDrawer);
+
     const [quantities, setQuantities] = React.useState<{ [key: string]: number }>(
         RESULTS.reduce((acc, item) => ({ ...acc, [item.id]: 0 }), {})
     );
 
-    const [totalPrice, setTotalPrice] = React.useState(0);
-
-    const calculateTotalPrice = (newQuantities: { [key: string]: number }) => {
-        let total = 0;
-        for (const id in newQuantities) {
-            const product = RESULTS.find((p) => p.id === id);
-            if (product) {
-                total += product.price * newQuantities[id];
-            }
-        }
-        setTotalPrice(total);
-    };
-
     const handleIncrease = (id: string) => {
         setQuantities((prev) => {
-            const updated = { ...prev, [id]: prev[id] + 1 };
-            calculateTotalPrice(updated);
-            return updated;
+            return { ...prev, [id]: prev[id] + 1 };
         });
     };
 
     const handleDecrease = (id: string) => {
         setQuantities((prev) => {
-            const updated = { ...prev, [id]: Math.max(0, prev[id] - 1) };
-            calculateTotalPrice(updated);
-            return updated;
+            return { ...prev, [id]: Math.max(0, prev[id] - 1) };
         });
     };
 
@@ -99,7 +86,7 @@ export default function SearchScreen() {
                             <Image source={item.image} className="w-full h-52" resizeMode="cover" />
 
                             <View className="absolute left-3 top-3 bg-white w-10 h-10 rounded-full items-center justify-center">
-                                {React.createElement(item.icon, { size: 24, color: '#E95322' })}
+                                {React.createElement(item.icon, { size: 24, color: "#E95322" })}
                             </View>
                         </View>
 
@@ -142,6 +129,15 @@ export default function SearchScreen() {
                         <TouchableOpacity
                             className="w-9 h-9 rounded-full bg-[#E95322] items-center justify-center"
                             activeOpacity={0.8}
+                            onPress={() => {
+                                addItem({
+                                    id: item.id,
+                                    title: item.title,
+                                    price: item.price,
+                                    image: item.image,
+                                });
+                                openDrawer();
+                            }}
                         >
                             <ShoppingCart size={18} color="#FFFFFF" />
                         </TouchableOpacity>

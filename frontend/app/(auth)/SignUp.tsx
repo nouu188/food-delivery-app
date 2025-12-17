@@ -1,4 +1,3 @@
-import { Button } from "@/components/common";
 import Header from "@/components/common/Header";
 import SocialLoginButtons from "@/components/common/auth/SocialLoginButtons";
 import { useRouter } from "expo-router";
@@ -6,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
 import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Button } from "tamagui";
 
 export default function SignUp() {
     const router = useRouter();
@@ -19,7 +19,7 @@ export default function SignUp() {
     });
     const [loading, setLoading] = useState(false);
 
-    const handleBack = () => router.back();
+    const handleBack = () => router.replace("/launch/welcome");
     const handleLogin = () => router.push("/(auth)/Login");
 
     const updateFormData = (field: string, value: string) => {
@@ -144,7 +144,7 @@ export default function SignUp() {
                     <View className="mb-3">
                         <Text className="text-lg font-medium mb-1">Mobile Number</Text>
                         <View className="h-[45px] bg-Yellow_2 rounded-xl flex-row items-center px-3">
-                            <Text className="text-base font-semibold text-Font">+1</Text>
+                            <Text className="text-base font-semibold text-Font">+</Text>
                             <TextInput
                                 placeholder="123 456 789"
                                 value={formData.mobile}
@@ -157,7 +157,7 @@ export default function SignUp() {
                         </View>
                     </View>
 
-                    <View className="mb-4">
+                    <View className="mb-6">
                         <Text className="text-lg font-medium mb-1">Date of birth</Text>
                         <View className="h-[45px] bg-Yellow_2 rounded-xl justify-center px-3">
                             <TextInput
@@ -172,7 +172,7 @@ export default function SignUp() {
                         </View>
                     </View>
 
-                    <Text className="text-gray-500 text-center text-sm mb-1">
+                    <Text className="text-gray-500 text-center text-sm mb-6">
                         By continuing, you agree to{" "}
                         <Text className="text-orange-500 underline" onPress={handleTermsPress}>
                             Terms of Use
@@ -184,18 +184,24 @@ export default function SignUp() {
                         .
                     </Text>
 
-                    <View className="items-center mb-1">
+                    <View className="items-center mb-6">
                         <Button
-                            title="Sign Up"
-                            background="OrangeBase"
+                            width="50%"
+                            height={50}
+                            background="#E95322"
                             color="white"
+                            fontSize={16}
+                            fontWeight="800"
+                            style={{ borderRadius: 30 }}
                             onPress={handleSignUp}
-                            loading={loading}
-                        />
+                            disabled={loading}
+                        >
+                            {loading ? "Signing up..." : "Sign Up"}
+                        </Button>
                     </View>
 
-                    <View className="items-center mb-1">
-                        <Text className="text-sm">or sign up with</Text>
+                    <View className="items-center">
+                        <Text className="text-sm mb-2">or sign up with</Text>
                         <SocialLoginButtons />
                     </View>
                 </View>

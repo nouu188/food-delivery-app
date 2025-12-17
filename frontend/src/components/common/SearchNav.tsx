@@ -1,7 +1,6 @@
 import { BellIcon, CartIcon, UserIcon } from "@/assets/icons";
 import { SearchBar } from "@/components/common";
-import { useOrderStore } from "@/store/useOrderStore";
-import { useRouter } from "expo-router";
+import { useCartStore } from "@/store/useCartStore";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 
@@ -11,8 +10,7 @@ interface SearchNavProps {
 }
 
 const SearchNav: React.FC<SearchNavProps> = ({ onNotificationPress, onProfilePress }) => {
-    const router = useRouter();
-    const firstOrderId = useOrderStore((s) => s.orders[0]?.id);
+    const openCartDrawer = useCartStore((s) => s.openDrawer);
 
     return (
         <View className="flex-row items-center">
@@ -25,7 +23,7 @@ const SearchNav: React.FC<SearchNavProps> = ({ onNotificationPress, onProfilePre
             <View className="flex-row items-center gap-3 ml-3">
                 {/* Cart Button */}
                 <TouchableOpacity
-                    onPress={() => router.push(`/order-details/${firstOrderId ?? "1"}`)}
+                    onPress={openCartDrawer}
                     activeOpacity={0.75}
                     className="w-12 h-12 bg-white rounded-2xl items-center justify-center shadow-sm"
                 >

@@ -35,7 +35,7 @@ const ForgotPassword = () => {
 
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
-            <Header title="Forgot Password" onBack={() => router.back()} />
+            <Header title="Forgot Password" onBack={() => router.replace("/(auth)/Login")} />
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-8">
                 <Text className="text-base font-light text-gray-600 text-center mb-10 leading-6">

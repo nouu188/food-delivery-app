@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import { OrderStatus } from "@/types/Order.type";
+import EmptyState from "@/components/common/orders/EmptyState";
+import OrderCard from "@/components/common/orders/OrderCard";
 import { useOrderStore } from "@/store/useOrderStore";
-import EmptyState from "@/components/common/order/EmptyState";
-import OrderCard from "@/components/common/order/OrderCard";
+import { OrderStatus } from "@/types/Order.type";
+import { Feather } from "@expo/vector-icons";
+import React, { useCallback, useMemo, useState } from "react";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TABS: OrderStatus[] = ["active", "completed", "cancelled"];

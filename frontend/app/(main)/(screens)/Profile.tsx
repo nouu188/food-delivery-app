@@ -5,6 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Header from "@/components/common/Header";
 
 export default function MyProfileScreen() {
     const { profile, isHydrated, setProfile } = useUserStore();
@@ -59,12 +60,7 @@ export default function MyProfileScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <View style={styles.header}>
-                <TouchableOpacity>
-                    <Feather name="chevron-left" size={24} color="#333" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>My profile</Text>
-            </View>
+            <Header title="My Profile" />
 
             <View style={styles.container}>
                 <View style={styles.profilePicContainer}>

@@ -119,7 +119,7 @@ const Filter = () => {
                         className="bg-[#E95322] rounded-full items-center mt-16 mb-2 self-center px-20  py-3"
                         activeOpacity={0.8}
                         onPress={() => {
-                            router.push("/(main)/(tabs)/Search");
+                            router.push("/Search");
                         }}
                     >
                         <Text className="text-white text-lg font-semibold">Apply</Text>
