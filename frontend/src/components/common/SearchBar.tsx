@@ -1,7 +1,7 @@
-import React from "react";
-import { TouchableOpacity, TextInput, View } from "react-native";
 import { Search, SlidersHorizontal, XCircle } from "@tamagui/lucide-icons";
 import { useRouter } from "expo-router";
+import React from "react";
+import { TextInput, TouchableOpacity, View } from "react-native";
 
 interface SearchBarProps {
     isSearchPage?: boolean;
@@ -26,14 +26,19 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     if (!isSearchPage) {
         return (
-            <TouchableOpacity onPress={() => router.push("/(main)/(tabs)/Search")} activeOpacity={0.7}>
-                <View className="bg-white rounded-full h-12 flex-row items-center px-4">
+            <View className="bg-white rounded-full h-12 flex-row items-center px-4">
+                <TouchableOpacity
+                    onPress={() => router.push("/(main)/(tabs)/Search")}
+                    activeOpacity={0.7}
+                    className="flex-1 flex-row items-center"
+                >
                     <Search size={20} color="#9CA3AF" />
                     <View className="flex-1 ml-3">
                         <TextInput
                             placeholder={placeholder}
                             placeholderTextColor="#9CA3AF"
                             editable={false}
+                            pointerEvents="none"
                             style={{
                                 fontSize: 14,
                                 color: "#151312",
@@ -41,11 +46,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
                             }}
                         />
                     </View>
-                    <TouchableOpacity activeOpacity={0.7}>
-                        <SlidersHorizontal size={20} color="#E95322" />
-                    </TouchableOpacity>
-                </View>
-            </TouchableOpacity>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={() => router.push("/(main)/(tabs)/Filter")}
+                    activeOpacity={0.8}
+                    className="w-8 h-8 rounded-full items-center justify-center"
+                    style={{ backgroundColor: "#E95322" }}
+                >
+                    <SlidersHorizontal size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+            </View>
         );
     }
 

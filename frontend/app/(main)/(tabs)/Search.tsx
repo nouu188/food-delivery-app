@@ -81,11 +81,6 @@ export default function SearchScreen() {
         });
     };
 
-    const handleCheckout = () => {
-        // Xử lý thanh toán ở đây
-        alert(`Tổng thanh toán: ${totalPrice.toLocaleString("vi-VN")} ₫`);
-    };
-
     const renderItem = ({ item }: { item: (typeof RESULTS)[0] }) => {
         return (
             <View
@@ -191,20 +186,6 @@ export default function SearchScreen() {
                     contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 70 }}
                     showsVerticalScrollIndicator={false}
                 />
-            </View>
-
-            <View className="absolute bottom-0 left-0 right-0 bg-white p-5 border-t border-gray-200 flex-row justify-between items-center">
-                <View>
-                    <Text className="text-lg font-semibold text-[#391713]">Total</Text>
-                    <Text className="text-2xl font-bold text-[#E95322]">{totalPrice.toLocaleString("vi-VN")} ₫</Text>
-                </View>
-                <TouchableOpacity
-                    onPress={handleCheckout}
-                    disabled={totalPrice === 0}
-                    className={`${totalPrice === 0 ? "bg-gray-300" : "bg-[#E95322]"} rounded-full px-6 py-3`}
-                >
-                    <Text className="text-white font-bold text-base">Checkout</Text>
-                </TouchableOpacity>
             </View>
         </View>
     );
