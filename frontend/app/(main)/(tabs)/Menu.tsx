@@ -1,9 +1,11 @@
-import { Cookie, ChevronDown, Minus, Plus, ShoppingCart, Star } from "@tamagui/lucide-icons";
 import { bestSeller } from "@/assets/images/index";
+import { Categories, SearchNav } from "@/components/common";
+import NotificationSidebar from "@/components/common/notification/NotificationSidebar";
+import ProfileSidebar from "@/components/common/profile/ProfileSidebar";
+import { ChevronDown, Cookie, Minus, Plus, ShoppingCart, Star } from "@tamagui/lucide-icons";
 import { Link } from "expo-router";
 import React from "react";
 import { FlatList, Image, Pressable, Text, TouchableOpacity, View } from "react-native";
-import { Categories, SearchBar } from "@/components/common";
 
 const RESULTS = [
     {
@@ -57,6 +59,8 @@ export default function MenuScreen() {
     const handleDecrease = (id: string) => {
         setQuantities((prev) => ({ ...prev, [id]: Math.max(1, prev[id] - 1) }));
     };
+    const [isNotificationVisible, setIsNotificationVisible] = React.useState(false);
+    const [isProfileVisible, setIsProfileVisible] = React.useState(false);
 
     const renderItem = ({ item }: { item: (typeof RESULTS)[0] }) => {
         return (
@@ -76,7 +80,7 @@ export default function MenuScreen() {
                             <Image source={item.image} className="w-full h-52" resizeMode="cover" />
 
                             <View className="absolute left-3 top-3 bg-white w-10 h-10 rounded-full items-center justify-center">
-                                {React.createElement(item.icon, { size: 24, color: '#E95322' })}
+                                {React.createElement(item.icon, { size: 24, color: "#E95322" })}
                             </View>
 
                             <View className="absolute right-3 top-3 bg-white/90 rounded-full px-2 py-1 flex-row items-center">
@@ -136,9 +140,13 @@ export default function MenuScreen() {
         <View className="flex-1 bg-[#F9CF63]">
             {/* Header + Search + Categories */}
             <View className="bg-[#F9CF63] pt-14 pb-2">
-                <View className="px-5 mb-4">
-                    <SearchBar isSearchPage={true} />
+                <View className="px-5">
+                    <SearchNav
+                        onNotificationPress={() => setIsNotificationVisible(true)}
+                        onProfilePress={() => setIsProfileVisible(true)}
+                    />
                 </View>
+
                 <View
                     className="bg-[#E95322] pb-10 z-1"
                     style={{
@@ -157,7 +165,6 @@ export default function MenuScreen() {
                 </View>
             </View>
 
-            {/* Phần màu trắng bo góc trên */}
             <View
                 className="flex-1 pt-3"
                 style={{
@@ -197,6 +204,9 @@ export default function MenuScreen() {
                     showsVerticalScrollIndicator={false}
                 />
             </View>
+
+            <NotificationSidebar isVisible={isNotificationVisible} onClose={() => setIsNotificationVisible(false)} />
+            <ProfileSidebar isVisible={isProfileVisible} onClose={() => setIsProfileVisible(false)} />
         </View>
     );
 }

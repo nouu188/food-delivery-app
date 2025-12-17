@@ -1,10 +1,13 @@
-import { Heart, ChevronRight, Star } from "@tamagui/lucide-icons";
 import { banners, bestSeller, recommend } from "@/assets/images/index";
+import { Categories } from "@/components/common";
+import NotificationSidebar from "@/components/common/notification/NotificationSidebar";
+import ProfileSidebar from "@/components/common/profile/ProfileSidebar";
+import SearchNav from "@/components/common/SearchNav";
+import { ChevronRight, Heart, Star } from "@tamagui/lucide-icons";
 import { Link } from "expo-router";
 import React from "react";
 import { Image, ImageBackground, ScrollView, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
-import { Categories, SearchBar } from "@/components/common";
 
 const BEST_SELLERS = [
     { id: "1", title: "Burger Deluxe", price: 10.3, image: bestSeller.BS1 },
@@ -37,6 +40,8 @@ const RECOMMEND = [
 const HomeScreen = () => {
     const [activeIndex, setActiveIndex] = React.useState(0);
     const [favorites, setFavorites] = React.useState<Set<string>>(new Set());
+    const [isNotificationVisible, setIsNotificationVisible] = React.useState(false);
+    const [isProfileVisible, setIsProfileVisible] = React.useState(false);
     const { width } = useWindowDimensions();
     const bannerWidth = width - 40;
 
@@ -53,9 +58,12 @@ const HomeScreen = () => {
     };
 
     return (
-        <View className="flex-1 bg-[#F9CF63]">
+        <View className="flex-1 bg-[#F5CB58] pt-4">
             <View className="px-5 pt-12 pb-4">
-                <SearchBar isSearchPage={false} />
+                <SearchNav
+                    onNotificationPress={() => setIsNotificationVisible(true)}
+                    onProfilePress={() => setIsProfileVisible(true)}
+                />
 
                 <View className="mt-5">
                     <Text className="text-white text-3xl font-extrabold">Good Morning</Text>
@@ -70,7 +78,7 @@ const HomeScreen = () => {
                     <Categories />
                 </View>
 
-                <ScrollView className="flex-1 rounded-t-3xl" contentContainerStyle={{ paddingBottom: 60 }}>
+                <ScrollView className="flex-1 rounded-t-3xl" contentContainerStyle={{ paddingBottom: 140 }}>
                     <View className="px-5">
                         <View className="flex-row items-center justify-between mb-3">
                             <Text className="text-lg font-semibold text-[#151312]">Best Seller</Text>
@@ -224,6 +232,9 @@ const HomeScreen = () => {
                     </View>
                 </ScrollView>
             </View>
+
+            <NotificationSidebar isVisible={isNotificationVisible} onClose={() => setIsNotificationVisible(false)} />
+            <ProfileSidebar isVisible={isProfileVisible} onClose={() => setIsProfileVisible(false)} />
         </View>
     );
 };

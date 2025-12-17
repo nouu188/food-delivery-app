@@ -1,19 +1,9 @@
-import React, { useState, useEffect } from "react";
-import {
-    View,
-    Text,
-    TextInput,
-    StyleSheet,
-    TouchableOpacity,
-    Image,
-    Platform,
-    StatusBar,
-    Alert,
-    ActivityIndicator,
-} from "react-native";
+import { Camera } from "@/assets/icons";
 import { useUserStore } from "@/store/useUserStore";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MyProfileScreen() {
@@ -80,7 +70,7 @@ export default function MyProfileScreen() {
                 <View style={styles.profilePicContainer}>
                     <Image source={{ uri: avatar }} style={styles.profilePic} />
                     <TouchableOpacity style={styles.cameraIconContainer} onPress={pickImage}>
-                        <Feather name="camera" size={20} color="#fff" />
+                        <Camera width={20} height={20} />
                     </TouchableOpacity>
                 </View>
 
@@ -132,8 +122,8 @@ export default function MyProfileScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: "#FFD34E", // Màu nền vàng của header
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+        backgroundColor: "#F5CB58", // Màu nền vàng của header
+        // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     },
     header: {
         flexDirection: "row",
@@ -202,8 +192,8 @@ const styles = StyleSheet.create({
         color: "#333",
     },
     updateButton: {
-        backgroundColor: "#FF6347", // Màu cam
-        borderRadius: 15,
+        backgroundColor: "#E95322", // Màu cam
+        borderRadius: 100,
         paddingVertical: 18,
         width: "100%",
         alignItems: "center",
