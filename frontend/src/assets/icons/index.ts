@@ -15,6 +15,7 @@ import VeganIcon from "./VeganIcon.svg";
 import Yellow_Logo from "./YellowLogo.svg";
 import Orange_Logo from "./OrangeLogo.svg";
 import EmptyOrder from "./EmptyOrder.svg";
+import Camera from "./Camera.svg";
 
 export {
     BellIcon,
@@ -34,4 +35,5 @@ export {
     Yellow_Logo,
     Orange_Logo,
     EmptyOrder,
+    Camera,
 };
