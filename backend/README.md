@@ -1,98 +1,210 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Food Delivery Application - Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based microservices architecture for a comprehensive food delivery platform built with Nx monorepo.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📚 Documentation
 
-## Description
+- **[PROGRESS_SUMMARY.md](./PROGRESS_SUMMARY.md)** - Current implementation status and completed work
+- **[IMPLEMENTATION_GUIDE.md](./IMPLEMENTATION_GUIDE.md)** - Detailed guide for implementing remaining services
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🏗️ Architecture
 
-## Project setup
+### Microservices
+- **Auth Service** (Port 3000, TCP 3001) ✅ COMPLETED
+- **User Service** (Port 3010, TCP 3002) ✅ COMPLETED
+- **Restaurant Service** (Port 3020, TCP 3003) ⏳ TO IMPLEMENT
+- **Order Service** (Port 3030, TCP 3004) ⏳ TO IMPLEMENT
+- **Payment Service** (Port 3040, TCP 3005) ⏳ TO IMPLEMENT
+- **Delivery Service** (Port 3050, TCP 3006) ⏳ TO IMPLEMENT
+- **Review Service** (Port 3060, TCP 3007) ⏳ TO IMPLEMENT
+- **Notification Service** (Port 3070, TCP 3008) ⏳ TO IMPLEMENT
+- **Promotion Service** (Port 3080, TCP 3009) ⏳ TO IMPLEMENT
+- **API Gateway** (Port 8000) ⏳ TO IMPLEMENT
 
+### Technology Stack
+- **Framework:** NestJS with Nx monorepo
+- **Database:** PostgreSQL with TypeORM
+- **Authentication:** JWT (Access & Refresh tokens)
+- **Communication:** TCP for inter-service, HTTP for clients
+- **Caching:** Redis (to be configured)
+- **Validation:** class-validator & class-transformer
+
+## 🚀 Quick Start
+
+### Installation
 ```bash
-$ yarn install
+cd backend
+npm install
 ```
 
-## Compile and run the project
-
+### Database Setup
 ```bash
-# development
-$ yarn run start
+# Create PostgreSQL database
+createdb food_delivery
 
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+# Configure environment variables
+# Copy .env.example to .env and update values
 ```
 
-## Run tests
+### Run Services
 
 ```bash
-# unit tests
-$ yarn run test
+# Auth Service
+nx serve auth-service
 
-# e2e tests
-$ yarn run test:e2e
+# User Service
+nx serve user-service
 
-# test coverage
-$ yarn run test:cov
+# Build for production
+nx build auth-service
 ```
 
-## Deployment
+## 📁 Project Structure
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+```
+backend/
+├── apps/                          # Microservices
+│   ├── auth-service/              ✅ Fully implemented
+│   ├── user-service/              ✅ Fully implemented
+│   ├── restaurant-service/        ⏳ To implement
+│   ├── order-service/             ⏳ To implement
+│   ├── payment-service/           ⏳ To implement
+│   ├── delivery-service/          ⏳ To implement
+│   ├── review-service/            ⏳ To implement
+│   ├── notification-service/      ⏳ To implement
+│   ├── promotion-service/         ⏳ To implement
+│   └── api-gateway/               ⏳ To implement
+│
+├── libs/                          # Shared libraries
+│   ├── common/                    ✅ Guards, decorators, filters, pipes
+│   ├── contracts/                 ✅ Events and message patterns
+│   ├── database/                  ✅ All entities created
+│   └── shared/                    ✅ All DTOs and enums
+│
+├── IMPLEMENTATION_GUIDE.md        # Detailed implementation guide
+├── PROGRESS_SUMMARY.md            # Current progress status
+└── README.md                      # This file
+```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 🎯 Current Implementation Status
+
+**Completed (30%):**
+- ✅ Complete foundation (DTOs, Entities, Enums, Common utilities)
+- ✅ Auth Service - Full authentication & authorization
+- ✅ User Service - Profile, addresses, devices, favorites
+
+**Remaining (70%):**
+- ⏳ 7 additional microservices to implement
+- ⏳ API Gateway for request routing
+- ⏳ Redis configuration for caching & pub/sub
+- ⏳ TypeORM migrations
+
+## 🔧 Environment Variables
+
+Create `.env` file:
+
+```env
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_DATABASE=food_delivery
+
+# JWT
+JWT_SECRET=your-secret-key-change-in-production
+JWT_REFRESH_SECRET=your-refresh-secret-change-in-production
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+```
+
+## 🧪 Testing
 
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+# Unit tests
+nx test auth-service
+nx test user-service
+
+# E2E tests
+nx e2e auth-service-e2e
+
+# Test with coverage
+nx test auth-service --coverage
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 📖 API Examples
 
-## Resources
+### Auth Service
+```bash
+# Register
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123","full_name":"Test User"}'
 
-Check out a few resources that may come in handy when working with NestJS:
+# Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}'
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### User Service
+```bash
+# Get profile (replace TOKEN)
+curl -X GET http://localhost:3010/api/users/me \
+  -H "Authorization: Bearer TOKEN"
+```
 
-## Support
+## 📝 Next Steps
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+1. **Read Documentation**
+   - Start with `PROGRESS_SUMMARY.md` to understand what's been done
+   - Review `IMPLEMENTATION_GUIDE.md` for implementation patterns
 
-## Stay in touch
+2. **Implement Remaining Services**
+   - Follow the established pattern from Auth & User services
+   - Use the comprehensive guide for each service
+   - Test incrementally as you build
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+3. **Integration**
+   - Implement API Gateway to route requests
+   - Configure Redis for caching and event pub/sub
+   - Create TypeORM migrations
 
-## License
+4. **Production Ready**
+   - Add comprehensive tests
+   - Set up Docker Compose
+   - Configure CI/CD
+   - Add monitoring and logging
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 💡 Tips for Implementation
+
+- **Use Reference Services:** Auth and User services are complete examples
+- **Follow the Pattern:** Each service has the same structure
+- **Reuse Shared Code:** All DTOs, entities, and utilities are ready
+- **Test Incrementally:** Don't wait until everything is done
+- **Check Port Assignments:** Each service has designated HTTP and TCP ports
+
+## 🤝 Contributing
+
+When implementing services:
+1. Follow the pattern in `IMPLEMENTATION_GUIDE.md`
+2. Use existing DTOs from `libs/shared`
+3. Use existing entities from `libs/database`
+4. Write tests for new functionality
+5. Update documentation
+
+## 📞 Support
+
+For implementation help:
+- Refer to `IMPLEMENTATION_GUIDE.md` for detailed examples
+- Check completed services (auth-service, user-service) for reference
+- Ensure PostgreSQL is running
+- Verify ports are not in use
+
+---
+
+**Overall Progress: ~30% Complete**
+
+**Last Updated:** December 2025

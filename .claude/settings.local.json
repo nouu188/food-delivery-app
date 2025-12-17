@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__figma__get_metadata",
+      "mcp__figma__get_screenshot",
+      "Bash(find:*)",
+      "mcp__figma__get_design_context",
+      "mcp__ide__getDiagnostics",
+      "Bash(ls:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
