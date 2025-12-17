@@ -1,4 +1,5 @@
 import { ContactIcon, FavourIcon, HomeIcon, MenuIcon, OrderIcon } from "@/assets/icons/index";
+import CartSidebar from "@/components/common/cart/CartSidebar";
 import { Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
@@ -29,84 +30,73 @@ const TabIcon = ({ focused, Icon }: TabIconProps) => {
 
 const TabsLayout = () => {
     return (
-        <Tabs
-            screenOptions={{
-                headerShown: false,
-                tabBarShowLabel: false,
-                tabBarItemStyle: {
-                    width: "100%",
-                    height: "100%",
-                    justifyContent: "center",
-                    alignItems: "center",
-                },
-                tabBarStyle: {
-                    height: 52,
-                    borderRadius: 50,
-                    borderTopWidth: 0,
-                    backgroundColor: "#8B3E26",
-                    position: "absolute",
-                    marginHorizontal: 16,
-                    marginBottom: 32,
-                    overflow: "hidden",
-                },
-            }}
-        >
-            <Tabs.Screen
-                name="Home"
-                options={{
+        <>
+            <Tabs
+                screenOptions={{
                     headerShown: false,
-                    title: "Home",
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={HomeIcon} />,
+                    tabBarShowLabel: false,
+                    tabBarItemStyle: {
+                        width: "100%",
+                        height: "100%",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    },
+                    tabBarStyle: {
+                        height: 52,
+                        borderRadius: 50,
+                        borderTopWidth: 0,
+                        backgroundColor: "#8B3E26",
+                        position: "absolute",
+                        marginHorizontal: 16,
+                        marginBottom: 32,
+                        overflow: "hidden",
+                    },
                 }}
-            />
-            <Tabs.Screen
-                name="Menu"
-                options={{
-                    headerShown: false,
-                    title: "Menu",
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={MenuIcon} />,
-                }}
-            />
-            <Tabs.Screen
-                name="Favourite"
-                options={{
-                    headerShown: false,
-                    title: "Favourites",
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={FavourIcon} />,
-                }}
-            />
-            <Tabs.Screen
-                name="orders/index"
-                options={{
-                    headerShown: false,
-                    title: "Orders",
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={OrderIcon} />,
-                }}
-            />
-            <Tabs.Screen
-                name="Contact"
-                options={{
-                    headerShown: false,
-                    title: "Contact",
-                    tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={ContactIcon} />,
-                }}
-            />
+            >
+                <Tabs.Screen
+                    name="Home"
+                    options={{
+                        headerShown: false,
+                        title: "Home",
+                        tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={HomeIcon} />,
+                    }}
+                />
+                <Tabs.Screen
+                    name="Menu"
+                    options={{
+                        headerShown: false,
+                        title: "Menu",
+                        tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={MenuIcon} />,
+                    }}
+                />
+                <Tabs.Screen
+                    name="Favourite"
+                    options={{
+                        headerShown: false,
+                        title: "Favourites",
+                        tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={FavourIcon} />,
+                    }}
+                />
+                <Tabs.Screen
+                    name="orders"
+                    options={{
+                        headerShown: false,
+                        title: "Orders",
+                        tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={OrderIcon} />,
+                    }}
+                />
+                <Tabs.Screen
+                    name="Contact"
+                    options={{
+                        headerShown: false,
+                        title: "Contact",
+                        tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={ContactIcon} />,
+                    }}
+                />
+            </Tabs>
 
-            {/* Hidden routes (reachable by navigation, but not shown as a tab) */}
-            <Tabs.Screen name="Search" options={{ href: null }} />
-            <Tabs.Screen name="Filter" options={{ href: null }} />
-            <Tabs.Screen name="Recommend" options={{ href: null }} />
-            <Tabs.Screen name="BestSeller" options={{ href: null }} />
-            <Tabs.Screen name="Profile" options={{ href: null }} />
-            <Tabs.Screen name="HelpFAQs" options={{ href: null }} />
-            <Tabs.Screen name="orders/history" options={{ href: null }} />
-            <Tabs.Screen name="orders/[orderId]" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="Profile" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            {/* Stack-like pages that should still keep the bottom tab bar visible */}
-            <Tabs.Screen name="food/[id]" options={{ href: null, tabBarStyle: { display: "none" } }} />
-            <Tabs.Screen name="order-details/[id]" options={{ href: null }} />
-            <Tabs.Screen name="cart" options={{ href: null }} />
-        </Tabs>
+            <CartSidebar />
+        </>
     );
 };
 

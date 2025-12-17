@@ -1,5 +1,5 @@
-import { useOrderStore } from "@/store/useOrderStore";
 import { useUserStore } from "@/store/useUserStore";
+import LogoutModal from "@/components/common/LogoutModal";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
@@ -17,7 +17,7 @@ interface ProfileSidebarProps {
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) => {
     const router = useRouter();
     const { profile } = useUserStore();
-    const firstOrderId = useOrderStore((s) => s.orders[0]?.id);
+    const [logoutVisible, setLogoutVisible] = React.useState(false);
 
     const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -63,16 +63,26 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
                 key: "orders",
                 icon: "shopping-bag",
                 label: "My Orders",
-                onPress: () => router.push(`/order-details/${firstOrderId ?? "1"}`),
+                onPress: () => router.push("/orders/index"),
             },
             { key: "profile", icon: "user", label: "My Profile", onPress: () => router.push("/Profile") },
-            { key: "address", icon: "map-pin", label: "Delivery Address", onPress: () => {} },
-            { key: "payment", icon: "credit-card", label: "Payment Methods", onPress: () => {} },
+            {
+                key: "address",
+                icon: "map-pin",
+                label: "Delivery Address",
+                onPress: () => router.push("/delivery-address"),
+            },
+            {
+                key: "payment",
+                icon: "credit-card",
+                label: "Payment Methods",
+                onPress: () => router.push("/payment-methods"),
+            },
             { key: "contact", icon: "phone", label: "Contact Us", onPress: () => router.push("/Contact") },
-            { key: "help", icon: "message-circle", label: "Help & FAQs", onPress: () => {} },
-            { key: "settings", icon: "settings", label: "Settings", onPress: () => {} },
+            { key: "help", icon: "message-circle", label: "Help & FAQs", onPress: () => router.push("/help") },
+            { key: "settings", icon: "settings", label: "Settings", onPress: () => router.push("/settings") },
         ],
-        [firstOrderId, router]
+        [router]
     );
 
     const handleItemPress = (fn: () => void) => {
@@ -128,12 +138,26 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
 
                     <View style={styles.divider} />
 
-                    <TouchableOpacity activeOpacity={0.85} onPress={onClose} style={styles.logoutRow}>
+                    <TouchableOpacity
+                        activeOpacity={0.85}
+                        onPress={() => setLogoutVisible(true)}
+                        style={styles.logoutRow}
+                    >
                         <View style={styles.logoutIconBox}>
                             <Feather name="log-out" size={20} color="#E5634D" />
                         </View>
                         <Text style={styles.logoutText}>Log Out</Text>
                     </TouchableOpacity>
+
+                    <LogoutModal
+                        visible={logoutVisible}
+                        onCancel={() => setLogoutVisible(false)}
+                        onConfirm={() => {
+                            setLogoutVisible(false);
+                            onClose();
+                            requestAnimationFrame(() => router.replace("/(auth)/Login"));
+                        }}
+                    />
                 </SafeAreaView>
             </Animated.View>
         </View>

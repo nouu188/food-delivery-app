@@ -8,6 +8,7 @@ module.exports = {
                 Yellow_2: "#F3E9B5",
                 OrangeBase: "#E95322",
                 Font: "#391713",
+                // SecondaryBase: "#F5CB58",
                 Orange_2: "#FFDECF",
                 Font_2: "#F8F8F8",
             },

@@ -58,7 +58,7 @@ const HomeScreen = () => {
     };
 
     return (
-        <View className="flex-1 bg-[#F5CB58] pt-4">
+        <View className="flex-1 bg-[#F5CB58] pt-10">
             <View className="px-5 pt-12 pb-4">
                 <SearchNav
                     onNotificationPress={() => setIsNotificationVisible(true)}
