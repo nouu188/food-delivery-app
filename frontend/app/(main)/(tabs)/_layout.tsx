@@ -102,6 +102,7 @@ const TabsLayout = () => {
             <Tabs.Screen name="food/[id]" options={{ href: null, tabBarStyle: { display: "none" } }} />
             <Tabs.Screen name="order-details/[id]" options={{ href: null }} />
             <Tabs.Screen name="cart" options={{ href: null }} />
+
         </Tabs>
     );
 };

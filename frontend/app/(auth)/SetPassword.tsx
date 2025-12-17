@@ -1,10 +1,10 @@
-import AuthHeader from "@/components/common/auth/AuthHeader";
+import { Button } from "@/components/common";
+import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
 import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "@/components/common";
 
 const SetPassword = () => {
     const router = useRouter();
@@ -42,7 +42,7 @@ const SetPassword = () => {
 
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
-            <AuthHeader title="Set Password" onBack={() => router.back()} />
+            <Header title="Set Password" onBack={() => router.back()} />
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-8 pb-10">
                 <Text className="text-base font-light text-gray-600 text-center mb-8 leading-6">
