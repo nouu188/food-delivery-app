@@ -99,6 +99,10 @@ const TabsLayout = () => {
             <Tabs.Screen name="orders/history" options={{ href: null }} />
             <Tabs.Screen name="orders/[orderId]" options={{ href: null, tabBarStyle: { display: "none" } }} />
             <Tabs.Screen name="Profile" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            {/* Stack-like pages that should still keep the bottom tab bar visible */}
+            <Tabs.Screen name="food/[id]" options={{ href: null, tabBarStyle: { display: "none" } }} />
+            <Tabs.Screen name="order-details/[id]" options={{ href: null }} />
+            <Tabs.Screen name="cart" options={{ href: null }} />
         </Tabs>
     );
 };
