@@ -6,15 +6,15 @@ import { Review } from './review.entity';
 @Index(['review_id'])
 export class ReviewImage extends BaseEntity {
   @Column({ type: 'uuid' })
-  review_id: string;
+  review_id!: string;
 
   @ManyToOne(() => Review)
   @JoinColumn({ name: 'review_id' })
-  review: Review;
+  review!: Review;
 
   @Column({ type: 'varchar', length: 500 })
-  image_url: string;
+  image_url!: string;
 
   @Column({ type: 'int', default: 0 })
-  display_order: number;
+  display_order!: number;
 }

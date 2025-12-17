@@ -9,43 +9,43 @@ import { PaymentMethod, PaymentStatus } from '@backend/shared';
 @Index(['user_id'])
 export class Payment extends BaseEntity {
   @Column({ type: 'uuid', unique: true })
-  order_id: string;
+  order_id!: string;
 
   @ManyToOne(() => Order)
   @JoinColumn({ name: 'order_id' })
-  order: Order;
+  order!: Order;
 
   @Column({ type: 'uuid' })
-  user_id: string;
+  user_id!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  amount: number;
+  amount!: number;
 
   @Column({ type: 'enum', enum: PaymentMethod })
-  method: PaymentMethod;
+  method!: PaymentMethod;
 
   @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
-  status: PaymentStatus;
+  status!: PaymentStatus;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  transaction_id: string;
+  transaction_id!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  gateway_response: any;
+  gateway_response!: any;
 
   @Column({ type: 'timestamp', nullable: true })
-  paid_at: Date;
+  paid_at!: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  refund_amount: number;
+  refund_amount!: number;
 
   @Column({ type: 'timestamp', nullable: true })
-  refunded_at: Date;
+  refunded_at!: Date;
 
   @Column({ type: 'text', nullable: true })
-  refund_reason: string;
+  refund_reason!: string;
 }

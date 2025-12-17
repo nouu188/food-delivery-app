@@ -6,14 +6,14 @@ import { BaseEntity } from '../base.entity';
 @Index(['slug'], { unique: true })
 export class RestaurantCategory extends BaseEntity {
   @Column({ type: 'varchar', length: 255, unique: true })
-  name: string;
+  name!: string;
 
   @Column({ type: 'varchar', length: 255, unique: true })
-  slug: string;
+  slug!: string;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  icon_url: string;
+  icon_url!: string;
 
   @Column({ type: 'int', default: 0 })
-  display_order: number;
+  display_order!: number;
 }

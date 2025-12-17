@@ -7,21 +7,21 @@ import { Restaurant } from './restaurant.entity';
 @Index(['restaurant_id'])
 export class OperatingHours extends BaseEntity {
   @Column({ type: 'uuid' })
-  restaurant_id: string;
+  restaurant_id!: string;
 
   @ManyToOne(() => Restaurant)
   @JoinColumn({ name: 'restaurant_id' })
-  restaurant: Restaurant;
+  restaurant!: Restaurant;
 
   @Column({ type: 'int' })
-  day_of_week: number;
+  day_of_week!: number;
 
   @Column({ type: 'time' })
-  open_time: string;
+  open_time!: string;
 
   @Column({ type: 'time' })
-  close_time: string;
+  close_time!: string;
 
   @Column({ type: 'boolean', default: false })
-  is_closed: boolean;
+  is_closed!: boolean;
 }

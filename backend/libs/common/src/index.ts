@@ -4,3 +4,5 @@ export * from './lib/decorators';
 export * from './lib/filters';
 export * from './lib/interceptors';
 export * from './lib/pipes';
+export * from './lib/strategies';
+export * from './lib/interfaces/authenticated-request.interface';

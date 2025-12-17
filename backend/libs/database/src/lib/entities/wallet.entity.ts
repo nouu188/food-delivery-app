@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index, Check } from 'typeorm';
+import { Entity, Column, OneToOne, JoinColumn, Index, Check } from 'typeorm';
 import { BaseEntity } from '../base.entity';
 import { User } from './user.entity';
 
@@ -7,18 +7,18 @@ import { User } from './user.entity';
 @Check(`"balance" >= 0`)
 export class Wallet extends BaseEntity {
   @Column({ type: 'uuid', unique: true })
-  user_id: string;
+  user_id!: string;
 
-  @ManyToOne(() => User)
+  @OneToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
-  balance: number;
+  balance!: number;
 
   @Column({ type: 'varchar', length: 10, default: 'VND' })
-  currency: string;
+  currency!: string;
 
   @Column({ type: 'boolean', default: true })
-  is_active: boolean;
+  is_active!: boolean;
 }

@@ -8,43 +8,43 @@ import { MenuCategory } from './menu-category.entity';
 @Index(['category_id'])
 export class MenuItem extends BaseEntity {
   @Column({ type: 'uuid' })
-  restaurant_id: string;
+  restaurant_id!: string;
 
   @ManyToOne(() => Restaurant)
   @JoinColumn({ name: 'restaurant_id' })
-  restaurant: Restaurant;
+  restaurant!: Restaurant;
 
   @Column({ type: 'uuid' })
-  category_id: string;
+  category_id!: string;
 
   @ManyToOne(() => MenuCategory)
   @JoinColumn({ name: 'category_id' })
-  category: MenuCategory;
+  category!: MenuCategory;
 
   @Column({ type: 'varchar', length: 255 })
-  name: string;
+  name!: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
+  price!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  original_price: number;
+  original_price!: number;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  image_url: string;
+  image_url!: string;
 
   @Column({ type: 'boolean', default: true })
-  is_available: boolean;
+  is_available!: boolean;
 
   @Column({ type: 'boolean', default: false })
-  is_featured: boolean;
+  is_featured!: boolean;
 
   @Column({ type: 'int', default: 15 })
-  preparation_time: number;
+  preparation_time!: number;
 
   @Column({ type: 'int', default: 0 })
-  display_order: number;
+  display_order!: number;
 }

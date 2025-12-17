@@ -9,16 +9,16 @@ import { Restaurant } from './restaurant.entity';
 @Index(['restaurant_id'])
 export class UserFavorite extends BaseEntity {
   @Column({ type: 'uuid' })
-  user_id: string;
+  user_id!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @Column({ type: 'uuid' })
-  restaurant_id: string;
+  restaurant_id!: string;
 
   @ManyToOne(() => Restaurant)
   @JoinColumn({ name: 'restaurant_id' })
-  restaurant: Restaurant;
+  restaurant!: Restaurant;
 }

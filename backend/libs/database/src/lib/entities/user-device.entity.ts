@@ -8,18 +8,18 @@ import { Platform } from '@backend/shared';
 @Index(['device_token'], { unique: true })
 export class UserDevice extends BaseEntity {
   @Column({ type: 'uuid' })
-  user_id: string;
+  user_id!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @Column({ type: 'varchar', length: 500, unique: true })
-  device_token: string;
+  device_token!: string;
 
   @Column({ type: 'enum', enum: Platform })
-  platform: Platform;
+  platform!: Platform;
 
   @Column({ type: 'boolean', default: true })
-  is_active: boolean;
+  is_active!: boolean;
 }

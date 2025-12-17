@@ -7,24 +7,24 @@ import { Driver } from './driver.entity';
 @Index(['recorded_at'])
 export class DriverLocation extends BaseEntity {
   @Column({ type: 'uuid' })
-  driver_id: string;
+  driver_id!: string;
 
   @ManyToOne(() => Driver)
   @JoinColumn({ name: 'driver_id' })
-  driver: Driver;
+  driver!: Driver;
 
   @Column({ type: 'decimal', precision: 10, scale: 8 })
-  latitude: number;
+  latitude!: number;
 
   @Column({ type: 'decimal', precision: 11, scale: 8 })
-  longitude: number;
+  longitude!: number;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
-  heading: number;
+  heading!: number;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
-  speed: number;
+  speed!: number;
 
   @Column({ type: 'timestamp' })
-  recorded_at: Date;
+  recorded_at!: Date;
 }

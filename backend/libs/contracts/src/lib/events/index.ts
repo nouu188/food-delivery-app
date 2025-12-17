@@ -4,3 +4,7 @@ export * from './payment.events';
 export * from './delivery.events';
 export * from './review.events';
 export * from './notification.events';
+export * from './promotion.events';
+export * from './restaurant.events';
+export * from './event-patterns';
+export * from './event-payloads';

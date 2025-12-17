@@ -6,17 +6,17 @@ import { NotificationType } from '@backend/shared';
 @Index(['name'], { unique: true })
 export class NotificationTemplate extends BaseEntity {
   @Column({ type: 'varchar', length: 255, unique: true })
-  name: string;
+  name!: string;
 
   @Column({ type: 'enum', enum: NotificationType })
-  type: NotificationType;
+  type!: NotificationType;
 
   @Column({ type: 'varchar', length: 500 })
-  title_template: string;
+  title_template!: string;
 
   @Column({ type: 'text' })
-  body_template: string;
+  body_template!: string;
 
   @Column({ type: 'boolean', default: true })
-  is_active: boolean;
+  is_active!: boolean;
 }

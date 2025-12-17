@@ -1,12 +1,12 @@
 export const USER_PATTERNS = {
-  GET_PROFILE: { cmd: 'user.get_profile' },
-  UPDATE_PROFILE: { cmd: 'user.update_profile' },
-  GET_ADDRESSES: { cmd: 'user.get_addresses' },
-  CREATE_ADDRESS: { cmd: 'user.create_address' },
-  UPDATE_ADDRESS: { cmd: 'user.update_address' },
-  DELETE_ADDRESS: { cmd: 'user.delete_address' },
-  REGISTER_DEVICE: { cmd: 'user.register_device' },
-  GET_FAVORITES: { cmd: 'user.get_favorites' },
-  ADD_FAVORITE: { cmd: 'user.add_favorite' },
-  REMOVE_FAVORITE: { cmd: 'user.remove_favorite' },
-};
+  GET_PROFILE: { cmd: 'user.profile.get' },
+  UPDATE_PROFILE: { cmd: 'user.profile.update' },
+  GET_ADDRESSES: { cmd: 'user.addresses.get' },
+  CREATE_ADDRESS: { cmd: 'user.address.create' },
+  UPDATE_ADDRESS: { cmd: 'user.address.update' },
+  DELETE_ADDRESS: { cmd: 'user.address.delete' },
+  REGISTER_DEVICE: { cmd: 'user.device.register' },
+  GET_FAVORITES: { cmd: 'user.favorites.get' },
+  ADD_FAVORITE: { cmd: 'user.favorite.add' },
+  REMOVE_FAVORITE: { cmd: 'user.favorite.remove' },
+} as const;

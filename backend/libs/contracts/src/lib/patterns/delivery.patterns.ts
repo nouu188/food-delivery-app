@@ -1,11 +1,11 @@
 export const DELIVERY_PATTERNS = {
-  REGISTER_DRIVER: { cmd: 'delivery.register_driver' },
-  GET_DRIVER_PROFILE: { cmd: 'delivery.get_driver_profile' },
-  UPDATE_DRIVER_PROFILE: { cmd: 'delivery.update_driver_profile' },
-  SET_DRIVER_STATUS: { cmd: 'delivery.set_driver_status' },
-  UPDATE_DRIVER_LOCATION: { cmd: 'delivery.update_location' },
-  GET_AVAILABLE_DELIVERIES: { cmd: 'delivery.get_available' },
+  REGISTER_DRIVER: { cmd: 'delivery.driver.register' },
+  GET_DRIVER_PROFILE: { cmd: 'delivery.driver.profile.get' },
+  UPDATE_DRIVER_PROFILE: { cmd: 'delivery.driver.profile.update' },
+  UPDATE_DRIVER_STATUS: { cmd: 'delivery.driver.status.update' },
+  UPDATE_DRIVER_LOCATION: { cmd: 'delivery.driver.location.update' },
+  GET_AVAILABLE_DELIVERIES: { cmd: 'delivery.available.get' },
   ACCEPT_DELIVERY: { cmd: 'delivery.accept' },
-  UPDATE_DELIVERY_STATUS: { cmd: 'delivery.update_status' },
-  GET_DELIVERY_TRACKING: { cmd: 'delivery.get_tracking' },
-};
+  UPDATE_DELIVERY_STATUS: { cmd: 'delivery.status.update' },
+  GET_DELIVERY_TRACKING: { cmd: 'delivery.tracking.get' },
+} as const;

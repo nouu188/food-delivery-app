@@ -9,25 +9,25 @@ import { OrderStatus } from '@backend/shared';
 @Index(['changed_by'])
 export class OrderStatusHistory extends BaseEntity {
   @Column({ type: 'uuid' })
-  order_id: string;
+  order_id!: string;
 
   @ManyToOne(() => Order)
   @JoinColumn({ name: 'order_id' })
-  order: Order;
+  order!: Order;
 
   @Column({ type: 'enum', enum: OrderStatus, nullable: true })
-  previous_status: OrderStatus;
+  previous_status!: OrderStatus;
 
   @Column({ type: 'enum', enum: OrderStatus })
-  new_status: OrderStatus;
+  new_status!: OrderStatus;
 
   @Column({ type: 'uuid' })
-  changed_by: string;
+  changed_by!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'changed_by' })
-  user: User;
+  user!: User;
 
   @Column({ type: 'text', nullable: true })
-  note: string;
+  note!: string;
 }

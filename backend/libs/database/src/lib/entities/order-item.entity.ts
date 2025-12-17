@@ -8,34 +8,34 @@ import { MenuItem } from './menu-item.entity';
 @Index(['menu_item_id'])
 export class OrderItem extends BaseEntity {
   @Column({ type: 'uuid' })
-  order_id: string;
+  order_id!: string;
 
   @ManyToOne(() => Order)
   @JoinColumn({ name: 'order_id' })
-  order: Order;
+  order!: Order;
 
   @Column({ type: 'uuid' })
-  menu_item_id: string;
+  menu_item_id!: string;
 
   @ManyToOne(() => MenuItem)
   @JoinColumn({ name: 'menu_item_id' })
-  menu_item: MenuItem;
+  menu_item!: MenuItem;
 
   @Column({ type: 'varchar', length: 255 })
-  item_name: string;
+  item_name!: string;
 
   @Column({ type: 'int' })
-  quantity: number;
+  quantity!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  unit_price: number;
+  unit_price!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  total_price: number;
+  total_price!: number;
 
   @Column({ type: 'jsonb', nullable: true })
-  selected_options: any;
+  selected_options!: any;
 
   @Column({ type: 'text', nullable: true })
-  special_instructions: string;
+  special_instructions!: string;
 }

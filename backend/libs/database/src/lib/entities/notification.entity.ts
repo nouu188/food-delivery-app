@@ -7,30 +7,30 @@ import { NotificationType, NotificationSentVia } from '@backend/shared';
 @Index(['user_id'])
 export class Notification extends BaseEntity {
   @Column({ type: 'uuid' })
-  user_id: string;
+  user_id!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @Column({ type: 'enum', enum: NotificationType })
-  type: NotificationType;
+  type!: NotificationType;
 
   @Column({ type: 'varchar', length: 255 })
-  title: string;
+  title!: string;
 
   @Column({ type: 'text' })
-  body: string;
+  body!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  data: any;
+  data!: any;
 
   @Column({ type: 'boolean', default: false })
-  is_read: boolean;
+  is_read!: boolean;
 
   @Column({ type: 'timestamp', nullable: true })
-  read_at: Date;
+  read_at!: Date;
 
   @Column({ type: 'simple-array' })
-  sent_via: NotificationSentVia[];
+  sent_via!: NotificationSentVia[];
 }

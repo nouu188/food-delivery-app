@@ -11,26 +11,26 @@ import { Order } from './order.entity';
 @Index(['order_id'])
 export class VoucherUsage extends BaseEntity {
   @Column({ type: 'uuid' })
-  voucher_id: string;
+  voucher_id!: string;
 
   @ManyToOne(() => Voucher)
   @JoinColumn({ name: 'voucher_id' })
-  voucher: Voucher;
+  voucher!: Voucher;
 
   @Column({ type: 'uuid' })
-  user_id: string;
+  user_id!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @Column({ type: 'uuid' })
-  order_id: string;
+  order_id!: string;
 
   @ManyToOne(() => Order)
   @JoinColumn({ name: 'order_id' })
-  order: Order;
+  order!: Order;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  discount_applied: number;
+  discount_applied!: number;
 }

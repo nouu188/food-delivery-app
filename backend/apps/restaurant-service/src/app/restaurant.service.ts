@@ -10,6 +10,7 @@ import {
   MenuItemOption,
   OperatingHours
 } from '@backend/database';
+import { CreateMenuItemDto } from '@backend/shared';
 
 @Injectable()
 export class RestaurantService {
@@ -28,12 +29,13 @@ export class RestaurantService {
     private readonly optionRepository: Repository<MenuItemOption>,
     @InjectRepository(OperatingHours)
     private readonly hoursRepository: Repository<OperatingHours>,
-  ) {}
+  ) { }
 
   async findAll(query: any) {
     const { search, category_id, latitude, longitude, radius_km, min_rating, is_open, is_featured, page = 1, limit = 20, sort_by = 'created_at', sort_order = 'DESC' } = query;
 
-    const queryBuilder = this.restaurantRepository.createQueryBuilder('restaurant');
+    const queryBuilder = this.restaurantRepository.createQueryBuilder('restaurant')
+      .leftJoinAndSelect('restaurant.operating_hours', 'operating_hours');
 
     if (search) {
       queryBuilder.andWhere('restaurant.name LIKE :search OR restaurant.description LIKE :search', { search: `%${search}%` });
@@ -129,39 +131,17 @@ export class RestaurantService {
   }
 
   async getMenu(restaurantId: string) {
-    const categories = await this.menuCategoryRepository.find({
-      where: { restaurant_id: restaurantId, is_active: true },
-      order: { display_order: 'ASC' },
-    });
+    const categories = await this.menuCategoryRepository
+      .createQueryBuilder('category')
+      .leftJoinAndSelect('category.items', 'items')
+      .leftJoinAndSelect('items.options', 'options', 'options.is_available = :optionAvailable', { optionAvailable: true })
+      .where('category.restaurant_id = :restaurantId', { restaurantId })
+      .andWhere('category.is_active = :isActive', { isActive: true })
+      .orderBy('category.display_order', 'ASC')
+      .addOrderBy('items.display_order', 'ASC')
+      .getMany();
 
-    const menu = [];
-
-    for (const category of categories) {
-      const items = await this.menuItemRepository.find({
-        where: { category_id: category.id },
-        order: { display_order: 'ASC' },
-      });
-
-      const itemsWithOptions = [];
-
-      for (const item of items) {
-        const options = await this.optionRepository.find({
-          where: { menu_item_id: item.id, is_available: true },
-        });
-
-        itemsWithOptions.push({
-          ...item,
-          options,
-        });
-      }
-
-      menu.push({
-        ...category,
-        items: itemsWithOptions,
-      });
-    }
-
-    return menu;
+    return categories;
   }
 
   async createMenuCategory(data: any) {
@@ -190,13 +170,21 @@ export class RestaurantService {
     return { message: 'Menu category deleted successfully' };
   }
 
-  async createMenuItem(data: any) {
+  async createMenuItem(data: CreateMenuItemDto) {
     const item = this.menuItemRepository.create(data);
-    return this.menuItemRepository.save(item);
+    const savedItem = await this.menuItemRepository.save(item);
+
+    return this.menuItemRepository.findOne({
+      where: { id: savedItem.id },
+      relations: ['options'],
+    });
   }
 
   async updateMenuItem(id: string, data: any) {
-    const item = await this.menuItemRepository.findOne({ where: { id } });
+    const item = await this.menuItemRepository.findOne({
+      where: { id },
+      relations: ['options'],
+    });
 
     if (!item) {
       throw new NotFoundException('Menu item not found');
@@ -251,12 +239,10 @@ export class RestaurantService {
   async updateOperatingHours(restaurantId: string, hours: any[]) {
     await this.hoursRepository.delete({ restaurant_id: restaurantId });
 
-    const operatingHours = hours.map(h =>
-      this.hoursRepository.create({
-        ...h,
-        restaurant_id: restaurantId,
-      })
-    );
+    const operatingHours = hours.map(h => ({
+      ...h,
+      restaurant_id: restaurantId,
+    }));
 
     return this.hoursRepository.save(operatingHours);
   }

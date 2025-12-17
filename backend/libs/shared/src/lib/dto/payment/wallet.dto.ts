@@ -1,6 +1,6 @@
 import { IsNumber, IsString, IsOptional, Min, Max, IsEnum, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
-import { WalletTransactionType } from '../../enums';
+import { PaymentMethod, WalletTransactionType } from '../../enums';
 
 export class TopUpWalletDto {
   @IsNumber()
@@ -10,7 +10,7 @@ export class TopUpWalletDto {
 
   @IsString()
   @IsOptional()
-  payment_method?: string;
+  payment_method?: PaymentMethod;
 }
 
 export class WalletResponseDto {

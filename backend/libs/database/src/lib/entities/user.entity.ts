@@ -7,32 +7,32 @@ import { UserRole, UserStatus } from '@backend/shared';
 @Index(['phone'], { unique: true })
 export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 255, unique: true })
-  email: string;
+  email!: string;
 
   @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
-  phone: string;
+  phone!: string;
 
   @Column({ type: 'varchar', length: 255 })
-  password_hash: string;
+  password_hash!: string;
 
   @Column({ type: 'varchar', length: 255 })
-  full_name: string;
+  full_name!: string;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-  avatar_url: string;
+  avatar_url!: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.CUSTOMER })
-  role: UserRole;
+  role!: UserRole;
 
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.PENDING_VERIFICATION })
-  status: UserStatus;
+  status!: UserStatus;
 
   @Column({ type: 'timestamp', nullable: true })
-  email_verified_at: Date;
+  email_verified_at!: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  phone_verified_at: Date;
+  phone_verified_at!: Date;
 
   @Column({ type: 'timestamp', nullable: true })
-  last_login_at: Date;
+  last_login_at!: Date;
 }

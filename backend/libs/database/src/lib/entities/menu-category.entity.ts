@@ -6,21 +6,21 @@ import { Restaurant } from './restaurant.entity';
 @Index(['restaurant_id'])
 export class MenuCategory extends BaseEntity {
   @Column({ type: 'uuid' })
-  restaurant_id: string;
+  restaurant_id!: string;
 
   @ManyToOne(() => Restaurant)
   @JoinColumn({ name: 'restaurant_id' })
-  restaurant: Restaurant;
+  restaurant!: Restaurant;
 
   @Column({ type: 'varchar', length: 255 })
-  name: string;
+  name!: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description!: string;
 
   @Column({ type: 'int', default: 0 })
-  display_order: number;
+  display_order!: number;
 
   @Column({ type: 'boolean', default: true })
-  is_active: boolean;
+  is_active!: boolean;
 }

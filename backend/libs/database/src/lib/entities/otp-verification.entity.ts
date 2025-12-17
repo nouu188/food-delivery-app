@@ -6,20 +6,20 @@ import { OtpType } from '@backend/shared';
 @Index(['identifier', 'type'])
 export class OtpVerification extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
-  identifier: string;
+  identifier!: string;
 
   @Column({ type: 'varchar', length: 500 })
-  otp_hash: string;
+  otp_hash!: string;
 
   @Column({ type: 'enum', enum: OtpType })
-  type: OtpType;
+  type!: OtpType;
 
   @Column({ type: 'timestamp' })
-  expires_at: Date;
+  expires_at!: Date;
 
   @Column({ type: 'int', default: 0 })
-  attempts: number;
+  attempts!: number;
 
   @Column({ type: 'boolean', default: false })
-  is_used: boolean;
+  is_used!: boolean;
 }
