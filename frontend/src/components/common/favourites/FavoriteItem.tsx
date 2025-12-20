@@ -4,12 +4,12 @@ import React from 'react';
 import { Image, ImageSourcePropType, Text, TouchableOpacity, View } from 'react-native';
 
 type FavoriteItemProps = {
-    id: number;
+    id: string;
     name: string;
     price: number;
-    image: ImageSourcePropType;
+    image: ImageSourcePropType | null;
     liked: boolean;
-    onToggleLike: (id: number) => void;
+    onToggleLike: (id: string) => void;
 };
 
 export const FavoriteItem = ({ id, name, price, image, liked, onToggleLike }: FavoriteItemProps) => {
@@ -23,7 +23,8 @@ export const FavoriteItem = ({ id, name, price, image, liked, onToggleLike }: Fa
         >
             {/* Ảnh món */}
             <View className="relative">
-                <Image source={image} className="w-full h-36 rounded-2xl" resizeMode="cover" />
+                {image && <Image source={image} className="w-full h-36 rounded-2xl" resizeMode="cover" />}
+                {!image && <View className="w-full h-36 bg-gray-200 rounded-2xl" />}
                 <TouchableOpacity
                     onPress={(e) => {
                         e.stopPropagation();

@@ -1,50 +1,60 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-export interface UserProfile {
-    fullName: string;
-    dateOfBirth: string;
-    email: string;
-    phoneNumber: string;
-    avatar: string;
-}
+import userService from "@/services/api/user.service";
+import { UserProfile, UpdateProfileRequest } from "@/types/api/user";
 
 interface UserState {
-    profile: UserProfile;
+    profile: UserProfile | null;
     isHydrated: boolean;
-    setProfile: (newProfile: Partial<UserProfile>) => void;
-    resetProfile: () => void;
-}
+    isLoading: boolean;
+    error: string | null;
 
-const defaultProfile: UserProfile = {
-    fullName: "John Smith",
-    dateOfBirth: "09/10/1991",
-    email: "johnsmith@example.com",
-    phoneNumber: "+123 567 89000",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format&fit=crop",
-};
+    fetchProfile: () => Promise<void>;
+    setProfile: (profile: UserProfile | null) => void;
+    updateProfile: (data: UpdateProfileRequest) => Promise<void>;
+    clearProfile: () => void;
+}
 
 export const useUserStore = create<UserState>()(
     persist(
         (set, get) => ({
-            profile: defaultProfile,
+            profile: null,
             isHydrated: false,
+            isLoading: false,
+            error: null,
 
-            setProfile: (newProfile) => {
-                set((state) => ({
-                    profile: { ...state.profile, ...newProfile },
-                }));
+            fetchProfile: async () => {
+                set({ isLoading: true, error: null });
+                try {
+                    const profile = await userService.getProfile();
+                    set({ profile, isLoading: false });
+                } catch (error: any) {
+                    set({ error: error.message, isLoading: false });
+                    throw error;
+                }
             },
 
-            resetProfile: () => set({ profile: defaultProfile }),
+            setProfile: (profile) => set({ profile }),
+
+            updateProfile: async (data) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const updatedProfile = await userService.updateProfile(data);
+                    set({ profile: updatedProfile, isLoading: false });
+                } catch (error: any) {
+                    set({ error: error.message, isLoading: false });
+                    throw error;
+                }
+            },
+
+            clearProfile: () => set({ profile: null, error: null }),
         }),
         {
-            name: "user_profile_data", // key trong AsyncStorage
+            name: "user_profile_data",
             storage: createJSONStorage(() => AsyncStorage),
             onRehydrateStorage: () => (state) => {
                 if (state) {
-                    // Được gọi sau khi hydrate thành công
                     state.isHydrated = true;
                 }
             },

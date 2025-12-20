@@ -1,111 +1,76 @@
 // app/(tabs)/orders/index.tsx
-import { food } from '@/assets/images/index';
 import Header from '@/components/common/Header';
 import OrderItem from '@/components/common/orders/OrderItem';
 import OrderTabHeader from '@/components/common/orders/OrderTabHeader';
 import { router } from "expo-router";
-import { useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const dummyActive = [
-  {
-    id: '1001',
-    name: 'Strawberry Shake',
-    price: '$20.00',
-    date: '29 Nov, 01:20 pm',
-    itemsCount: 1,
-    image: food.BS1, 
-  },
-  {
-    id: '1002',
-    name: 'Chicken Burger',
-    price: '$20.00',
-    date: '17 Oct, 01:20 pm',
-    itemsCount: 1,
-    image: food.BS2,
-  },
-  {
-    id: '1003',
-    name: 'Sushi Wave',
-    price: '$20.00',
-    date: '22 Apr, 01:20 pm',
-    itemsCount: 2,
-    image: food.BS3,
-  },
-  {
-    id: '1004',
-    name: 'Strawberry Shake',
-    price: '$20.00',
-    date: '29 Nov, 01:20 pm',
-    itemsCount: 1,
-    image: food.BS1,
-  },
-];
-
-const dummyCompleted = [
-  {
-    id: '2001',
-    name: 'Chicken Curry',
-    price: '$50.00',
-    date: '10 Nov, 08:00 pm',
-    itemsCount: 2,
-    image: food.BS2,
-  },
-  {
-    id: '2002',
-    name: 'Bean and Vegetable Burger',
-    price: '$50.00',
-    date: '10 Nov, 08:00 pm',
-    itemsCount: 2,
-    image: food.BS3,
-  },
-  {
-    id: '2003',
-    name: 'Coffee Latte',
-    price: '$8.00',
-    date: '10 Nov, 08:30 pm',
-    itemsCount: 1,
-    image: food.BS2,
-  },
-  {
-    id: '2004',
-    name: 'Strawberry Cheesecake Tea',
-    price: '$22.00',
-    date: '10 Oct, 03:00 pm',
-    itemsCount: 2,
-    image: food.BS4,
-  },
-];
-
-const dummyCancelled = [
-  {
-    id: '3001',
-    name: 'Sushi Wave',
-    price: '$103.00',
-    date: '02 Nov, 04:00 pm',
-    itemsCount: 3,
-    image: food.BS1,
-  },
-  {
-    id: '3002',
-    name: 'Fruit and Berry',
-    price: '$15.00',
-    date: '12 Oct, 03:15 pm',
-    itemsCount: 2,
-    image: food.BS3,
-  },
-];
+import orderService from '@/services/api/order.service';
+import { Order, OrderStatus } from '@/types/api/order';
+import { showErrorAlert } from '@/utils/error-handler';
 
 export default function MyOrders() {
   const [activeTab, setActiveTab] = useState<'Active' | 'Completed' | 'Cancelled'>('Active');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Chọn data theo tab hiện tại
-  const orders = activeTab === 'Active' 
-    ? dummyActive 
-    : activeTab === 'Completed' 
-      ? dummyCompleted 
-      : dummyCancelled;
+  const fetchOrders = async (showRefreshIndicator = false) => {
+    try {
+      if (showRefreshIndicator) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+
+      // Determine which statuses to fetch based on active tab
+      let statuses: OrderStatus[] = [];
+      if (activeTab === 'Active') {
+        statuses = [
+          OrderStatus.PENDING,
+          OrderStatus.CONFIRMED,
+          OrderStatus.PREPARING,
+          OrderStatus.READY_FOR_PICKUP,
+          OrderStatus.PICKED_UP,
+          OrderStatus.ON_THE_WAY,
+        ];
+      } else if (activeTab === 'Completed') {
+        statuses = [OrderStatus.DELIVERED, OrderStatus.COMPLETED];
+      } else {
+        statuses = [OrderStatus.CANCELLED, OrderStatus.REFUNDED, OrderStatus.FAILED];
+      }
+
+      const response = await orderService.getOrders({
+        page: 1,
+        limit: 50, // Get more orders for better UX
+      });
+
+      // Filter orders by status on client side (backend may not support status filtering)
+      const filteredOrders = response.items.filter(order =>
+        statuses.includes(order.status)
+      );
+
+      setOrders(filteredOrders);
+    } catch (error) {
+      showErrorAlert(error, 'Failed to Load Orders');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [activeTab]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const time = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    return `${day} ${month}, ${time}`;
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-YellowBase">
@@ -131,23 +96,63 @@ export default function MyOrders() {
         <OrderTabHeader activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Danh sách đơn hàng */}
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View className="pb-32">
-            {orders.length === 0 ? (
-              <Text className="text-center text-gray-500 mt-10 text-base">
-                No {activeTab.toLowerCase()} orders yet
-              </Text>
-            ) : (
-              orders.map((order) => (
-                <OrderItem
-                  key={order.id}
-                  {...order}
-                  status={activeTab}
-                />
-              ))
-            )}
+        {isLoading ? (
+          <View className="flex-1 items-center justify-center pt-20">
+            <ActivityIndicator size="large" color="#E95322" />
+            <Text className="text-gray-500 mt-4">Loading orders...</Text>
           </View>
-        </ScrollView>
+        ) : (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={() => fetchOrders(true)}
+                tintColor="#E95322"
+              />
+            }
+          >
+            <View className="pb-32">
+              {orders.length === 0 ? (
+                <View className="items-center pt-20">
+                  <Text className="text-center text-gray-500 text-base">
+                    No {activeTab.toLowerCase()} orders yet
+                  </Text>
+                  {activeTab === 'Active' && (
+                    <TouchableOpacity
+                      onPress={() => router.push('/(main)/(tabs)/Home')}
+                      className="mt-6 px-8 py-3 rounded-full bg-[#E95322]"
+                    >
+                      <Text className="text-white font-semibold">Start Ordering</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ) : (
+                orders.map((order) => {
+                  // Get first item name or restaurant name
+                  const displayName = order.items?.[0]?.menu_item?.name || 'Order';
+                  const itemCount = order.items?.length || 0;
+
+                  return (
+                    <OrderItem
+                      key={order.id}
+                      id={order.id}
+                      name={displayName}
+                      price={`$${order.total_amount.toFixed(2)}`}
+                      date={formatDate(order.created_at)}
+                      itemsCount={itemCount}
+                      image={order.items?.[0]?.menu_item?.image_url
+                        ? { uri: order.items[0].menu_item.image_url }
+                        : undefined
+                      }
+                      status={activeTab}
+                    />
+                  );
+                })
+              )}
+            </View>
+          </ScrollView>
+        )}
       </View>
     </SafeAreaView>
   );

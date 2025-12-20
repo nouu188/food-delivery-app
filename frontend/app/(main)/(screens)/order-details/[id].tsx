@@ -1,23 +1,23 @@
 import EmptyState from "@/components/common/orders/EmptyState";
 import OrderCard from "@/components/common/orders/OrderCard";
 import { useOrderStore } from "@/store/useOrderStore";
-import { OrderStatus } from "@/types/Order.type";
+import { OrderStatus } from "@/types/api/order";
 import { Feather } from "@expo/vector-icons";
 import React, { useCallback, useMemo, useState } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const TABS: OrderStatus[] = ["active", "completed", "cancelled"];
+const TABS: OrderStatus[] = [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PREPARING];
 
 const MyOrdersScreen = () => {
     const { orders, cancelOrder } = useOrderStore();
-    const [activeTab, setActiveTab] = useState<OrderStatus>("active");
+    const [activeTab, setActiveTab] = useState<OrderStatus>(OrderStatus.PENDING);
 
     const filteredOrders = useMemo(() => orders.filter((order) => order.status === activeTab), [orders, activeTab]);
 
     const handleCancel = useCallback(
         (orderId: string) => {
-            cancelOrder(orderId);
+            cancelOrder(orderId, 'Cancelled by customer');
         },
         [cancelOrder]
     );

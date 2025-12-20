@@ -20,10 +20,12 @@ const SIDEBAR_WIDTH = width * 0.86;
 
 export default function CartSidebar() {
     const router = useRouter();
-    const { items, isDrawerOpen, closeDrawer, increment, decrement, removeItem, subtotal } = useCartStore();
+    const { cart, isDrawerOpen, closeDrawer, updateQuantity, removeItem, subtotal } = useCartStore();
 
     const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    const items = cart?.items || [];
 
     const openSidebar = useCallback(() => {
         Animated.parallel([
@@ -45,7 +47,7 @@ export default function CartSidebar() {
         if (isDrawerOpen) openSidebar();
     }, [isDrawerOpen, openSidebar]);
 
-    const total = subtotal();
+    const total = subtotal;
 
     if (!isDrawerOpen) return null;
 
@@ -78,10 +80,8 @@ export default function CartSidebar() {
                         renderItem={({ item }) => (
                             <View style={styles.itemRow}>
                                 <View style={styles.thumb}>
-                                    {item.image ? (
-                                        <Image source={item.image} style={styles.thumbImg} />
-                                    ) : item.imageUri ? (
-                                        <Image source={{ uri: item.imageUri }} style={styles.thumbImg} />
+                                    {item.menu_item?.image_url ? (
+                                        <Image source={{ uri: item.menu_item.image_url }} style={styles.thumbImg} />
                                     ) : (
                                         <View style={[styles.thumbImg, { backgroundColor: "#FFE3D6" }]} />
                                     )}
@@ -89,21 +89,21 @@ export default function CartSidebar() {
 
                                 <View style={{ flex: 1 }}>
                                     <Text numberOfLines={1} style={styles.itemTitle}>
-                                        {item.title}
+                                        {item.menu_item?.name || item.item_name}
                                     </Text>
-                                    <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                                    <Text style={styles.itemPrice}>${item.unit_price.toFixed(2)}</Text>
 
                                     <View style={styles.qtyRow}>
                                         <TouchableOpacity
-                                            onPress={() => decrement(item.id)}
+                                            onPress={() => updateQuantity(item.id, item.quantity - 1)}
                                             activeOpacity={0.8}
                                             style={styles.qtyBtn}
                                         >
                                             <Feather name="minus" size={16} color="#E5634D" />
                                         </TouchableOpacity>
-                                        <Text style={styles.qtyText}>{item.qty}</Text>
+                                        <Text style={styles.qtyText}>{item.quantity}</Text>
                                         <TouchableOpacity
-                                            onPress={() => increment(item.id)}
+                                            onPress={() => updateQuantity(item.id, item.quantity + 1)}
                                             activeOpacity={0.8}
                                             style={[styles.qtyBtn, { backgroundColor: "#E5634D" }]}
                                         >

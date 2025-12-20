@@ -1,5 +1,5 @@
-import { Order } from "@/types/Order.type";
-import { AntDesign } from "@expo/vector-icons"; // 👈 thêm import
+import { Order, OrderStatus } from "@/types/api/order";
+import { AntDesign } from "@expo/vector-icons";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -11,27 +11,32 @@ interface OrderCardProps {
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({ order, onCancel, onReview, onReorder }) => {
+    const firstItem = order.items?.[0];
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    };
+
     return (
         <View style={styles.card}>
-            {/* Hình ảnh món */}
-            <Image source={{ uri: order.imageUri }} style={styles.image} />
+            {firstItem?.menu_item?.image_url ? (
+                <Image source={{ uri: firstItem.menu_item.image_url }} style={styles.image} />
+            ) : (
+                <View style={[styles.image, { backgroundColor: '#e0e0e0' }]} />
+            )}
 
-            {/* Thông tin chi tiết */}
             <View style={styles.detailsContainer}>
-                {/* Tên món + Giá */}
                 <View style={styles.row}>
-                    <Text style={styles.name}>{order.name}</Text>
-                    <Text style={styles.price}>${order.price.toFixed(2)}</Text>
+                    <Text style={styles.name}>{order.restaurant_name || 'Restaurant'}</Text>
+                    <Text style={styles.price}>${order.total_amount.toFixed(2)}</Text>
                 </View>
 
-                {/* Ngày + số lượng items */}
                 <View style={[styles.row, { marginTop: 4 }]}>
-                    <Text style={styles.date}>{order.date}</Text>
-                    <Text style={styles.items}>{order.itemCount} items</Text>
+                    <Text style={styles.date}>{formatDate(order.created_at)}</Text>
+                    <Text style={styles.items}>{order.items.length} items</Text>
                 </View>
 
-                {/* Trạng thái Completed */}
-                {order.status === "completed" && (
+                {order.status === OrderStatus.COMPLETED && (
                     <>
                         <Text style={styles.deliveredText}>✓ Order delivered</Text>
                         <View style={styles.actionsRow}>
@@ -46,8 +51,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onCancel, onReview, onReor
                     </>
                 )}
 
-                {/* Trạng thái Active */}
-                {order.status === "active" && (
+                {(order.status === OrderStatus.PENDING || order.status === OrderStatus.CONFIRMED || order.status === OrderStatus.PREPARING || order.status === OrderStatus.READY_FOR_PICKUP || order.status === OrderStatus.PICKED_UP || order.status === OrderStatus.ON_THE_WAY) && (
                     <View style={styles.actionsRow}>
                         <TouchableOpacity style={styles.cancelButton} onPress={() => onCancel(order.id)}>
                             <Text style={styles.cancelButtonText}>Cancel Order</Text>
@@ -59,8 +63,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onCancel, onReview, onReor
                     </View>
                 )}
 
-                {/* Trạng thái Cancelled */}
-                {order.status === "cancelled" && (
+                {order.status === OrderStatus.CANCELLED && (
                     <View style={styles.statusRow}>
                         <AntDesign name="close-circle" size={14} color="#E5634D" style={{ marginRight: 4 }} />
                         <Text style={styles.cancelledText}>Order cancelled</Text>

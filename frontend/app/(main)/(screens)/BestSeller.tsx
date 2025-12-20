@@ -1,41 +1,91 @@
-// app/(tabs)/bestSeller/index.tsx
-import { bestSeller } from '@/assets/images/index';
 import { BestSellerItem } from '@/components/common/bestSeller/BestSellerItem';
 import Header from '@/components/common/Header';
-import React, { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-type Item = {
-    id: number;
-    name: string;
-    price: number;
-    rating: number;
-    image: any; // từ bestSeller.BS1, BS2,...
-    liked: boolean;
-};
-
-const initialBestSellers: Item[] = [
-    { id: 1, name: 'Sunny Bruschetta', price: 15.0, rating: 5.0, image: bestSeller.BS1, liked: false },
-    { id: 2, name: 'Gourmet Grilled Skewers', price: 12.0, rating: 4.5, image: bestSeller.BS2, liked: true },
-    { id: 3, name: 'Barbecue Tacos', price: 15.0, rating: 4.0, image: bestSeller.BS3, liked: false },
-    { id: 4, name: 'Broccoli Lasagna', price: 12.0, rating: 3.5, image: bestSeller.BS4, liked: false },
-    { id: 5, name: 'Creamy Frappuccino', price: 15.0, rating: 4.8, image: bestSeller.BS1, liked: true },
-    { id: 6, name: 'Strawberry Cheesecake', price: 12.0, rating: 4.9, image: bestSeller.BS3, liked: false },
-    // Thêm nếu muốn nhiều hơn...
-];
+import { useRouter } from 'expo-router';
+import restaurantService from '@/services/api/restaurant.service';
+import userService from '@/services/api/user.service';
+import { Restaurant } from '@/types/api/restaurant';
+import { showErrorAlert } from '@/utils/error-handler';
 
 const BestSellerScreen = () => {
-    const [items, setItems] = useState(initialBestSellers);
+    const router = useRouter();
+    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+    const [favorites, setFavorites] = useState<Set<string>>(new Set());
+    const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const handleToggleLike = (id: number) => {
-        setItems((prev) => prev.map((item) => (item.id === id ? { ...item, liked: !item.liked } : item)));
-        // TODO: Gọi API backend ở đây
+    const fetchBestSellers = async (showRefreshIndicator = false) => {
+        try {
+            if (showRefreshIndicator) {
+                setIsRefreshing(true);
+            } else {
+                setIsLoading(true);
+            }
+
+            const [restaurantsData, favoritesData] = await Promise.all([
+                restaurantService.getRestaurants({
+                    limit: 50,
+                    sort_by: 'rating',
+                }),
+                userService.getFavorites().catch(() => ({ items: [] })),
+            ]);
+
+            setRestaurants(restaurantsData.items);
+            setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+        } catch (error) {
+            showErrorAlert(error, 'Failed to Load Best Sellers');
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false);
+        }
     };
 
-    const handleAddToCart = (id: number) => {
-        // TODO: Thêm vào giỏ hàng
-        console.log('Added to cart:', id);
+    useEffect(() => {
+        fetchBestSellers();
+    }, []);
+
+    const handleToggleLike = async (restaurantId: string) => {
+        const wasFavorite = favorites.has(restaurantId);
+
+        // Optimistic update
+        setFavorites((prev) => {
+            const newSet = new Set(prev);
+            if (wasFavorite) {
+                newSet.delete(restaurantId);
+            } else {
+                newSet.add(restaurantId);
+            }
+            return newSet;
+        });
+
+        try {
+            if (wasFavorite) {
+                await userService.removeFavorite(restaurantId);
+            } else {
+                await userService.addFavorite(restaurantId);
+            }
+        } catch (error) {
+            // Revert on error
+            setFavorites((prev) => {
+                const newSet = new Set(prev);
+                if (wasFavorite) {
+                    newSet.add(restaurantId);
+                } else {
+                    newSet.delete(restaurantId);
+                }
+                return newSet;
+            });
+            showErrorAlert(error, 'Failed to Update Favorite');
+        }
+    };
+
+    const handlePress = (restaurantId: string) => {
+        router.push({
+            pathname: "/restaurant/[id]",
+            params: { id: restaurantId },
+        });
     };
 
     return (
@@ -43,25 +93,48 @@ const BestSellerScreen = () => {
             <Header title="Best Seller" />
 
             <View className="flex-1 bg-white rounded-t-3xl px-5 pt-6">
-                <Text className="text-gray-600 text-center mb-6">Discover our most popular dishes!</Text>
+                <Text className="text-gray-600 text-center mb-6">Discover our most popular restaurants!</Text>
 
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-                    <View className="flex-row flex-wrap justify-between">
-                        {items.map((item) => (
-                            <BestSellerItem
-                                key={item.id}
-                                id={item.id}
-                                name={item.name}
-                                price={item.price}
-                                rating={item.rating}
-                                image={item.image}
-                                liked={item.liked}
-                                onToggleLike={handleToggleLike}
-                                onAddToCart={handleAddToCart}
-                            />
-                        ))}
+                {isLoading ? (
+                    <View className="flex-1 items-center justify-center">
+                        <ActivityIndicator size="large" color="#E95322" />
+                        <Text className="text-gray-500 mt-4">Loading best sellers...</Text>
                     </View>
-                </ScrollView>
+                ) : restaurants.length === 0 ? (
+                    <View className="flex-1 items-center justify-center">
+                        <Text className="text-xl font-medium text-gray-600">No restaurants available</Text>
+                        <Text className="text-gray-500 text-center mt-2 px-8">
+                            Check back later for our best sellers
+                        </Text>
+                    </View>
+                ) : (
+                    <ScrollView
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ paddingBottom: 100 }}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={isRefreshing}
+                                onRefresh={() => fetchBestSellers(true)}
+                                tintColor="#E95322"
+                            />
+                        }
+                    >
+                        <View className="flex-row flex-wrap justify-between">
+                            {restaurants.map((restaurant) => (
+                                <BestSellerItem
+                                    key={restaurant.id}
+                                    id={restaurant.id}
+                                    name={restaurant.name}
+                                    price={restaurant.min_order_amount}
+                                    rating={restaurant.average_rating}
+                                    image={restaurant.logo_url ? { uri: restaurant.logo_url } : null}
+                                    liked={favorites.has(restaurant.id)}
+                                    onToggleLike={() => handleToggleLike(restaurant.id)}
+                                />
+                            ))}
+                        </View>
+                    </ScrollView>
+                )}
             </View>
         </SafeAreaView>
     );

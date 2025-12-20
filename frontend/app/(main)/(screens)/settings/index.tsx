@@ -1,74 +1,156 @@
 import Header from "@/components/common/Header";
-import LogoutModal from "@/components/common/LogoutModal";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import { ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 
-const ROWS = [
-    { key: "profile", label: "My Profile", icon: "user" },
-    { key: "address", label: "Delivery Address", icon: "map-pin" },
-    { key: "payment", label: "Payment Methods", icon: "credit-card" },
-    { key: "help", label: "Help & FAQs", icon: "help-circle" },
-];
-
 export default function SettingsScreen() {
     const router = useRouter();
-    const { logout } = useLocalSearchParams<{ logout?: string }>();
-    const [logoutVisible, setLogoutVisible] = React.useState(false);
 
-    React.useEffect(() => {
-        if (logout === "1") setLogoutVisible(true);
-    }, [logout]);
+    const [pushNotifications, setPushNotifications] = useState(true);
+    const [emailNotifications, setEmailNotifications] = useState(true);
+    const [smsNotifications, setSmsNotifications] = useState(false);
+    const [orderUpdates, setOrderUpdates] = useState(true);
+    const [promotions, setPromotions] = useState(true);
+
+    const settingsSections = [
+        {
+            title: "Notifications",
+            items: [
+                {
+                    label: "Push Notifications",
+                    description: "Receive push notifications on your device",
+                    value: pushNotifications,
+                    onToggle: setPushNotifications,
+                },
+                {
+                    label: "Email Notifications",
+                    description: "Receive notifications via email",
+                    value: emailNotifications,
+                    onToggle: setEmailNotifications,
+                },
+                {
+                    label: "SMS Notifications",
+                    description: "Receive notifications via SMS",
+                    value: smsNotifications,
+                    onToggle: setSmsNotifications,
+                },
+            ],
+        },
+        {
+            title: "Order Preferences",
+            items: [
+                {
+                    label: "Order Updates",
+                    description: "Get notified about order status changes",
+                    value: orderUpdates,
+                    onToggle: setOrderUpdates,
+                },
+                {
+                    label: "Promotions & Offers",
+                    description: "Receive promotional offers and discounts",
+                    value: promotions,
+                    onToggle: setPromotions,
+                },
+            ],
+        },
+    ];
+
+    const accountOptions = [
+        {
+            icon: "user" as const,
+            label: "Edit Profile",
+            onPress: () => router.push("/Profile"),
+        },
+        {
+            icon: "map-pin" as const,
+            label: "Delivery Addresses",
+            onPress: () => router.push("/delivery-address"),
+        },
+        {
+            icon: "credit-card" as const,
+            label: "Payment Methods",
+            onPress: () => router.push("/payment-methods"),
+        },
+        {
+            icon: "help-circle" as const,
+            label: "Help & Support",
+            onPress: () => router.push("/help"),
+        },
+        {
+            icon: "info" as const,
+            label: "About",
+            onPress: () => {},
+        },
+    ];
 
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
             <Header title="Settings" />
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-6">
-                {ROWS.map((r) => (
-                    <TouchableOpacity
-                        key={r.key}
-                        activeOpacity={0.8}
-                        className="py-5 border-b flex-row items-center"
-                        style={{ borderBottomColor: "#FFD8C7" }}
-                        onPress={() => {
-                            if (r.key === "profile") router.push("/Profile");
-                            if (r.key === "address") router.push("/delivery-address");
-                            if (r.key === "payment") router.push("/payment-methods");
-                            if (r.key === "help") router.push("/help");
-                        }}
-                    >
-                        <View
-                            className="w-12 h-12 rounded-2xl items-center justify-center"
-                            style={{ backgroundColor: "#FFE3D6" }}
-                        >
-                            <Feather name={r.icon as any} size={20} color="#E95322" />
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+                    {settingsSections.map((section, sectionIndex) => (
+                        <View key={sectionIndex} className="mb-6">
+                            <Text className="text-[#070707] font-bold text-base mb-3">{section.title}</Text>
+                            <View className="bg-[#FFF5D6] rounded-2xl overflow-hidden">
+                                {section.items.map((item, itemIndex) => (
+                                    <View
+                                        key={itemIndex}
+                                        className="px-4 py-4 flex-row items-center justify-between"
+                                        style={{
+                                            borderBottomWidth: itemIndex < section.items.length - 1 ? 1 : 0,
+                                            borderBottomColor: "#FFE3D6",
+                                        }}
+                                    >
+                                        <View className="flex-1 pr-4">
+                                            <Text className="text-[#070707] font-semibold">{item.label}</Text>
+                                            <Text className="text-[#6B7280] text-xs mt-1">{item.description}</Text>
+                                        </View>
+                                        <Switch
+                                            value={item.value}
+                                            onValueChange={item.onToggle}
+                                            trackColor={{ false: "#E5E7EB", true: "#FFE3D6" }}
+                                            thumbColor={item.value ? "#E95322" : "#9CA3AF"}
+                                        />
+                                    </View>
+                                ))}
+                            </View>
                         </View>
-                        <Text className="ml-4 font-semibold text-[#070707] flex-1">{r.label}</Text>
-                        <Feather name="chevron-right" size={18} color="#E95322" />
-                    </TouchableOpacity>
-                ))}
+                    ))}
 
-                <TouchableOpacity
-                    activeOpacity={0.85}
-                    onPress={() => setLogoutVisible(true)}
-                    className="mt-8 flex-row items-center justify-center py-4 rounded-full"
-                    style={{ backgroundColor: "#FFE3D6" }}
-                >
-                    <Feather name="log-out" size={18} color="#E95322" />
-                    <Text className="ml-3 text-[#E95322] font-semibold">Log Out</Text>
-                </TouchableOpacity>
+                    <Text className="text-[#070707] font-bold text-base mb-3">Account</Text>
+                    <View className="bg-[#FFF5D6] rounded-2xl overflow-hidden">
+                        {accountOptions.map((option, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                activeOpacity={0.7}
+                                onPress={option.onPress}
+                                className="px-4 py-4 flex-row items-center justify-between"
+                                style={{
+                                    borderBottomWidth: index < accountOptions.length - 1 ? 1 : 0,
+                                    borderBottomColor: "#FFE3D6",
+                                }}
+                            >
+                                <View className="flex-row items-center flex-1">
+                                    <View
+                                        className="w-10 h-10 rounded-full items-center justify-center mr-3"
+                                        style={{ backgroundColor: "#FFE3D6" }}
+                                    >
+                                        <Feather name={option.icon} size={20} color="#E95322" />
+                                    </View>
+                                    <Text className="text-[#070707] font-semibold">{option.label}</Text>
+                                </View>
+                                <Feather name="chevron-right" size={20} color="#9CA3AF" />
+                            </TouchableOpacity>
+                        ))}
+                    </View>
 
-                <LogoutModal
-                    visible={logoutVisible}
-                    onCancel={() => setLogoutVisible(false)}
-                    onConfirm={() => {
-                        setLogoutVisible(false);
-                        router.replace("/(auth)/Login");
-                    }}
-                />
+                    <View className="mt-8 items-center">
+                        <Text className="text-[#9CA3AF] text-sm">App Version 1.0.0</Text>
+                    </View>
+                </ScrollView>
             </View>
         </SafeAreaView>
     );

@@ -1,7 +1,6 @@
-// components/orders/OrderItem.tsx
 import { useCartStore } from "@/store/useCartStore";
 import { router } from "expo-router";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View, ImageSourcePropType } from "react-native";
 
 type Props = {
     id: string;
@@ -9,12 +8,11 @@ type Props = {
     price: string;
     date: string;
     itemsCount: number;
-    image: any; // thay bằng require('@/assets/images/...') thực tế
+    image?: ImageSourcePropType;
     status: "Active" | "Completed" | "Cancelled";
 };
 
 export default function OrderItem({ id, name, price, date, itemsCount, image, status }: Props) {
-    const addItem = useCartStore((s) => s.addItem);
     const openDrawer = useCartStore((s) => s.openDrawer);
 
     const handleViewDetails = () => {
@@ -72,11 +70,12 @@ export default function OrderItem({ id, name, price, date, itemsCount, image, st
                                 className="bg-orange-100 px-4 py-2 rounded-full"
                                 activeOpacity={0.8}
                                 onPress={() => {
-                                    addItem({ id: `reorder_${id}`, title: name, price: parsedPrice || 1, image });
-                                    openDrawer();
+                                    // TODO: Implement reorder functionality using addToCart
+                                    // openDrawer();
+                                    router.push(`/orders/${id}`);
                                 }}
                             >
-                                <Text className="text-sm text-orange-600">Order Again</Text>
+                                <Text className="text-sm text-orange-600">View Order</Text>
                             </TouchableOpacity>
                         </>
                     )}

@@ -3,75 +3,70 @@ import SocialLoginButtons from "@/components/common/auth/SocialLoginButtons";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
-import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "tamagui";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema, RegisterFormData } from "@/utils/validation/auth.schema";
+import authService from "@/services/api/auth.service";
+import { showErrorAlert, isErrorStatus } from "@/utils/error-handler";
 
 export default function SignUp() {
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
-    const [formData, setFormData] = useState({
-        fullName: "",
-        email: "",
-        password: "",
-        mobile: "",
-        dateOfBirth: "",
+    const [isLoading, setIsLoading] = useState(false);
+
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<RegisterFormData>({
+        resolver: zodResolver(registerSchema),
+        defaultValues: {
+            full_name: '',
+            email: '',
+            password: '',
+            phone: '',
+        },
     });
-    const [loading, setLoading] = useState(false);
 
     const handleBack = () => router.replace("/launch/welcome");
     const handleLogin = () => router.push("/(auth)/Login");
 
-    const updateFormData = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-    };
-
     const formatPhoneNumber = (text: string) => {
         const numeric = text.replace(/\D/g, "");
-        if (numeric.length <= 3) return numeric;
-        if (numeric.length <= 6) return `${numeric.slice(0, 3)} ${numeric.slice(3)}`;
-        return `${numeric.slice(0, 3)} ${numeric.slice(3, 6)} ${numeric.slice(6, 9)}`;
+        return numeric;
     };
 
-    const formatDate = (text: string) => {
-        const numeric = text.replace(/\D/g, "");
-        if (numeric.length <= 2) return numeric;
-        if (numeric.length <= 4) return `${numeric.slice(0, 2)} / ${numeric.slice(2)}`;
-        return `${numeric.slice(0, 2)} / ${numeric.slice(2, 4)} / ${numeric.slice(4, 8)}`;
-    };
-
-    const handleSignUp = async () => {
-        if (!formData.fullName.trim() || !formData.email.trim() || !formData.password.trim()) {
-            Alert.alert("Error", "Please fill in all required fields");
-            return;
-        }
-
-        // NOTE: Backend integration needed
-        // TODO: Implement actual signup API call
-        setLoading(true);
+    const onSubmit = async (data: RegisterFormData) => {
+        setIsLoading(true);
         try {
-            // Backend: API call example
-            // const response = await fetch('YOUR_API_URL/auth/signup', {
-            //   method: 'POST',
-            //   headers: { 'Content-Type': 'application/json' },
-            //   body: JSON.stringify(formData)
-            // });
-            // const data = await response.json();
+            await authService.register({
+                email: data.email,
+                password: data.password,
+                full_name: data.full_name,
+                phone: data.phone || undefined,
+            });
 
-            // Backend: Store auth token
-            // await AsyncStorage.setItem('authToken', data.token);
-
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-
-            Alert.alert("Success", "Account created successfully!", [
-                { text: "OK", onPress: () => router.replace("/(main)/(tabs)/Home") },
-            ]);
-        } catch (error) {
-            Alert.alert("Error", "Signup failed. Please try again.");
-            console.error("Signup error:", error);
+            Alert.alert(
+                "Success",
+                "Account created successfully! Please check your email to verify your account.",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => router.replace("/(auth)/Login"),
+                    },
+                ]
+            );
+        } catch (error: any) {
+            if (isErrorStatus(error, 409)) {
+                Alert.alert('Sign Up Failed', 'This email or phone number is already registered');
+            } else {
+                showErrorAlert(error, 'Sign Up Failed');
+            }
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -93,83 +88,111 @@ export default function SignUp() {
                 <View>
                     <View className="mb-3">
                         <Text className="text-lg font-medium mb-1">Full name</Text>
-                        <View className="h-[45px] bg-Yellow_2 rounded-xl justify-center px-3">
-                            <TextInput
-                                placeholder="Enter your full name"
-                                value={formData.fullName}
-                                onChangeText={(text) => updateFormData("fullName", text)}
-                                className="text-base font-semibold text-Font"
-                                placeholderTextColor="#6B7280"
-                            />
-                        </View>
-                    </View>
-
-                    <View className="mb-3">
-                        <Text className="text-lg font-medium mb-1">Password</Text>
-                        <View className="h-[45px] bg-Yellow_2 rounded-xl flex-row items-center justify-between px-3">
-                            <TextInput
-                                secureTextEntry={!showPassword}
-                                value={formData.password}
-                                onChangeText={(text) => updateFormData("password", text)}
-                                placeholder="Enter your password"
-                                placeholderTextColor="#6B7280"
-                                className="flex-1 text-base font-semibold text-Font"
-                                autoCapitalize="none"
-                            />
-                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                {showPassword ? (
-                                    <Eye size={20} color="#E95322" />
-                                ) : (
-                                    <EyeOff size={20} color="#E95322" />
-                                )}
-                            </TouchableOpacity>
-                        </View>
+                        <Controller
+                            control={control}
+                            name="full_name"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <View className="h-[45px] bg-Yellow_2 rounded-xl justify-center px-3">
+                                    <TextInput
+                                        placeholder="Enter your full name"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        className="text-base font-semibold text-Font"
+                                        placeholderTextColor="#6B7280"
+                                        editable={!isLoading}
+                                    />
+                                </View>
+                            )}
+                        />
+                        {errors.full_name && (
+                            <Text className="text-red-500 text-sm mt-1">{errors.full_name.message}</Text>
+                        )}
                     </View>
 
                     <View className="mb-3">
                         <Text className="text-lg font-medium mb-1">Email</Text>
-                        <View className="h-[45px] bg-Yellow_2 rounded-xl justify-center px-3">
-                            <TextInput
-                                placeholder="example@example.com"
-                                value={formData.email}
-                                onChangeText={(text) => updateFormData("email", text)}
-                                className="text-base font-semibold text-Font"
-                                placeholderTextColor="#6B7280"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                            />
-                        </View>
+                        <Controller
+                            control={control}
+                            name="email"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <View className="h-[45px] bg-Yellow_2 rounded-xl justify-center px-3">
+                                    <TextInput
+                                        placeholder="example@example.com"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        className="text-base font-semibold text-Font"
+                                        placeholderTextColor="#6B7280"
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                        editable={!isLoading}
+                                    />
+                                </View>
+                            )}
+                        />
+                        {errors.email && (
+                            <Text className="text-red-500 text-sm mt-1">{errors.email.message}</Text>
+                        )}
                     </View>
 
                     <View className="mb-3">
-                        <Text className="text-lg font-medium mb-1">Mobile Number</Text>
-                        <View className="h-[45px] bg-Yellow_2 rounded-xl flex-row items-center px-3">
-                            <Text className="text-base font-semibold text-Font">+</Text>
-                            <TextInput
-                                placeholder="123 456 789"
-                                value={formData.mobile}
-                                onChangeText={(text) => updateFormData("mobile", formatPhoneNumber(text))}
-                                className="flex-1 text-base font-semibold text-Font ml-2"
-                                keyboardType="phone-pad"
-                                placeholderTextColor="#6B7280"
-                                maxLength={11}
-                            />
-                        </View>
+                        <Text className="text-lg font-medium mb-1">Password</Text>
+                        <Controller
+                            control={control}
+                            name="password"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <View className="h-[45px] bg-Yellow_2 rounded-xl flex-row items-center justify-between px-3">
+                                    <TextInput
+                                        secureTextEntry={!showPassword}
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        placeholder="Enter your password"
+                                        placeholderTextColor="#6B7280"
+                                        className="flex-1 text-base font-semibold text-Font"
+                                        autoCapitalize="none"
+                                        editable={!isLoading}
+                                    />
+                                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                        {showPassword ? (
+                                            <Eye size={20} color="#E95322" />
+                                        ) : (
+                                            <EyeOff size={20} color="#E95322" />
+                                        )}
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        />
+                        {errors.password && (
+                            <Text className="text-red-500 text-sm mt-1">{errors.password.message}</Text>
+                        )}
                     </View>
 
                     <View className="mb-6">
-                        <Text className="text-lg font-medium mb-1">Date of birth</Text>
-                        <View className="h-[45px] bg-Yellow_2 rounded-xl justify-center px-3">
-                            <TextInput
-                                placeholder="DD / MM / YYYY"
-                                value={formData.dateOfBirth}
-                                onChangeText={(text) => updateFormData("dateOfBirth", formatDate(text))}
-                                className="text-base font-semibold text-Font"
-                                placeholderTextColor="#6B7280"
-                                keyboardType="numeric"
-                                maxLength={14}
-                            />
-                        </View>
+                        <Text className="text-lg font-medium mb-1">Mobile Number (Optional)</Text>
+                        <Controller
+                            control={control}
+                            name="phone"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <View className="h-[45px] bg-Yellow_2 rounded-xl flex-row items-center px-3">
+                                    <TextInput
+                                        placeholder="0123456789"
+                                        value={value}
+                                        onChangeText={(text) => onChange(formatPhoneNumber(text))}
+                                        onBlur={onBlur}
+                                        className="flex-1 text-base font-semibold text-Font"
+                                        keyboardType="phone-pad"
+                                        placeholderTextColor="#6B7280"
+                                        maxLength={10}
+                                        editable={!isLoading}
+                                    />
+                                </View>
+                            )}
+                        />
+                        {errors.phone && (
+                            <Text className="text-red-500 text-sm mt-1">{errors.phone.message}</Text>
+                        )}
                     </View>
 
                     <Text className="text-gray-500 text-center text-sm mb-6">
@@ -193,10 +216,11 @@ export default function SignUp() {
                             fontSize={16}
                             fontWeight="800"
                             style={{ borderRadius: 30 }}
-                            onPress={handleSignUp}
-                            disabled={loading}
+                            onPress={handleSubmit(onSubmit)}
+                            disabled={isLoading}
+                            opacity={isLoading ? 0.7 : 1}
                         >
-                            {loading ? "Signing up..." : "Sign Up"}
+                            {isLoading ? <ActivityIndicator color="white" /> : "Sign Up"}
                         </Button>
                     </View>
 

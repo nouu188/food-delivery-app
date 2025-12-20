@@ -57,7 +57,12 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
         else closeSidebar();
     }, [isVisible, openSidebar, closeSidebar]);
 
-    const menuItems = useMemo(
+    const menuItems = useMemo<Array<{
+        key: string;
+        icon: React.ComponentProps<typeof Feather>['name'];
+        label: string;
+        onPress: () => void;
+    }>>(
         () => [
             {
                 key: "orders",
@@ -107,13 +112,17 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
                     </View>
 
                     <View style={styles.profileHeader}>
-                        <Image source={{ uri: profile.avatar }} style={styles.avatar} />
+                        {profile?.avatar_url ? (
+                            <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+                        ) : (
+                            <View style={[styles.avatar, { backgroundColor: '#e0e0e0' }]} />
+                        )}
                         <View style={{ flex: 1 }}>
                             <Text style={styles.name} numberOfLines={1}>
-                                {profile.fullName}
+                                {profile?.full_name || 'User'}
                             </Text>
                             <Text style={styles.email} numberOfLines={1}>
-                                {profile.email}
+                                {profile?.email || ''}
                             </Text>
                         </View>
                     </View>
@@ -129,7 +138,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
                                 style={styles.menuRow}
                             >
                                 <View style={styles.menuIconBox}>
-                                    <Feather name={item.icon as any} size={22} color="#E5634D" />
+                                    <Feather name={item.icon} size={22} color="#E5634D" />
                                 </View>
                                 <Text style={styles.menuText}>{item.label}</Text>
                             </TouchableOpacity>

@@ -5,14 +5,14 @@ import React from 'react';
 import { Image, ImageSourcePropType, Text, TouchableOpacity, View } from 'react-native';
 
 type Props = {
-    id: number;
+    id: string;
     name: string;
     price: number;
     rating: number;
-    image: ImageSourcePropType;
+    image: ImageSourcePropType | null;
     liked: boolean;
-    onToggleLike: (id: number) => void;
-    onAddToCart?: (id: number) => void;
+    onToggleLike: (id: string) => void;
+    onAddToCart?: (id: string) => void;
 };
 
 export const BestSellerItem = ({ id, name, price, rating, image, liked, onToggleLike, onAddToCart }: Props) => {
@@ -24,7 +24,8 @@ export const BestSellerItem = ({ id, name, price, rating, image, liked, onToggle
                 <View className="bg-white rounded-3xl overflow-hidden shadow-lg h-72">
                     {/* Ảnh */}
                     <View className="relative">
-                        <Image source={image} className="w-full h-40" resizeMode="cover" />
+                        {image && <Image source={image} className="w-full h-40" resizeMode="cover" />}
+                        {!image && <View className="w-full h-40 bg-gray-200" />}
 
                         {/* Icon Snack */}
                         <View className="absolute top-2.5 left-2.5 bg-white rounded-full p-1.5 shadow-md">

@@ -1,95 +1,52 @@
-import { Cookie, Star } from "@tamagui/lucide-icons";
-import { recommend } from "@/assets/images";
+import { Star } from "@tamagui/lucide-icons";
 import { Ionicons } from "@expo/vector-icons";
-import { Link, router } from "expo-router";
-import React from "react";
-import { FlatList, Image, Pressable, Text, TouchableOpacity, View } from "react-native";
-
-type Reco = {
-    id: string;
-    title: string;
-    desc: string;
-    price: number;
-    rating: number;
-    image: any;
-    isNew?: boolean;
-    icon: any;
-};
-
-const DATA: Reco[] = [
-    {
-        id: "1",
-        title: "Chocolate & Fresh Fruit Crepes",
-        desc: "Lorem ipsum dolor sit amet, consectetur adipiscing…",
-        price: 15,
-        rating: 5.0,
-        image: recommend.rcm1,
-        isNew: true,
-        icon: Cookie,
-    },
-    {
-        id: "2",
-        title: "Bean and vegetable burger",
-        desc: "Lorem ipsum dolor sit amet, consectetur…",
-        price: 15,
-        rating: 4.0,
-        image: recommend.rcm2,
-        icon: Cookie,
-    },
-    {
-        id: "3",
-        title: "Creamy milkshakes",
-        desc: "Lorem ipsum dolor sit amet, consectetur…",
-        price: 15,
-        rating: 4.6,
-        image: recommend.rcm3,
-        icon: Cookie,
-    },
-    {
-        id: "4",
-        title: "Chicken curry rice",
-        desc: "Lorem ipsum dolor sit amet, consectetur…",
-        price: 15,
-        rating: 4.8,
-        image: recommend.rcm3,
-        icon: Cookie,
-    },
-    {
-        id: "5",
-        title: "Salmon don",
-        desc: "Lorem ipsum dolor sit amet, consectetur…",
-        price: 15,
-        rating: 4.7,
-        image: recommend.rcm3,
-        icon: Cookie,
-    },
-    {
-        id: "6",
-        title: "Salmon don 2",
-        desc: "Lorem ipsum dolor sit amet, consectetur…",
-        price: 15,
-        rating: 4.7,
-        image: recommend.rcm3,
-        icon: Cookie,
-    },
-];
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+import restaurantService from "@/services/api/restaurant.service";
+import userService from "@/services/api/user.service";
+import { Restaurant } from "@/types/api/restaurant";
+import { showErrorAlert } from "@/utils/error-handler";
 
 export default function RecommendScreen() {
-    const [quantities, setQuantities] = React.useState<{ [key: string]: number }>(
-        DATA.reduce((acc, item) => ({ ...acc, [item.id]: 1 }), {})
-    );
+    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+    const [favorites, setFavorites] = useState<Set<string>>(new Set());
+    const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const handleIncrease = (id: string) => {
-        setQuantities((prev) => ({ ...prev, [id]: prev[id] + 1 }));
+    const fetchRecommendations = async (showRefreshIndicator = false) => {
+        try {
+            if (showRefreshIndicator) {
+                setIsRefreshing(true);
+            } else {
+                setIsLoading(true);
+            }
+
+            const [restaurantsData, favoritesData] = await Promise.all([
+                restaurantService.getRestaurants({
+                    limit: 50,
+                    sort_by: 'popular',
+                }),
+                userService.getFavorites().catch(() => ({ items: [] })),
+            ]);
+
+            setRestaurants(restaurantsData.items);
+            setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+        } catch (error) {
+            showErrorAlert(error, 'Failed to Load Recommendations');
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false);
+        }
     };
 
-    const handleDecrease = (id: string) => {
-        setQuantities((prev) => ({ ...prev, [id]: Math.max(1, prev[id] - 1) }));
-    };
+    useEffect(() => {
+        fetchRecommendations();
+    }, []);
 
-    const renderItem = ({ item }: { item: Reco }) => {
+    const renderItem = ({ item }: { item: Restaurant }) => {
         return (
-            <View
+            <Pressable
                 className="bg-white rounded-3xl mb-4 overflow-hidden"
                 style={{
                     elevation: 3,
@@ -98,73 +55,53 @@ export default function RecommendScreen() {
                     shadowOffset: { width: 0, height: 4 },
                     shadowRadius: 8,
                 }}
+                onPress={() => router.push(`/restaurant/${item.id}`)}
             >
-                <Link href={{ pathname: "/food/[id]", params: { id: item.id } }} asChild>
-                    <Pressable>
-                        <View className="relative">
-                            <Image source={item.image} className="w-full h-52" resizeMode="cover" />
-                            <View className="absolute left-3 top-3 bg-white w-10 h-10 rounded-full items-center justify-center">
-                                {React.createElement(item.icon, { size: 24, color: '#E95322' })}
-                            </View>
-
-                            {item.isNew ? (
-                                <View className="absolute right-3 top-3 bg-[#F15A24] rounded-full px-3 py-1">
-                                    <Text className="text-white text-xs font-semibold">New</Text>
-                                </View>
-                            ) : (
-                                <View className="absolute right-3 top-3 bg-white/90 rounded-full px-2 py-1 flex-row items-center">
-                                    <Star size={16} />
-                                    <Text className="text-[#F15A24] text-xs font-bold ml-1">
-                                        {item.rating.toFixed(1)}
-                                    </Text>
-                                </View>
-                            )}
+                <View className="relative">
+                    {item.logo_url ? (
+                        <Image source={{ uri: item.logo_url }} className="w-full h-52" resizeMode="cover" />
+                    ) : (
+                        <View className="w-full h-52 bg-gray-200 items-center justify-center">
+                            <Text className="text-gray-500">No Image</Text>
                         </View>
+                    )}
 
-                        <View className="px-4 py-3">
-                            <Text numberOfLines={1} className="text-[#391713] text-lg font-bold leading-5">
-                                {item.title}
-                            </Text>
-                            <Text numberOfLines={2} className="text-[#9CA3AF] text-sm mt-1 leading-4">
-                                {item.desc}
+                    {item.average_rating > 0 && (
+                        <View className="absolute right-3 top-3 bg-white/90 rounded-full px-2 py-1 flex-row items-center">
+                            <Star size={12} color="#F15A24" fill="#F15A24" />
+                            <Text className="text-[#F15A24] text-xs font-bold ml-1">
+                                {item.average_rating.toFixed(1)}
                             </Text>
                         </View>
-                    </Pressable>
-                </Link>
+                    )}
 
-                <View className="px-4 pb-4 flex-row items-center justify-between">
-                    <Text className="text-[#F15A24] text-2xl font-bold">${item.price.toFixed(2)}</Text>
-
-                    <View className="flex-row items-center">
-                        <View className="flex-row items-center bg-[#FFF5E6] rounded-full px-1 py-1 mr-2">
-                            <TouchableOpacity
-                                onPress={() => handleDecrease(item.id)}
-                                className="w-7 h-7 rounded-full bg-white items-center justify-center"
-                                activeOpacity={0.7}
-                            >
-                                <Ionicons name="remove" size={16} color="#F15A24" />
-                            </TouchableOpacity>
-
-                            <Text className="mx-3 text-[#391713] font-semibold">{quantities[item.id]}</Text>
-
-                            <TouchableOpacity
-                                onPress={() => handleIncrease(item.id)}
-                                className="w-7 h-7 rounded-full bg-[#F15A24] items-center justify-center"
-                                activeOpacity={0.7}
-                            >
-                                <Ionicons name="add" size={16} color="#FFFFFF" />
-                            </TouchableOpacity>
+                    {item.is_open !== undefined && (
+                        <View className={`absolute left-3 top-3 px-3 py-1 rounded-full ${
+                            item.is_open ? 'bg-green-500' : 'bg-red-500'
+                        }`}>
+                            <Text className="text-white text-xs font-semibold">
+                                {item.is_open ? 'OPEN' : 'CLOSED'}
+                            </Text>
                         </View>
-
-                        <TouchableOpacity
-                            className="w-9 h-9 rounded-full bg-[#F15A24] items-center justify-center"
-                            activeOpacity={0.8}
-                        >
-                            <Ionicons name="cart" size={18} color="#FFFFFF" />
-                        </TouchableOpacity>
-                    </View>
+                    )}
                 </View>
-            </View>
+
+                <View className="px-4 py-3">
+                    <Text numberOfLines={1} className="text-[#391713] text-lg font-bold leading-5">
+                        {item.name}
+                    </Text>
+                    {item.description && (
+                        <Text numberOfLines={2} className="text-[#9CA3AF] text-sm mt-1 leading-4">
+                            {item.description}
+                        </Text>
+                    )}
+                    {item.address && (
+                        <Text numberOfLines={1} className="text-[#9CA3AF] text-xs mt-1">
+                            {item.address}
+                        </Text>
+                    )}
+                </View>
+            </Pressable>
         );
     };
 
@@ -185,16 +122,39 @@ export default function RecommendScreen() {
 
             <View className="flex-1 bg-white rounded-t-3xl -mt-2 -mb-20 pt-6">
                 <Text className="text-[#E95322] text-lg font-semibold text-center px-5 mb-4">
-                    Discover the dishes{"\n"}recommended by the chef.
+                    Discover our most{"\n"}popular restaurants.
                 </Text>
 
-                <FlatList
-                    data={DATA}
-                    keyExtractor={(it) => it.id}
-                    renderItem={renderItem}
-                    contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-                    showsVerticalScrollIndicator={false}
-                />
+                {isLoading ? (
+                    <View className="flex-1 items-center justify-center">
+                        <ActivityIndicator size="large" color="#E95322" />
+                        <Text className="text-gray-500 mt-4">Loading recommendations...</Text>
+                    </View>
+                ) : restaurants.length === 0 ? (
+                    <View className="flex-1 items-center justify-center px-8">
+                        <Text className="text-xl font-medium text-gray-600 text-center">
+                            No recommendations available
+                        </Text>
+                        <Text className="text-gray-500 text-center mt-2">
+                            Check back later for our top picks
+                        </Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={restaurants}
+                        keyExtractor={(it) => it.id}
+                        renderItem={renderItem}
+                        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+                        showsVerticalScrollIndicator={false}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={isRefreshing}
+                                onRefresh={() => fetchRecommendations(true)}
+                                tintColor="#E95322"
+                            />
+                        }
+                    />
+                )}
             </View>
         </View>
     );
