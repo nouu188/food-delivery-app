@@ -8,6 +8,15 @@ import { USER_PATTERNS } from '@backend/contracts';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'user-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get('me')
   @MessagePattern(USER_PATTERNS.GET_PROFILE)
   @UseGuards(JwtAuthGuard)

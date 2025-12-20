@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { Review, ReviewImage, Order, Restaurant } from '@backend/database';
+import { Review, ReviewImage, Order, Restaurant, User, OperatingHours } from '@backend/database';
 import { ReviewController } from './review.controller';
 import { ReviewService } from './review.service';
 
@@ -14,15 +14,14 @@ import { ReviewService } from './review.service';
     EventEmitterModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_DATABASE || 'food_delivery',
-      entities: [Review, ReviewImage, Order, Restaurant],
+      host: process.env.DATABASE_HOST || process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DATABASE_PORT || process.env.DB_PORT) || 5432,
+      username: process.env.DATABASE_USER || process.env.POSTGRES_USER || 'postgres',
+      password: process.env.DATABASE_PASSWORD || process.env.POSTGRES_PASSWORD || 'postgres',
+      database: process.env.DATABASE_NAME || process.env.POSTGRES_DB || 'food_delivery',
       synchronize: process.env.NODE_ENV !== 'production',
     }),
-    TypeOrmModule.forFeature([Review, ReviewImage, Order, Restaurant]),
+    TypeOrmModule.forFeature([Review, ReviewImage, Order, Restaurant, OperatingHours]),
   ],
   controllers: [ReviewController],
   providers: [ReviewService],

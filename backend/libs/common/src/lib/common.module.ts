@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import type { JwtSignOptions } from '@nestjs/jwt';
 
 @Global()
 @Module({
@@ -15,7 +16,9 @@ import { RolesGuard } from './guards/roles.guard';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '1d',
+          expiresIn: configService.get<JwtSignOptions['expiresIn']>(
+            'JWT_EXPIRES_IN',
+          ) ?? '1d',
         },
       }),
       inject: [ConfigService],

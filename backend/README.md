@@ -107,9 +107,9 @@ Create `.env` file:
 # Database
 DB_HOST=localhost
 DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
-DB_DATABASE=food_delivery
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=food_delivery
 
 # JWT
 JWT_SECRET=your-secret-key-change-in-production

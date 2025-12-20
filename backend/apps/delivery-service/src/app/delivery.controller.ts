@@ -9,6 +9,15 @@ import { DELIVERY_PATTERNS, ORDER_EVENTS } from '@backend/contracts';
 export class DeliveryController {
   constructor(private readonly deliveryService: DeliveryService) {}
 
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'delivery-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Post('drivers/register')
   @MessagePattern(DELIVERY_PATTERNS.REGISTER_DRIVER)
   @UseGuards(JwtAuthGuard)

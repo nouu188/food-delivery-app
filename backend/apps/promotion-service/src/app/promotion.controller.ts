@@ -9,6 +9,15 @@ import { PROMOTION_PATTERNS, ORDER_EVENTS } from '@backend/contracts';
 export class PromotionController {
   constructor(private readonly promotionService: PromotionService) {}
 
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'promotion-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get()
   @MessagePattern(PROMOTION_PATTERNS.GET_AVAILABLE_VOUCHERS)
   @UseGuards(JwtAuthGuard)

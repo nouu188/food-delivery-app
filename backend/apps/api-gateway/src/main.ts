@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { AllExceptionsFilter } from './app/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './app/interceptors/logging.interceptor';
+import { setupHMR } from '@backend/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,6 +33,11 @@ async function bootstrap() {
   Logger.log(`🚀 API Gateway is running on: http://localhost:${port}/${globalPrefix}`);
   Logger.log(`📝 CORS enabled for origin: ${process.env.CORS_ORIGIN || '*'}`);
   Logger.log(`🔐 JWT authentication is configured`);
+
+  if (process.env.HMR === 'true') {
+    Logger.log(`🔥 Hot Module Replacement is enabled`);
+    setupHMR(app);
+  }
 }
 
 bootstrap();

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Get } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto } from '@backend/shared';
@@ -9,6 +9,15 @@ import { AUTH_PATTERNS } from '@backend/contracts';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('/health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'auth-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
 
   @Post('register')
   @MessagePattern(AUTH_PATTERNS.REGISTER)

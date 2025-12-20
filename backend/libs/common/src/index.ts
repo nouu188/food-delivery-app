@@ -6,3 +6,4 @@ export * from './lib/interceptors';
 export * from './lib/pipes';
 export * from './lib/strategies';
 export * from './lib/interfaces/authenticated-request.interface';
+export * from './lib/utils/hmr.util';

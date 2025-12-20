@@ -9,6 +9,15 @@ import { NOTIFICATION_PATTERNS, ORDER_EVENTS, PAYMENT_EVENTS, REVIEW_EVENTS } fr
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'notification-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get()
   @MessagePattern(NOTIFICATION_PATTERNS.GET_USER_NOTIFICATIONS)
   @UseGuards(JwtAuthGuard)

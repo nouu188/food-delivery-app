@@ -11,6 +11,15 @@ export class ReviewController {
 
   constructor(private readonly reviewService: ReviewService) {}
 
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'review-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Post()
   @MessagePattern(REVIEW_PATTERNS.CREATE_REVIEW)
   @UseGuards(JwtAuthGuard)

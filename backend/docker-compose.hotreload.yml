@@ -1,0 +1,195 @@
+version: '3.8'
+
+# Hot Reload Development Configuration
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.hotreload.yml up
+
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: api-gateway
+    command: yarn nx serve api-gateway --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Debug port
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: auth-service
+    command: yarn nx serve auth-service --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3001:3001"
+      - "9230:9229"  # Debug port
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: user-service
+    command: yarn nx serve user-service --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3002:3010"
+      - "9231:9229"  # Debug port
+
+  restaurant-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: restaurant-service
+    command: yarn nx serve restaurant-service --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3003:3003"
+      - "9232:9229"  # Debug port
+
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: order-service
+    command: yarn nx serve order-service --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3004:3030"
+      - "9233:9229"  # Debug port
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: payment-service
+    command: yarn nx serve payment-service --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3005:3005"
+      - "9234:9229"  # Debug port
+
+  delivery-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: delivery-service
+    command: yarn nx serve delivery-service --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3006:3023"
+      - "9235:9229"  # Debug port
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: notification-service
+    command: yarn nx serve notification-service --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3007:3025"
+      - "9236:9229"  # Debug port
+
+  review-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: review-service
+    command: yarn nx serve review-service --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3008:3024"
+      - "9237:9229"  # Debug port
+
+  promotion-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+      args:
+        SERVICE_NAME: promotion-service
+    command: yarn nx serve promotion-service --host=0.0.0.0
+    environment:
+      NODE_ENV: development
+      HMR: "true"
+    volumes:
+      - .:/workspace:cached
+      - /workspace/node_modules
+      - /workspace/dist
+    ports:
+      - "3009:3026"
+      - "9238:9229"  # Debug port

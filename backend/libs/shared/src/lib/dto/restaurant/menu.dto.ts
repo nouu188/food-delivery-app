@@ -1,5 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsBoolean, IsUUID, Min, IsArray, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsBoolean, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateMenuCategoryDto {
   @IsUUID()

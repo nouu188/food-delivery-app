@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { Cart, CartItem, Order, OrderItem, OrderStatusHistory } from '@backend/database';
+import { Cart, CartItem, Order, OrderItem, OrderStatusHistory, User, UserAddress, Restaurant, MenuItem } from '@backend/database';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 
@@ -12,12 +12,11 @@ import { OrderService } from './order.service';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_DATABASE || 'food_delivery',
-      entities: [Cart, CartItem, Order, OrderItem, OrderStatusHistory],
+      host: process.env.DATABASE_HOST || process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DATABASE_PORT || process.env.DB_PORT) || 5432,
+      username: process.env.DATABASE_USER || process.env.POSTGRES_USER || 'postgres',
+      password: process.env.DATABASE_PASSWORD || process.env.POSTGRES_PASSWORD || 'postgres',
+      database: process.env.DATABASE_NAME || process.env.POSTGRES_DB || 'food_delivery',
       synchronize: process.env.NODE_ENV !== 'production',
     }),
     TypeOrmModule.forFeature([Cart, CartItem, Order, OrderItem, OrderStatusHistory]),

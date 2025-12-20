@@ -8,6 +8,15 @@ import { RESTAURANT_PATTERNS } from '@backend/contracts';
 export class RestaurantController {
   constructor(private readonly restaurantService: RestaurantService) {}
 
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'restaurant-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get()
   @MessagePattern(RESTAURANT_PATTERNS.FIND_ALL_RESTAURANTS)
   async findAll(@Query() query: any) {

@@ -2,6 +2,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { AppModule } from './app/app.module';
+import { setupHMR } from '@backend/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,7 +11,7 @@ async function bootstrap() {
     transport: Transport.TCP,
     options: {
       host: '0.0.0.0',
-      port: 3002,
+      port: parseInt(process.env.MICROSERVICE_PORT || '4002'),
     },
   });
 
@@ -29,6 +30,11 @@ async function bootstrap() {
 
   Logger.log(`🚀 User Service is running on: http://localhost:${port}/${globalPrefix}`);
   Logger.log(`🚀 User Microservice is listening on TCP port 3002`);
+
+  if (process.env.HMR === 'true') {
+    Logger.log(`🔥 Hot Module Replacement is enabled`);
+    setupHMR(app);
+  }
 }
 
 bootstrap();

@@ -9,6 +9,15 @@ import { ORDER_PATTERNS } from '@backend/contracts';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'order-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get('cart')
   @MessagePattern(ORDER_PATTERNS.GET_CART)
   @UseGuards(JwtAuthGuard)

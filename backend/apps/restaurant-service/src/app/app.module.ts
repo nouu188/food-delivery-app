@@ -8,7 +8,8 @@ import {
   MenuCategory,
   MenuItem,
   MenuItemOption,
-  OperatingHours
+  OperatingHours,
+  User
 } from '@backend/database';
 import { RestaurantController } from './restaurant.controller';
 import { RestaurantService } from './restaurant.service';
@@ -20,15 +21,15 @@ import { RestaurantService } from './restaurant.service';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_DATABASE || 'food_delivery',
-      entities: [Restaurant, RestaurantCategory, RestaurantCategoryMapping, MenuCategory, MenuItem, MenuItemOption, OperatingHours],
+      host: process.env.DATABASE_HOST || process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DATABASE_PORT || process.env.DB_PORT) || 5432,
+      username: process.env.DATABASE_USER || process.env.POSTGRES_USER || 'postgres',
+      password: process.env.DATABASE_PASSWORD || process.env.POSTGRES_PASSWORD || 'postgres',
+      database: process.env.DATABASE_NAME || process.env.POSTGRES_DB || 'food_delivery',
+      entities: [Restaurant, RestaurantCategory, RestaurantCategoryMapping, MenuCategory, MenuItem, MenuItemOption, OperatingHours, User],
       synchronize: process.env.NODE_ENV !== 'production',
     }),
-    TypeOrmModule.forFeature([Restaurant, RestaurantCategory, RestaurantCategoryMapping, MenuCategory, MenuItem, MenuItemOption, OperatingHours]),
+    TypeOrmModule.forFeature([Restaurant, RestaurantCategory, RestaurantCategoryMapping, MenuCategory, MenuItem, MenuItemOption, OperatingHours, User]),
   ],
   controllers: [RestaurantController],
   providers: [RestaurantService],

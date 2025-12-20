@@ -9,6 +9,15 @@ import { PAYMENT_PATTERNS, ORDER_EVENTS, OrderCreatedPayload, OrderCancelledPayl
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'payment-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Post('process')
   @MessagePattern(PAYMENT_PATTERNS.PROCESS_PAYMENT)
   @UseGuards(JwtAuthGuard)
