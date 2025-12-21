@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as AllEntities from './entities';
+
+const entities = Object.values(AllEntities);
 
 @Module({
   imports: [
@@ -14,14 +17,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         username: configService.get('DATABASE_USER', configService.get('POSTGRES_USER', 'postgres')),
         password: configService.get('DATABASE_PASSWORD', configService.get('POSTGRES_PASSWORD', 'postgres')),
         database: configService.get('DATABASE_NAME', configService.get('DB_NAME', 'food_delivery')),
-        entities: [__dirname + '/entities/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('NODE_ENV') === 'development',
-        logging: configService.get('NODE_ENV') === 'development',
+        entities: entities,
+        synchronize: true,
+        logging: true,
         migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
         migrationsRun: false,
         ssl: configService.get('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
       }),
     }),
+    TypeOrmModule.forFeature(entities),
   ],
   exports: [TypeOrmModule],
 })

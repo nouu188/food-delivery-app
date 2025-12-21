@@ -23,7 +23,7 @@ apiClient.interceptors.request.use(
     }
 
     if (ENV.ENABLE_LOGGING) {
-      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
+      console.log(`[API Request] ${API_BASE_URL} ${config.method?.toUpperCase()} ${config.url}`, config.data);
     }
 
     return config;
@@ -61,7 +61,10 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
     if (ENV.ENABLE_LOGGING) {
-      console.error(`[API Error] ${error.config?.url}`, error.response?.data);
+      console.error(
+        `[API Error] ${error.response?.status || 'Network Error'} ${error.config?.url}`,
+        error.response?.data || error.message
+      );
     }
 
     // Handle 401 Unauthorized - Token expired

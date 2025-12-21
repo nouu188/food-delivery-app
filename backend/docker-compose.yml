@@ -51,15 +51,24 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
-      AUTH_SERVICE_URL: http://auth-service:3001
-      USER_SERVICE_URL: http://user-service:3002
-      RESTAURANT_SERVICE_URL: http://restaurant-service:3003
-      ORDER_SERVICE_URL: http://order-service:3004
-      PAYMENT_SERVICE_URL: http://payment-service:3005
-      DELIVERY_SERVICE_URL: http://delivery-service:3006
-      NOTIFICATION_SERVICE_URL: http://notification-service:3007
-      REVIEW_SERVICE_URL: http://review-service:3008
-      PROMOTION_SERVICE_URL: http://promotion-service:3009
+      AUTH_SERVICE_HOST: auth-service
+      AUTH_SERVICE_PORT: 4001
+      USER_SERVICE_HOST: user-service
+      USER_SERVICE_PORT: 4002
+      RESTAURANT_SERVICE_HOST: restaurant-service
+      RESTAURANT_SERVICE_PORT: 4003
+      ORDER_SERVICE_HOST: order-service
+      ORDER_SERVICE_PORT: 4004
+      PAYMENT_SERVICE_HOST: payment-service
+      PAYMENT_SERVICE_PORT: 4005
+      DELIVERY_SERVICE_HOST: delivery-service
+      DELIVERY_SERVICE_PORT: 4006
+      NOTIFICATION_SERVICE_HOST: notification-service
+      NOTIFICATION_SERVICE_PORT: 4007
+      REVIEW_SERVICE_HOST: review-service
+      REVIEW_SERVICE_PORT: 4008
+      PROMOTION_SERVICE_HOST: promotion-service
+      PROMOTION_SERVICE_PORT: 4009
     depends_on:
       postgres:
         condition: service_healthy

@@ -42,12 +42,18 @@ export default function SignUp() {
     const onSubmit = async (data: RegisterFormData) => {
         setIsLoading(true);
         try {
-            await authService.register({
+            const registerData: any = {
                 email: data.email,
                 password: data.password,
                 full_name: data.full_name,
-                phone: data.phone || undefined,
-            });
+            };
+
+            // Only include phone if it has a value
+            if (data.phone && data.phone.trim()) {
+                registerData.phone = data.phone;
+            }
+
+            await authService.register(registerData);
 
             Alert.alert(
                 "Success",
