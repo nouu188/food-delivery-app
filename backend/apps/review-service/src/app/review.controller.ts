@@ -1,8 +1,6 @@
-import { Controller, Get, Post, Put, Body, Param, Query, UseGuards, Request, Logger } from '@nestjs/common';
+import { Controller, Get, Logger } from '@nestjs/common';
 import { MessagePattern, EventPattern } from '@nestjs/microservices';
 import { ReviewService } from './review.service';
-import { AuthenticatedRequest, JwtAuthGuard, Roles, RolesGuard } from '@backend/common';
-import { UserRole, CreateReviewDto, ReplyToReviewDto, ReviewQueryDto } from '@backend/shared';
 import { REVIEW_PATTERNS, ORDER_EVENTS, OrderDeliveredPayload } from '@backend/contracts';
 
 @Controller('reviews')
@@ -20,12 +18,10 @@ export class ReviewController {
     };
   }
 
-  @Post()
   @MessagePattern(REVIEW_PATTERNS.CREATE_REVIEW)
-  @UseGuards(JwtAuthGuard)
-  async createReview(@Request() req: AuthenticatedRequest, @Body() data: CreateReviewDto) {
+  async createReview(data: any) {
     return this.reviewService.createReview(
-      req.user.id,
+      data.userId,
       data.order_id,
       data.food_rating,
       data.delivery_rating,
@@ -35,24 +31,19 @@ export class ReviewController {
     );
   }
 
-  @Get('restaurants/:id')
   @MessagePattern(REVIEW_PATTERNS.GET_RESTAURANT_REVIEWS)
-  async getRestaurantReviews(@Param('id') id: string, @Query() query: ReviewQueryDto) {
-    return this.reviewService.getRestaurantReviews(id, query.min_rating, query.has_images, query.page, query.limit);
+  async getRestaurantReviews(data: any) {
+    return this.reviewService.getRestaurantReviews(data.id, data.min_rating, data.has_images, data.page, data.limit);
   }
 
-  @Get(':id')
   @MessagePattern(REVIEW_PATTERNS.GET_REVIEW_BY_ID)
-  async getReviewById(@Param('id') id: string) {
-    return this.reviewService.getReviewById(id);
+  async getReviewById(data: { id: string }) {
+    return this.reviewService.getReviewById(data.id);
   }
 
-  @Put(':id/reply')
   @MessagePattern(REVIEW_PATTERNS.REPLY_TO_REVIEW)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async replyToReview(@Request() req: AuthenticatedRequest, @Param('id') id: string, @Body() data: ReplyToReviewDto) {
-    return this.reviewService.replyToReview(req.user.restaurant_id, id, data.restaurant_reply);
+  async replyToReview(data: any) {
+    return this.reviewService.replyToReview(data.restaurant_id, data.id, data.restaurant_reply);
   }
 
   @EventPattern(ORDER_EVENTS.DELIVERED)

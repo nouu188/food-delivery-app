@@ -28,3 +28,8 @@ export class RefreshTokenResponseDto {
   access_token!: string;
   refresh_token!: string;
 }
+
+export class LogoutDto {
+  @IsString()
+  refresh_token!: string;
+}

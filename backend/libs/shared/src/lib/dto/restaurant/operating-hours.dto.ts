@@ -1,4 +1,5 @@
-import { IsNumber, IsString, IsBoolean, Min, Max, IsOptional } from 'class-validator';
+import { IsNumber, IsString, IsBoolean, Min, Max, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class OperatingHoursDto {
   @IsNumber()
@@ -34,4 +35,11 @@ export class UpdateOperatingHoursDto {
   @IsBoolean()
   @IsOptional()
   is_closed?: boolean;
+}
+
+export class UpdateRestaurantOperatingHoursDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OperatingHoursDto)
+  hours!: OperatingHoursDto[];
 }

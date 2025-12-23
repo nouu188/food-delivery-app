@@ -1,7 +1,6 @@
-import { Controller, Get, Put, Post, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { UserService } from './user.service';
-import { JwtAuthGuard } from '@backend/common';
 import { USER_PATTERNS } from '@backend/contracts';
 
 @Controller('users')
@@ -17,73 +16,53 @@ export class UserController {
     };
   }
 
-  @Get('me')
   @MessagePattern(USER_PATTERNS.GET_PROFILE)
-  @UseGuards(JwtAuthGuard)
-  async getProfile(@Request() req: any) {
-    return this.userService.getProfile(req.user.id);
+  async getProfile(data: { userId: string }) {
+    return this.userService.getProfile(data.userId);
   }
 
-  @Put('me')
   @MessagePattern(USER_PATTERNS.UPDATE_PROFILE)
-  @UseGuards(JwtAuthGuard)
-  async updateProfile(@Request() req: any, @Body() updateData: any) {
-    return this.userService.updateProfile(req.user.id, updateData);
+  async updateProfile(data: any) {
+    return this.userService.updateProfile(data.userId, data);
   }
 
-  @Get('addresses')
   @MessagePattern(USER_PATTERNS.GET_ADDRESSES)
-  @UseGuards(JwtAuthGuard)
-  async getAddresses(@Request() req: any) {
-    return this.userService.getAddresses(req.user.id);
+  async getAddresses(data: { userId: string }) {
+    return this.userService.getAddresses(data.userId);
   }
 
-  @Post('addresses')
   @MessagePattern(USER_PATTERNS.CREATE_ADDRESS)
-  @UseGuards(JwtAuthGuard)
-  async createAddress(@Request() req: any, @Body() addressData: any) {
-    return this.userService.createAddress(req.user.id, addressData);
+  async createAddress(data: any) {
+    return this.userService.createAddress(data.userId, data);
   }
 
-  @Put('addresses/:id')
   @MessagePattern(USER_PATTERNS.UPDATE_ADDRESS)
-  @UseGuards(JwtAuthGuard)
-  async updateAddress(@Request() req: any, @Param('id') id: string, @Body() addressData: any) {
-    return this.userService.updateAddress(req.user.id, id, addressData);
+  async updateAddress(data: any) {
+    return this.userService.updateAddress(data.userId, data.addressId, data);
   }
 
-  @Delete('addresses/:id')
   @MessagePattern(USER_PATTERNS.DELETE_ADDRESS)
-  @UseGuards(JwtAuthGuard)
-  async deleteAddress(@Request() req: any, @Param('id') id: string) {
-    return this.userService.deleteAddress(req.user.id, id);
+  async deleteAddress(data: { userId: string; addressId: string }) {
+    return this.userService.deleteAddress(data.userId, data.addressId);
   }
 
-  @Put('devices')
   @MessagePattern(USER_PATTERNS.REGISTER_DEVICE)
-  @UseGuards(JwtAuthGuard)
-  async registerDevice(@Request() req: any, @Body() deviceData: any) {
-    return this.userService.registerDevice(req.user.id, deviceData);
+  async registerDevice(data: any) {
+    return this.userService.registerDevice(data.userId, data);
   }
 
-  @Get('favorites')
   @MessagePattern(USER_PATTERNS.GET_FAVORITES)
-  @UseGuards(JwtAuthGuard)
-  async getFavorites(@Request() req: any) {
-    return this.userService.getFavorites(req.user.id);
+  async getFavorites(data: { userId: string }) {
+    return this.userService.getFavorites(data.userId);
   }
 
-  @Post('favorites/:restaurantId')
   @MessagePattern(USER_PATTERNS.ADD_FAVORITE)
-  @UseGuards(JwtAuthGuard)
-  async addFavorite(@Request() req: any, @Param('restaurantId') restaurantId: string) {
-    return this.userService.addFavorite(req.user.id, restaurantId);
+  async addFavorite(data: { userId: string; restaurantId: string }) {
+    return this.userService.addFavorite(data.userId, data.restaurantId);
   }
 
-  @Delete('favorites/:restaurantId')
   @MessagePattern(USER_PATTERNS.REMOVE_FAVORITE)
-  @UseGuards(JwtAuthGuard)
-  async removeFavorite(@Request() req: any, @Param('restaurantId') restaurantId: string) {
-    return this.userService.removeFavorite(req.user.id, restaurantId);
+  async removeFavorite(data: { userId: string; restaurantId: string }) {
+    return this.userService.removeFavorite(data.userId, data.restaurantId);
   }
 }

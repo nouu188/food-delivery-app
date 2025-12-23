@@ -1,8 +1,7 @@
-import { Controller, Get, Put, Delete, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { MessagePattern, EventPattern } from '@nestjs/microservices';
 import { NotificationService } from './notification.service';
-import { JwtAuthGuard } from '@backend/common';
-import { NotificationQueryDto, NotificationType } from '@backend/shared';
+import { NotificationType } from '@backend/shared';
 import { NOTIFICATION_PATTERNS, ORDER_EVENTS, PAYMENT_EVENTS, REVIEW_EVENTS } from '@backend/contracts';
 
 @Controller('notifications')
@@ -18,32 +17,24 @@ export class NotificationController {
     };
   }
 
-  @Get()
   @MessagePattern(NOTIFICATION_PATTERNS.GET_USER_NOTIFICATIONS)
-  @UseGuards(JwtAuthGuard)
-  async getUserNotifications(@Request() req: any, @Query() query: NotificationQueryDto) {
-    return this.notificationService.getUserNotifications(req.user.id, query.type, query.is_read, query.page, query.limit);
+  async getUserNotifications(data: any) {
+    return this.notificationService.getUserNotifications(data.userId, data.type, data.is_read, data.page, data.limit);
   }
 
-  @Put(':id/read')
   @MessagePattern(NOTIFICATION_PATTERNS.MARK_AS_READ)
-  @UseGuards(JwtAuthGuard)
-  async markAsRead(@Request() req: any, @Param('id') id: string) {
-    return this.notificationService.markAsRead(req.user.id, id);
+  async markAsRead(data: { userId: string; id: string }) {
+    return this.notificationService.markAsRead(data.userId, data.id);
   }
 
-  @Put('read-all')
   @MessagePattern(NOTIFICATION_PATTERNS.MARK_ALL_AS_READ)
-  @UseGuards(JwtAuthGuard)
-  async markAllAsRead(@Request() req: any) {
-    return this.notificationService.markAllAsRead(req.user.id);
+  async markAllAsRead(data: { userId: string }) {
+    return this.notificationService.markAllAsRead(data.userId);
   }
 
-  @Delete(':id')
   @MessagePattern(NOTIFICATION_PATTERNS.DELETE_NOTIFICATION)
-  @UseGuards(JwtAuthGuard)
-  async deleteNotification(@Request() req: any, @Param('id') id: string) {
-    return this.notificationService.deleteNotification(req.user.id, id);
+  async deleteNotification(data: { userId: string; id: string }) {
+    return this.notificationService.deleteNotification(data.userId, data.id);
   }
 
   @EventPattern(ORDER_EVENTS.CREATED)

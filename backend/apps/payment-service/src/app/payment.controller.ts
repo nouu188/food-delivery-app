@@ -1,8 +1,6 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { MessagePattern, EventPattern } from '@nestjs/microservices';
 import { PaymentService } from './payment.service';
-import { JwtAuthGuard, AuthenticatedRequest } from '@backend/common';
-import { ProcessPaymentDto, RefundPaymentDto, TopUpWalletDto, WalletTransactionQueryDto } from '@backend/shared';
 import { PAYMENT_PATTERNS, ORDER_EVENTS, OrderCreatedPayload, OrderCancelledPayload } from '@backend/contracts';
 
 @Controller('payments')
@@ -18,46 +16,34 @@ export class PaymentController {
     };
   }
 
-  @Post('process')
   @MessagePattern(PAYMENT_PATTERNS.PROCESS_PAYMENT)
-  @UseGuards(JwtAuthGuard)
-  async processPayment(@Request() req: AuthenticatedRequest, @Body() data: ProcessPaymentDto) {
-    return this.paymentService.processPayment(data.order_id, req.user.id, data.amount, data.method);
+  async processPayment(data: any) {
+    return this.paymentService.processPayment(data.order_id, data.userId, data.amount, data.method);
   }
 
-  @Get(':id')
   @MessagePattern(PAYMENT_PATTERNS.GET_PAYMENT_DETAILS)
-  @UseGuards(JwtAuthGuard)
-  async getPaymentDetails(@Param('id') id: string) {
-    return this.paymentService.getPaymentDetails(id);
+  async getPaymentDetails(data: { id: string }) {
+    return this.paymentService.getPaymentDetails(data.id);
   }
 
-  @Post(':id/refund')
   @MessagePattern(PAYMENT_PATTERNS.PROCESS_REFUND)
-  @UseGuards(JwtAuthGuard)
-  async refundPayment(@Param('id') id: string, @Body() data: RefundPaymentDto) {
-    return this.paymentService.refundPayment(id, data.refund_amount, data.refund_reason);
+  async refundPayment(data: any) {
+    return this.paymentService.refundPayment(data.id, data.refund_amount, data.refund_reason);
   }
 
-  @Get('wallet/balance')
   @MessagePattern(PAYMENT_PATTERNS.GET_WALLET)
-  @UseGuards(JwtAuthGuard)
-  async getWallet(@Request() req: AuthenticatedRequest) {
-    return this.paymentService.getWallet(req.user.id);
+  async getWallet(data: { userId: string }) {
+    return this.paymentService.getWallet(data.userId);
   }
 
-  @Post('wallet/top-up')
   @MessagePattern(PAYMENT_PATTERNS.TOP_UP_WALLET)
-  @UseGuards(JwtAuthGuard)
-  async topUpWallet(@Request() req: AuthenticatedRequest, @Body() data: TopUpWalletDto) {
-    return this.paymentService.topUpWallet(req.user.id, data.amount, data.payment_method);
+  async topUpWallet(data: any) {
+    return this.paymentService.topUpWallet(data.userId, data.amount, data.payment_method);
   }
 
-  @Get('wallet/transactions')
   @MessagePattern(PAYMENT_PATTERNS.GET_WALLET_TRANSACTIONS)
-  @UseGuards(JwtAuthGuard)
-  async getWalletTransactions(@Request() req: AuthenticatedRequest, @Query() query: WalletTransactionQueryDto) {
-    return this.paymentService.getWalletTransactions(req.user.id, query.type, query.page, query.limit);
+  async getWalletTransactions(data: any) {
+    return this.paymentService.getWalletTransactions(data.userId, data.type, data.page, data.limit);
   }
 
   @EventPattern(ORDER_EVENTS.CREATED)

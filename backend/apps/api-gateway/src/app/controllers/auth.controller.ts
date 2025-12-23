@@ -3,7 +3,16 @@ import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { JwtAuthGuard, AuthenticatedRequest } from '@backend/common';
 import { AUTH_PATTERNS } from '@backend/contracts';
-import { RegisterDto, LoginDto, OtpType } from '@backend/shared';
+import {
+  RegisterDto,
+  LoginDto,
+  LogoutDto,
+  RefreshTokenDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  VerifyOtpDto,
+  SendOtpDto
+} from '@backend/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -21,63 +30,55 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
-  async logout(@Request() req: AuthenticatedRequest, @Body('refresh_token') refreshToken: string) {
+  async logout(@Request() req: AuthenticatedRequest, @Body() body: LogoutDto) {
     return firstValueFrom(
       this.authService.send(AUTH_PATTERNS.LOGOUT, {
         userId: req.user.id,
-        refreshToken,
+        refreshToken: body.refresh_token,
       })
     );
   }
 
   @Post('refresh-token')
-  async refreshToken(@Body('refresh_token') refreshToken: string) {
+  async refreshToken(@Body() body: RefreshTokenDto) {
     return firstValueFrom(
-      this.authService.send(AUTH_PATTERNS.REFRESH_TOKEN, { refreshToken })
+      this.authService.send(AUTH_PATTERNS.REFRESH_TOKEN, { refreshToken: body.refresh_token })
     );
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body('email') email: string) {
-    return firstValueFrom(this.authService.send(AUTH_PATTERNS.FORGOT_PASSWORD, { email }));
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    return firstValueFrom(this.authService.send(AUTH_PATTERNS.FORGOT_PASSWORD, { email: body.email }));
   }
 
   @Post('reset-password')
-  async resetPassword(
-    @Body('email') email: string,
-    @Body('otp') otp: string,
-    @Body('new_password') newPassword: string
-  ) {
+  async resetPassword(@Body() body: ResetPasswordDto) {
     return firstValueFrom(
       this.authService.send(AUTH_PATTERNS.RESET_PASSWORD, {
-        email,
-        otp,
-        newPassword,
+        email: body.email,
+        otp: body.otp,
+        newPassword: body.new_password,
       })
     );
   }
 
   @Post('verify-otp')
-  async verifyOtp(
-    @Body('identifier') identifier: string,
-    @Body('otp') otp: string,
-    @Body('type') type: OtpType
-  ) {
+  async verifyOtp(@Body() body: VerifyOtpDto) {
     return firstValueFrom(
       this.authService.send(AUTH_PATTERNS.VERIFY_OTP, {
-        identifier,
-        otp,
-        type,
+        identifier: body.identifier,
+        otp: body.otp,
+        type: body.type,
       })
     );
   }
 
   @Post('resend-otp')
-  async resendOtp(@Body('identifier') identifier: string, @Body('type') type: OtpType) {
+  async resendOtp(@Body() body: SendOtpDto) {
     return firstValueFrom(
       this.authService.send(AUTH_PATTERNS.RESEND_OTP, {
-        identifier,
-        type,
+        identifier: body.identifier,
+        type: body.type,
       })
     );
   }

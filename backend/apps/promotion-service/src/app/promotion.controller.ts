@@ -1,8 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { MessagePattern, EventPattern } from '@nestjs/microservices';
 import { PromotionService } from './promotion.service';
-import { JwtAuthGuard, Roles, RolesGuard } from '@backend/common';
-import { UserRole, CreateVoucherDto, UpdateVoucherDto, ValidateVoucherDto } from '@backend/shared';
 import { PROMOTION_PATTERNS, ORDER_EVENTS } from '@backend/contracts';
 
 @Controller('vouchers')
@@ -18,48 +16,34 @@ export class PromotionController {
     };
   }
 
-  @Get()
   @MessagePattern(PROMOTION_PATTERNS.GET_AVAILABLE_VOUCHERS)
-  @UseGuards(JwtAuthGuard)
-  async getAvailableVouchers(@Request() req: any, @Query('restaurant_id') restaurantId?: string) {
-    return this.promotionService.getAvailableVouchers(req.user.id, restaurantId);
+  async getAvailableVouchers(data: { userId: string; restaurant_id?: string }) {
+    return this.promotionService.getAvailableVouchers(data.userId, data.restaurant_id);
   }
 
-  @Get(':code')
   @MessagePattern(PROMOTION_PATTERNS.GET_VOUCHER_BY_CODE)
-  async getVoucherByCode(@Param('code') code: string) {
-    return this.promotionService.getVoucherByCode(code);
+  async getVoucherByCode(data: { code: string }) {
+    return this.promotionService.getVoucherByCode(data.code);
   }
 
-  @Post('validate')
   @MessagePattern(PROMOTION_PATTERNS.VALIDATE_VOUCHER)
-  @UseGuards(JwtAuthGuard)
-  async validateVoucher(@Request() req: any, @Body() data: ValidateVoucherDto) {
-    return this.promotionService.validateVoucher(data.code, req.user.id, data.restaurant_id, data.order_amount);
+  async validateVoucher(data: any) {
+    return this.promotionService.validateVoucher(data.code, data.userId, data.restaurant_id, data.order_amount);
   }
 
-  @Post()
   @MessagePattern(PROMOTION_PATTERNS.CREATE_VOUCHER)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.RESTAURANT_OWNER)
-  async createVoucher(@Body() data: CreateVoucherDto) {
+  async createVoucher(data: any) {
     return this.promotionService.createVoucher(data);
   }
 
-  @Put(':id')
   @MessagePattern(PROMOTION_PATTERNS.UPDATE_VOUCHER)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.RESTAURANT_OWNER)
-  async updateVoucher(@Param('id') id: string, @Body() data: UpdateVoucherDto) {
-    return this.promotionService.updateVoucher(id, data);
+  async updateVoucher(data: any) {
+    return this.promotionService.updateVoucher(data.id, data);
   }
 
-  @Delete(':id')
   @MessagePattern(PROMOTION_PATTERNS.DEACTIVATE_VOUCHER)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.RESTAURANT_OWNER)
-  async deactivateVoucher(@Param('id') id: string) {
-    return this.promotionService.deactivateVoucher(id);
+  async deactivateVoucher(data: { id: string }) {
+    return this.promotionService.deactivateVoucher(data.id);
   }
 
   @EventPattern(ORDER_EVENTS.CREATED)
