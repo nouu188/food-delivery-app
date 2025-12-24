@@ -1,4 +1,3 @@
-// app/(tabs)/ContactUs.tsx
 import ContactItem from '@/components/common/contact/ContactItem';
 import Header from '@/components/common/Header';
 import { router } from 'expo-router';
@@ -13,16 +12,13 @@ export default function ContactUs() {
 
   return (
     <SafeAreaView className="flex-1 bg-YellowBase">
-      {/* Header tùy chỉnh giống BestSeller */}
       <Header title="Contact Us" />
 
-      {/* Phần nội dung trắng bo góc trên – giống BestSeller */}
       <View className="flex-1 bg-white rounded-t-3xl px-5 pt-6">
         <Text className="text-base text-center mb-6 text-gray-700">
           How Can We Help You?
         </Text>
 
-        {/* Tab chuyển giữa FAQ và Contact Us */}
         <View className="flex-row justify-center mb-10">
           <TouchableOpacity
             onPress={handleGoToFAQ}
@@ -37,7 +33,6 @@ export default function ContactUs() {
           </View>
         </View>
 
-        {/* Danh sách các kênh liên hệ */}
         <ScrollView showsVerticalScrollIndicator={false}>
           <View className="w-full pb-20">
             <ContactItem icon="headset-outline" title="Customer service" />

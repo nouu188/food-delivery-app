@@ -150,7 +150,7 @@ export default function OrderDetails() {
                 />
               }
             >
-              {order.items && order.items.map((item, index) => (
+              {order.items && Array.isArray(order.items) && order.items.map((item, index) => (
                 <View key={index} className="flex-row items-center mb-6">
                   {item.menu_item?.image_url ? (
                     <Image

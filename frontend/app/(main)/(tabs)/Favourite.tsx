@@ -24,9 +24,15 @@ const FavoritesScreen = () => {
             }
 
             const response = await userService.getFavorites();
-            setFavorites(response.items);
+
+            if (response?.items && Array.isArray(response.items)) {
+                setFavorites(response.items);
+            } else {
+                setFavorites([]);
+            }
         } catch (error) {
             showErrorAlert(error, 'Failed to Load Favorites');
+            setFavorites([]);
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);
@@ -38,14 +44,13 @@ const FavoritesScreen = () => {
     }, []);
 
     const handleToggleLike = async (restaurantId: string) => {
-        // Optimistic update
         const updatedFavorites = favorites.filter(fav => fav.restaurant_id !== restaurantId);
         setFavorites(updatedFavorites);
 
         try {
             await userService.removeFavorite(restaurantId);
         } catch (error) {
-            // Revert on error
+
             fetchFavorites();
             showErrorAlert(error, 'Failed to Remove Favorite');
         }
@@ -102,7 +107,7 @@ const FavoritesScreen = () => {
                                         key={favorite.id}
                                         id={favorite.restaurant_id}
                                         name={favorite.restaurant.name}
-                                        price={0} // Restaurants don't have a single price
+                                        price={0} 
                                         image={favorite.restaurant.logo_url ? { uri: favorite.restaurant.logo_url } : null}
                                         liked={true}
                                         onToggleLike={() => handleToggleLike(favorite.restaurant_id)}

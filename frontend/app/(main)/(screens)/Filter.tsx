@@ -30,9 +30,15 @@ const Filter = () => {
         try {
             setIsLoading(true);
             const categoriesData = await restaurantService.getCategories();
-            setCategories(categoriesData);
+
+            if (categoriesData && Array.isArray(categoriesData)) {
+                setCategories(categoriesData);
+            } else {
+                setCategories([]);
+            }
         } catch (error) {
             showErrorAlert(error, 'Failed to Load Categories');
+            setCategories([]);
         } finally {
             setIsLoading(false);
         }

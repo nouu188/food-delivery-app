@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
+import { FirebaseModule } from './firebase/firebase.module';
+import { FcmListener } from './listeners/fcm.listener';
 
 @Module({
   imports: [
@@ -11,9 +13,10 @@ import { NotificationService } from './notification.service';
       isGlobal: true,
     }),
     EventEmitterModule.forRoot(),
-    DatabaseModule
+    DatabaseModule,
+    FirebaseModule,
   ],
   controllers: [NotificationController],
-  providers: [NotificationService],
+  providers: [NotificationService, FcmListener],
 })
 export class AppModule {}

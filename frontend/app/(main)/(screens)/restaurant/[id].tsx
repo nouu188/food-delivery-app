@@ -44,21 +44,34 @@ export default function RestaurantDetailsScreen() {
             }
 
             const [restaurantData, menuCategories, favoritesData] = await Promise.all([
-                restaurantService.getRestaurantById(id),
-                restaurantService.getMenu(id),
-                userService.getFavorites().catch(() => ({ items: [] })),
+                restaurantService.getRestaurantById(id).catch(() => null),
+                restaurantService.getMenu(id).catch(() => null),
+                userService.getFavorites().catch(() => null),
             ]);
 
-            setRestaurant(restaurantData);
+            if (restaurantData) {
+                setRestaurant(restaurantData);
+            } else {
+                showErrorAlert(new Error('Restaurant not found'), 'Failed to Load Restaurant');
+                router.back();
+                return;
+            }
 
-            // Flatten all items from all categories
             const allMenuItems: MenuItem[] = [];
-            menuCategories.forEach(category => {
-                allMenuItems.push(...category.items);
-            });
+            if (menuCategories && Array.isArray(menuCategories)) {
+                menuCategories.forEach(category => {
+                    if (category?.items && Array.isArray(category.items)) {
+                        allMenuItems.push(...category.items);
+                    }
+                });
+            }
             setMenuItems(allMenuItems);
 
-            setIsFavorite(favoritesData.items.some(f => f.restaurant_id === id));
+            if (favoritesData?.items && Array.isArray(favoritesData.items)) {
+                setIsFavorite(favoritesData.items.some(f => f.restaurant_id === id));
+            } else {
+                setIsFavorite(false);
+            }
 
             const initialQuantities: { [key: string]: number } = {};
             allMenuItems.forEach((item: MenuItem) => {

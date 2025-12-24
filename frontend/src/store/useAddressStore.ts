@@ -8,14 +8,12 @@ interface AddressState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions
   fetchAddresses: () => Promise<void>;
   addAddress: (data: CreateAddressRequest) => Promise<void>;
   updateAddress: (id: string, data: UpdateAddressRequest) => Promise<void>;
   deleteAddress: (id: string) => Promise<void>;
   setSelectedAddress: (id: string) => void;
 
-  // Computed
   get selectedAddress(): UserAddress | null;
   get defaultAddress(): UserAddress | null;
 }
@@ -32,7 +30,6 @@ export const useAddressStore = create<AddressState>((set, get) => ({
       const addresses = await userService.getAddresses();
       set({ addresses, isLoading: false });
 
-      // Auto-select default address
       const defaultAddr = addresses.find((a) => a.is_default);
       if (defaultAddr && !get().selectedAddressId) {
         set({ selectedAddressId: defaultAddr.id });

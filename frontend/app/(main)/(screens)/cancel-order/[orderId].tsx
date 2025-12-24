@@ -121,7 +121,7 @@ export default function CancelOrderScreen() {
                     <View className="bg-[#FFF5D6] rounded-2xl p-4 mb-6">
                         <Text className="text-[#070707] font-bold text-base">Order #{order.order_number}</Text>
                         <Text className="text-[#6B7280] text-sm mt-1">
-                            {order.restaurant_name || 'Restaurant'} • {order.items.length} item{order.items.length > 1 ? 's' : ''}
+                            {order.restaurant_name || 'Restaurant'} • {order.items && Array.isArray(order.items) ? order.items.length : 0} item{order.items && Array.isArray(order.items) && order.items.length > 1 ? 's' : ''}
                         </Text>
                         <Text className="text-[#E95322] font-bold text-lg mt-2">
                             ${order.total_amount.toFixed(2)}

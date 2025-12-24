@@ -1,4 +1,3 @@
-// components/orders/OrderTabHeader.tsx
 import { Text, TouchableOpacity, View } from 'react-native';
 
 type Props = {

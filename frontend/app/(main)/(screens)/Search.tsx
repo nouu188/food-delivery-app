@@ -57,29 +57,44 @@ export default function SearchScreen() {
                     category: appliedFilters.category,
                     page: 1,
                     limit: 50,
-                }),
-                userService.getFavorites().catch(() => ({ items: [] })),
+                }).catch(() => null),
+                userService.getFavorites().catch(() => null),
             ]);
 
-            let filteredRestaurants = restaurantsData.data;
+            // Safely handle restaurant search results
+            let filteredRestaurants: Restaurant[] = [];
+            if (restaurantsData?.data && Array.isArray(restaurantsData.data)) {
+                filteredRestaurants = restaurantsData.data;
 
-            if (appliedFilters.minRating && appliedFilters.minRating > 0) {
-                filteredRestaurants = filteredRestaurants.filter(
-                    r => r.average_rating >= appliedFilters.minRating!
-                );
-            }
+                // Apply additional filters
+                if (appliedFilters.minRating && appliedFilters.minRating > 0) {
+                    filteredRestaurants = filteredRestaurants.filter(
+                        r => r.average_rating >= appliedFilters.minRating!
+                    );
+                }
 
-            if (appliedFilters.maxPrice && appliedFilters.maxPrice > 1) {
-                filteredRestaurants = filteredRestaurants.filter(
-                    r => r.min_order_amount <= appliedFilters.maxPrice!
-                );
+                if (appliedFilters.maxPrice && appliedFilters.maxPrice > 1) {
+                    filteredRestaurants = filteredRestaurants.filter(
+                        r => r.min_order_amount <= appliedFilters.maxPrice!
+                    );
+                }
             }
 
             setRestaurants(filteredRestaurants);
-            setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+
+            // Safely handle favorites data
+            if (favoritesData?.items && Array.isArray(favoritesData.items)) {
+                setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+            } else {
+                setFavorites(new Set());
+            }
+
             setHasSearched(true);
         } catch (error) {
             showErrorAlert(error, 'Failed to Search Restaurants');
+            setRestaurants([]);
+            setFavorites(new Set());
+            setHasSearched(true);
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);

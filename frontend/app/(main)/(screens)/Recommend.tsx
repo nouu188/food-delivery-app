@@ -26,14 +26,25 @@ export default function RecommendScreen() {
                 restaurantService.getRestaurants({
                     limit: 50,
                     sort_by: 'popular',
-                }),
-                userService.getFavorites().catch(() => ({ items: [] })),
+                }).catch(() => null),
+                userService.getFavorites().catch(() => null),
             ]);
 
-            setRestaurants(restaurantsData.items);
-            setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+            if (restaurantsData?.items && Array.isArray(restaurantsData.items)) {
+                setRestaurants(restaurantsData.items);
+            } else {
+                setRestaurants([]);
+            }
+
+            if (favoritesData?.items && Array.isArray(favoritesData.items)) {
+                setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+            } else {
+                setFavorites(new Set());
+            }
         } catch (error) {
             showErrorAlert(error, 'Failed to Load Recommendations');
+            setRestaurants([]);
+            setFavorites(new Set());
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);

@@ -34,13 +34,16 @@ export default function FoodDetail() {
             setIsLoading(true);
             const menuCategories = await restaurantService.getMenu(restaurantId);
 
-            // Find the menu item in all categories
             let foundItem: MenuItem | null = null;
-            for (const category of menuCategories) {
-                const item = category.items.find((menuItem: MenuItem) => menuItem.id === id);
-                if (item) {
-                    foundItem = item;
-                    break;
+            if (menuCategories && Array.isArray(menuCategories)) {
+                for (const category of menuCategories) {
+                    if (category?.items && Array.isArray(category.items)) {
+                        const item = category.items.find((menuItem: MenuItem) => menuItem.id === id);
+                        if (item) {
+                            foundItem = item;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -52,8 +55,7 @@ export default function FoodDetail() {
 
             setMenuItem(foundItem);
 
-            // Set default options
-            if (foundItem.options) {
+            if (foundItem.options && Array.isArray(foundItem.options)) {
                 const defaultOpts = foundItem.options.filter(opt => opt.is_default);
                 setSelectedOptions(defaultOpts);
             }
@@ -71,12 +73,11 @@ export default function FoodDetail() {
         );
 
         if (existingIndex !== -1) {
-            // Replace option in same group
             const newOptions = [...selectedOptions];
             newOptions[existingIndex] = option;
             setSelectedOptions(newOptions);
         } else {
-            // Add new option
+
             setSelectedOptions([...selectedOptions, option]);
         }
     };
@@ -269,7 +270,6 @@ export default function FoodDetail() {
 
                     {menuItem.options && menuItem.options.length > 0 && (
                         <View className="mt-6">
-                            {/* Group options by option_group */}
                             {Array.from(new Set(menuItem.options.map(opt => opt.option_group))).map((group, groupIdx) => {
                                 const groupOptions = menuItem.options!.filter(opt => opt.option_group === group);
 

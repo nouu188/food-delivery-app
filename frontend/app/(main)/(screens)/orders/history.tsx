@@ -28,10 +28,12 @@ export default function HistoryScreen() {
                 limit: 20,
             });
 
-            // Filter for completed/cancelled orders (history)
-            const historyOrders = response.items.filter(order =>
-                [OrderStatus.DELIVERED, OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(order.status)
-            );
+            let historyOrders: Order[] = [];
+            if (response?.items && Array.isArray(response.items)) {
+                historyOrders = response.items.filter(order =>
+                    [OrderStatus.DELIVERED, OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(order.status)
+                );
+            }
 
             if (pageNum === 1) {
                 setOrders(historyOrders);
@@ -39,9 +41,13 @@ export default function HistoryScreen() {
                 setOrders(prev => [...prev, ...historyOrders]);
             }
 
-            setHasMore(response.meta.has_next_page);
+            setHasMore(response?.meta?.has_next_page ?? false);
         } catch (error) {
             showErrorAlert(error, 'Failed to Load Order History');
+            if (pageNum === 1) {
+                setOrders([]);
+            }
+            setHasMore(false);
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);

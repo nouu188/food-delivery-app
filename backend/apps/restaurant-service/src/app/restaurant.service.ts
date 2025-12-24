@@ -34,11 +34,41 @@ export class RestaurantService {
   async findAll(query: any) {
     const { search, category_id, latitude, longitude, radius_km, min_rating, is_open, is_featured, page = 1, limit = 20, sort_by = 'created_at', sort_order = 'DESC' } = query;
 
+    const sortFieldMap: Record<string, string> = {
+      'popular': 'average_rating',
+      'rating': 'average_rating',
+      'reviews': 'total_reviews',
+      'created_at': 'created_at',
+      'updated_at': 'updated_at',
+      'name': 'name',
+      'delivery_fee': 'delivery_fee',
+      'estimated_prep_time': 'estimated_prep_time',
+    };
+
+    const actualSortField = sortFieldMap[sort_by] || 'created_at';
+
     const queryBuilder = this.restaurantRepository.createQueryBuilder('restaurant')
       .leftJoinAndSelect('restaurant.operating_hours', 'operating_hours');
 
     if (search) {
-      queryBuilder.andWhere('restaurant.name LIKE :search OR restaurant.description LIKE :search', { search: `%${search}%` });
+      // Enhanced search: search in name, description, address, and menu items
+      const searchTerm = `%${search.trim().toLowerCase()}%`;
+
+      queryBuilder.andWhere(
+        `(
+          LOWER(restaurant.name) LIKE :search
+          OR LOWER(restaurant.description) LIKE :search
+          OR LOWER(restaurant.address) LIKE :search
+          OR EXISTS (
+            SELECT 1 FROM menu_items mi
+            INNER JOIN menu_categories mc ON mi.category_id = mc.id
+            WHERE mc.restaurant_id = restaurant.id
+            AND LOWER(mi.name) LIKE :search
+            AND mi.deleted_at IS NULL
+          )
+        )`,
+        { search: searchTerm }
+      );
     }
 
     if (category_id) {
@@ -63,7 +93,7 @@ export class RestaurantService {
     const total = await queryBuilder.getCount();
 
     queryBuilder
-      .orderBy(`restaurant.${sort_by}`, sort_order as 'ASC' | 'DESC')
+      .orderBy(`restaurant.${actualSortField}`, sort_order as 'ASC' | 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 

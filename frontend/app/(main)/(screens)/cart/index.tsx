@@ -76,7 +76,7 @@ export default function CartScreen() {
     };
 
     const handleCheckout = () => {
-        if (!cart || cart.items.length === 0) return;
+        if (!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0) return;
         router.push("/checkout/confirm-order");
     };
 
@@ -102,7 +102,7 @@ export default function CartScreen() {
                             />
                         }
                     >
-                        {cart && cart.items.length > 0 ? (
+                        {cart && cart.items && Array.isArray(cart.items) && cart.items.length > 0 ? (
                             <>
                                 {cart.items.map((item) => (
                                     <View

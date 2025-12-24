@@ -36,7 +36,7 @@ export default function PaymentScreen() {
             return;
         }
 
-        if (!cart || cart.items.length === 0) {
+        if (!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0) {
             Alert.alert('Error', 'Your cart is empty');
             return;
         }
@@ -91,7 +91,7 @@ export default function PaymentScreen() {
                     <View className="mt-8 flex-row items-center justify-between">
                         <View>
                             <Text className="text-[#070707] font-bold">Order Summary</Text>
-                            <Text className="text-xs text-[#6B7280] mt-1">{cart?.items.length || 0} items</Text>
+                            <Text className="text-xs text-[#6B7280] mt-1">{cart?.items && Array.isArray(cart.items) ? cart.items.length : 0} items</Text>
                         </View>
                         <Text className="font-extrabold text-[#E95322]">${cart?.subtotal.toFixed(2) || '0.00'}</Text>
                     </View>
@@ -134,10 +134,10 @@ export default function PaymentScreen() {
                     <TouchableOpacity
                         activeOpacity={0.9}
                         onPress={handlePlaceOrder}
-                        disabled={isProcessing || !selectedAddress || !cart || cart.items.length === 0}
+                        disabled={isProcessing || !selectedAddress || !cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0}
                         className="self-center mt-10 px-16 py-4 rounded-full"
                         style={{
-                            backgroundColor: (isProcessing || !selectedAddress || !cart || cart.items.length === 0)
+                            backgroundColor: (isProcessing || !selectedAddress || !cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0)
                                 ? "#9CA3AF"
                                 : "#E95322"
                         }}

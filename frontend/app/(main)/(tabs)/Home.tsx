@@ -36,7 +36,6 @@ const HomeScreen = () => {
     const { width } = useWindowDimensions();
     const bannerWidth = width - 40;
 
-    // API Integration
     const [bestSellers, setBestSellers] = useState<Restaurant[]>([]);
     const [recommended, setRecommended] = useState<Restaurant[]>([]);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -51,18 +50,26 @@ const HomeScreen = () => {
                 setIsLoading(true);
             }
 
-            // Fetch restaurants (best sellers - popular/high rating)
             const [bestSellersData, recommendedData, favoritesData] = await Promise.all([
-                restaurantService.getRestaurants({ limit: 4, sort_by: 'rating' }),
-                restaurantService.getRestaurants({ limit: 2, sort_by: 'popular' }),
-                userService.getFavorites().catch(() => ({ items: [] })), // Don't fail if favorites fail
+                restaurantService.getRestaurants({ limit: 4, sort_by: 'rating' }).catch(() => null),
+                restaurantService.getRestaurants({ limit: 2, sort_by: 'popular' }).catch(() => null),
+                userService.getFavorites().catch(() => null),
             ]);
 
-            setBestSellers(bestSellersData.items);
-            setRecommended(recommendedData.items);
-            setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+            setBestSellers(bestSellersData?.items ?? []);
+            setRecommended(recommendedData?.items ?? []);
+
+            if (favoritesData?.items && Array.isArray(favoritesData.items)) {
+                setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+            } else {
+                setFavorites(new Set());
+            }
         } catch (error) {
             showErrorAlert(error, 'Failed to Load Data');
+
+            setBestSellers([]);
+            setRecommended([]);
+            setFavorites(new Set());
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);
@@ -76,7 +83,6 @@ const HomeScreen = () => {
     const toggleFavorite = async (restaurantId: string) => {
         const wasFavorite = favorites.has(restaurantId);
 
-        // Optimistic update
         setFavorites((prev) => {
             const newSet = new Set(prev);
             if (wasFavorite) {
@@ -94,7 +100,6 @@ const HomeScreen = () => {
                 await userService.addFavorite(restaurantId);
             }
         } catch (error) {
-            // Revert on error
             setFavorites((prev) => {
                 const newSet = new Set(prev);
                 if (wasFavorite) {

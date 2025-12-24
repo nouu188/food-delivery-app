@@ -32,20 +32,17 @@ export const useCartStore = create<CartState>((set, get) => ({
     isLoading: false,
     error: null,
 
-    // Drawer actions
     openDrawer: () => set({ isDrawerOpen: true }),
     closeDrawer: () => set({ isDrawerOpen: false }),
     toggleDrawer: () => set((s) => ({ isDrawerOpen: !s.isDrawerOpen })),
     setDrawerOpen: (open) => set({ isDrawerOpen: open }),
 
-    // Cart actions
     fetchCart: async () => {
         set({ isLoading: true, error: null });
         try {
             const cart = await orderService.getCart();
             set({ cart, isLoading: false });
         } catch (error: any) {
-            // If cart doesn't exist (404), that's ok
             if (error.response?.status === 404) {
                 set({ cart: null, isLoading: false });
             } else {
@@ -118,12 +115,13 @@ export const useCartStore = create<CartState>((set, get) => ({
         }
     },
 
-    // Computed properties
     get subtotal() {
         return get().cart?.subtotal || 0;
     },
 
     get itemCount() {
-        return get().cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
+        const cart = get().cart;
+        if (!cart?.items || !Array.isArray(cart.items)) return 0;
+        return cart.items.reduce((sum, item) => sum + item.quantity, 0);
     },
 }));

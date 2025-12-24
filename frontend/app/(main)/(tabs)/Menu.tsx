@@ -34,20 +34,36 @@ export default function MenuScreen() {
                     page: pageNum,
                     limit: 10,
                     sort_by: sortBy,
-                }),
-                userService.getFavorites().catch(() => ({ items: [] })),
+                }).catch(() => null),
+                userService.getFavorites().catch(() => null),
             ]);
 
-            if (pageNum === 1) {
-                setRestaurants(restaurantsData.items);
+            if (restaurantsData?.items && Array.isArray(restaurantsData.items)) {
+                if (pageNum === 1) {
+                    setRestaurants(restaurantsData.items);
+                } else {
+                    setRestaurants(prev => [...prev, ...restaurantsData.items]);
+                }
+                setHasMore(restaurantsData.meta?.has_next_page ?? false);
             } else {
-                setRestaurants(prev => [...prev, ...restaurantsData.items]);
+                if (pageNum === 1) {
+                    setRestaurants([]);
+                }
+                setHasMore(false);
             }
 
-            setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
-            setHasMore(restaurantsData.meta.has_next_page);
+            if (favoritesData?.items && Array.isArray(favoritesData.items)) {
+                setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+            } else {
+                setFavorites(new Set());
+            }
         } catch (error) {
             showErrorAlert(error, 'Failed to Load Restaurants');
+            if (pageNum === 1) {
+                setRestaurants([]);
+            }
+            setFavorites(new Set());
+            setHasMore(false);
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);

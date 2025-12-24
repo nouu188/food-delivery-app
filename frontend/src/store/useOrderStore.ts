@@ -1,4 +1,3 @@
-// store/useOrderStore.ts
 import { create } from "zustand";
 import { produce } from "immer"; // giúp update state an toàn, clean code
 import orderService from "@/services/api/order.service";
@@ -9,7 +8,6 @@ interface OrderState {
     isLoading: boolean;
     error: string | null;
 
-    // Actions
     fetchOrders: (status?: OrderStatus) => Promise<void>;
     fetchOrderById: (id: string) => Promise<Order>;
     createOrder: (data: CreateOrderRequest) => Promise<Order>;
@@ -19,7 +17,6 @@ interface OrderState {
     getOrdersByStatus: (status: OrderStatus) => Order[];
 }
 
-// Store Zustand
 export const useOrderStore = create<OrderState>((set, get) => ({
     orders: [],
     isLoading: false,
@@ -29,9 +26,10 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await orderService.getOrders({ status });
-            set({ orders: response.items, isLoading: false });
+            const orders = response?.items && Array.isArray(response.items) ? response.items : [];
+            set({ orders, isLoading: false });
         } catch (error: any) {
-            set({ error: error.message, isLoading: false });
+            set({ error: error.message, isLoading: false, orders: [] });
         }
     },
 
@@ -53,7 +51,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
             const order = await orderService.createOrder(data);
             set(
                 produce((state: OrderState) => {
-                    state.orders.unshift(order); // Add to beginning
+                    state.orders.unshift(order); 
                     state.isLoading = false;
                 })
             );

@@ -13,7 +13,10 @@ const MyOrdersScreen = () => {
     const { orders, cancelOrder } = useOrderStore();
     const [activeTab, setActiveTab] = useState<OrderStatus>(OrderStatus.PENDING);
 
-    const filteredOrders = useMemo(() => orders.filter((order) => order.status === activeTab), [orders, activeTab]);
+    const filteredOrders = useMemo(() => {
+        if (!orders || !Array.isArray(orders)) return [];
+        return orders.filter((order) => order.status === activeTab);
+    }, [orders, activeTab]);
 
     const handleCancel = useCallback(
         (orderId: string) => {

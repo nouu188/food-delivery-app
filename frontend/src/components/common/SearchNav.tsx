@@ -14,14 +14,11 @@ const SearchNav: React.FC<SearchNavProps> = ({ onNotificationPress, onProfilePre
 
     return (
         <View className="flex-row items-center">
-            {/* Search Bar Section */}
             <View className="flex-1">
                 <SearchBar isSearchPage={false} />
             </View>
 
-            {/* Action Buttons Section */}
             <View className="flex-row items-center gap-3 ml-3">
-                {/* Cart Button */}
                 <TouchableOpacity
                     onPress={openCartDrawer}
                     activeOpacity={0.75}
@@ -30,7 +27,6 @@ const SearchNav: React.FC<SearchNavProps> = ({ onNotificationPress, onProfilePre
                     <CartIcon width={22} height={22} />
                 </TouchableOpacity>
 
-                {/* Notification Button */}
                 <TouchableOpacity
                     onPress={onNotificationPress}
                     activeOpacity={0.75}
@@ -39,7 +35,6 @@ const SearchNav: React.FC<SearchNavProps> = ({ onNotificationPress, onProfilePre
                     <BellIcon width={22} height={22} />
                 </TouchableOpacity>
 
-                {/* Profile Button */}
                 <TouchableOpacity
                     onPress={onProfilePress}
                     activeOpacity={0.75}

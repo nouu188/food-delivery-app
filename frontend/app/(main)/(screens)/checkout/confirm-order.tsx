@@ -40,7 +40,7 @@ export default function ConfirmOrderScreen() {
             return;
         }
 
-        if (!cart || cart.items.length === 0) {
+        if (!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0) {
             Alert.alert('Empty Cart', 'Your cart is empty. Add items to cart before placing an order.');
             return;
         }
@@ -81,7 +81,7 @@ export default function ConfirmOrderScreen() {
 
                         <Text className="mt-8 text-[#070707] font-bold">Order Summary</Text>
                         <View className="mt-4">
-                            {cart?.items.map((item) => (
+                            {cart?.items && Array.isArray(cart.items) && cart.items.map((item) => (
                                 <View
                                     key={item.id}
                                     className="flex-row items-center py-4 border-b"
@@ -142,9 +142,9 @@ export default function ConfirmOrderScreen() {
                         <TouchableOpacity
                             activeOpacity={0.9}
                             onPress={handlePlaceOrder}
-                            disabled={!cart || cart.items.length === 0 || !selectedAddress}
+                            disabled={!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0 || !selectedAddress}
                             className="self-center mt-10 px-16 py-4 rounded-full"
-                            style={{ backgroundColor: (!cart || cart.items.length === 0 || !selectedAddress) ? "#9CA3AF" : "#E95322" }}
+                            style={{ backgroundColor: (!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0 || !selectedAddress) ? "#9CA3AF" : "#E95322" }}
                         >
                             <Text className="text-white font-semibold">Continue to Payment</Text>
                         </TouchableOpacity>

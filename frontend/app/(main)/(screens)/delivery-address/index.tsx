@@ -56,7 +56,7 @@ export default function DeliveryAddressScreen() {
                         <ActivityIndicator size="large" color="#E95322" />
                         <Text className="text-gray-500 mt-4">Loading addresses...</Text>
                     </View>
-                ) : addresses.length === 0 ? (
+                ) : !addresses || !Array.isArray(addresses) || addresses.length === 0 ? (
                     <View className="flex-1 items-center justify-center">
                         <Feather name="map-pin" size={60} color="#E95322" />
                         <Text className="text-xl font-medium text-gray-600 mt-6">No addresses yet</Text>
@@ -83,7 +83,7 @@ export default function DeliveryAddressScreen() {
                             />
                         }
                     >
-                        {addresses.map((a) => {
+                        {addresses && Array.isArray(addresses) && addresses.map((a) => {
                             const active = a.id === selectedAddressId;
                             return (
                                 <View key={a.id}>

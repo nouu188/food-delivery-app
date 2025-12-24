@@ -105,7 +105,7 @@ export default function ReviewScreen() {
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-8">
                 <View className="items-center">
-                    {order.items && order.items.length > 0 && order.items[0].menu_item?.image_url ? (
+                    {order.items && Array.isArray(order.items) && order.items.length > 0 && order.items[0].menu_item?.image_url ? (
                         <Image
                             source={{ uri: order.items[0].menu_item.image_url }}
                             className="w-40 h-32 rounded-2xl"
@@ -120,7 +120,7 @@ export default function ReviewScreen() {
                         {order.restaurant_name || 'Restaurant'}
                     </Text>
                     <Text className="mt-1 text-sm text-[#6B7280]">
-                        {order.items.length} item{order.items.length > 1 ? 's' : ''}
+                        {order.items && Array.isArray(order.items) ? order.items.length : 0} item{(order.items && Array.isArray(order.items) && order.items.length > 1) ? 's' : ''}
                     </Text>
                     <Text className="mt-2 text-center text-[#6B7280] font-semibold">
                         We'd love to know what you{`\n`}think of your order.
