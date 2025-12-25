@@ -19,7 +19,7 @@
     "docker:hotreload": "docker-compose -f docker-compose.yml -f docker-compose.hotreload.yml up",
     "docker:hotreload:build": "docker-compose -f docker-compose.yml -f docker-compose.hotreload.yml up --build",
     "docker:down": "docker-compose down",
-    "seed": "ts-node -r tsconfig-paths/register libs/database/src/lib/seeds/run-seed.ts"
+    "seed": "tsx --tsconfig ./tsconfig.base.json libs/database/src/lib/seeds/run-seed.ts"
   },
   "private": true,
   "dependencies": {
@@ -73,6 +73,7 @@
     "prettier": "^2.6.2",
     "tsconfig-paths": "^4.2.0",
     "tslib": "^2.3.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.40.0",
     "webpack-cli": "^5.1.4",

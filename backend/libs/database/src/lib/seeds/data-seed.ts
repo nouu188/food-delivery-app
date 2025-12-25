@@ -41,6 +41,32 @@ import {
 export async function seedDatabase(dataSource: DataSource) {
   console.log('Starting database seeding...');
 
+  // Clear existing data
+  console.log('Clearing existing data...');
+  await dataSource.query('TRUNCATE TABLE review_images CASCADE');
+  await dataSource.query('TRUNCATE TABLE reviews CASCADE');
+  await dataSource.query('TRUNCATE TABLE user_favorites CASCADE');
+  await dataSource.query('TRUNCATE TABLE payments CASCADE');
+  await dataSource.query('TRUNCATE TABLE deliveries CASCADE');
+  await dataSource.query('TRUNCATE TABLE order_items CASCADE');
+  await dataSource.query('TRUNCATE TABLE orders CASCADE');
+  await dataSource.query('TRUNCATE TABLE cart_items CASCADE');
+  await dataSource.query('TRUNCATE TABLE carts CASCADE');
+  await dataSource.query('TRUNCATE TABLE wallet_transactions CASCADE');
+  await dataSource.query('TRUNCATE TABLE wallets CASCADE');
+  await dataSource.query('TRUNCATE TABLE vouchers CASCADE');
+  await dataSource.query('TRUNCATE TABLE user_addresses CASCADE');
+  await dataSource.query('TRUNCATE TABLE drivers CASCADE');
+  await dataSource.query('TRUNCATE TABLE menu_item_options CASCADE');
+  await dataSource.query('TRUNCATE TABLE menu_items CASCADE');
+  await dataSource.query('TRUNCATE TABLE menu_categories CASCADE');
+  await dataSource.query('TRUNCATE TABLE operating_hours CASCADE');
+  await dataSource.query('TRUNCATE TABLE restaurant_category_mappings CASCADE');
+  await dataSource.query('TRUNCATE TABLE restaurants CASCADE');
+  await dataSource.query('TRUNCATE TABLE restaurant_categories CASCADE');
+  await dataSource.query('TRUNCATE TABLE users CASCADE');
+  console.log('✓ Cleared existing data');
+
   const userRepository = dataSource.getRepository(User);
   const restaurantRepository = dataSource.getRepository(Restaurant);
   const restaurantCategoryRepository = dataSource.getRepository(RestaurantCategory);
@@ -403,6 +429,7 @@ export async function seedDatabase(dataSource: DataSource) {
   const driverUsers = users.filter(u => u.role === UserRole.DRIVER);
 
   // Add more driver users if needed
+  const newDriverUsers: User[] = [];
   for (let i = driverUsers.length + 1; i <= 50; i++) {
     const user = userRepository.create({
       email: `driver${i}@example.com`,
@@ -416,10 +443,12 @@ export async function seedDatabase(dataSource: DataSource) {
       phone_verified_at: new Date(),
       last_login_at: new Date(Date.now() - Math.random() * 5 * 24 * 60 * 60 * 1000),
     });
-    driverUsers.push(user);
+    newDriverUsers.push(user);
   }
 
-  await userRepository.save(driverUsers);
+  // Only save the new driver users, not the ones already saved
+  const savedNewDrivers = await userRepository.save(newDriverUsers);
+  driverUsers.push(...savedNewDrivers);
 
   const vehicleTypes = [VehicleType.MOTORCYCLE, VehicleType.BICYCLE, VehicleType.CAR];
 
@@ -549,7 +578,7 @@ export async function seedDatabase(dataSource: DataSource) {
       const balanceBefore = currentBalance;
 
       currentBalance = type === WalletTransactionType.PAYMENT
-        ? currentBalance - amount
+        ? Math.max(0, currentBalance - amount)  // Ensure balance doesn't go negative
         : currentBalance + amount;
 
       const transaction = walletTransactionRepository.create({
@@ -559,7 +588,7 @@ export async function seedDatabase(dataSource: DataSource) {
         balance_before: balanceBefore,
         balance_after: currentBalance,
         reference_type: type === WalletTransactionType.PAYMENT ? 'ORDER' : type === WalletTransactionType.REFUND ? 'REFUND' : 'TOP_UP',
-        reference_id: `REF${Date.now()}-${i}`,
+        reference_id: `REF${Math.floor(Math.random() * 1000000)}-${i}`,
         description: `${type} transaction`,
       });
       walletTransactions.push(transaction);
@@ -600,6 +629,7 @@ export async function seedDatabase(dataSource: DataSource) {
   for (const cart of carts) {
     const restaurantItems = menuItems.filter(item => item.restaurant_id === cart.restaurant_id);
     const numItems = Math.floor(Math.random() * 4) + 1;
+    let cartSubtotal = 0;
 
     for (let i = 0; i < numItems; i++) {
       const menuItem = restaurantItems[Math.floor(Math.random() * restaurantItems.length)];
@@ -610,15 +640,20 @@ export async function seedDatabase(dataSource: DataSource) {
         cart_id: cart.id,
         menu_item_id: menuItem.id,
         quantity,
-        unit_price: menuItem.price,
+        unit_price: Number(menuItem.price),
         selected_options: { size: 'Medium', spice: 'Mild' },
         ...(hasSpecialInstructions && { special_instructions: 'No onions please' }),
       });
       cartItems.push(cartItem);
+      cartSubtotal += Number(menuItem.price) * quantity;
     }
+
+    // Update cart subtotal
+    cart.subtotal = Number(cartSubtotal.toFixed(2));
   }
 
   await cartItemRepository.save(cartItems);
+  await cartRepository.save(carts); // Update carts with correct subtotals
   console.log(`✓ Seeded ${cartItems.length} cart items`);
 
   // ===============================
@@ -634,22 +669,22 @@ export async function seedDatabase(dataSource: DataSource) {
     const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)];
     const userAddress = userAddresses.find(addr => addr.user_id === customer.id) || userAddresses[0];
     const subtotal = (Math.floor(Math.random() * 200) + 50) * 1000;
-    const deliveryFee = restaurant.delivery_fee;
+    const deliveryFee = Number(restaurant.delivery_fee);
     const discountAmount = Math.random() > 0.7 ? Math.floor(Math.random() * 30) * 1000 : 0;
     const hasVoucher = Math.random() > 0.7;
     const hasSpecialInstructions = Math.random() > 0.7;
     const hasActualDelivery = Math.random() > 0.5;
 
     const order = orderRepository.create({
-      order_number: `ORD${Date.now()}-${i}`,
+      order_number: `ORD${Math.floor(Math.random() * 1000000)}-${i}`,
       user_id: customer.id,
       restaurant_id: restaurant.id,
       delivery_address_id: userAddress.id,
       status: orderStatuses[Math.floor(Math.random() * orderStatuses.length)],
-      subtotal,
-      delivery_fee: deliveryFee,
-      discount_amount: discountAmount,
-      total_amount: subtotal + deliveryFee - discountAmount,
+      subtotal: Number(subtotal.toFixed(2)),
+      delivery_fee: Number(deliveryFee.toFixed(2)),
+      discount_amount: Number(discountAmount.toFixed(2)),
+      total_amount: Number((subtotal + deliveryFee - discountAmount).toFixed(2)),
       ...(hasVoucher && { voucher_id: vouchers[Math.floor(Math.random() * vouchers.length)].id }),
       payment_method: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
       ...(hasSpecialInstructions && { special_instructions: 'Please ring the doorbell' }),
@@ -675,7 +710,7 @@ export async function seedDatabase(dataSource: DataSource) {
     for (let i = 0; i < numItems; i++) {
       const menuItem = restaurantItems[Math.floor(Math.random() * restaurantItems.length)];
       const quantity = Math.floor(Math.random() * 3) + 1;
-      const unitPrice = menuItem.price;
+      const unitPrice = Number(menuItem.price);
       const hasSpecialInstructions = Math.random() > 0.8;
 
       const orderItem = orderItemRepository.create({
@@ -683,8 +718,8 @@ export async function seedDatabase(dataSource: DataSource) {
         menu_item_id: menuItem.id,
         item_name: menuItem.name,
         quantity,
-        unit_price: unitPrice,
-        total_price: unitPrice * quantity,
+        unit_price: Number(unitPrice.toFixed(2)),
+        total_price: Number((unitPrice * quantity).toFixed(2)),
         selected_options: { size: 'Medium', extras: ['Extra Cheese'] },
         ...(hasSpecialInstructions && { special_instructions: 'Extra spicy' }),
       });
@@ -753,13 +788,13 @@ export async function seedDatabase(dataSource: DataSource) {
     const payment = paymentRepository.create({
       order_id: order.id,
       user_id: order.user_id,
-      amount: order.total_amount,
+      amount: Number(order.total_amount),
       method: order.payment_method,
       status: paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)],
-      transaction_id: `TXN${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      transaction_id: `TXN${Math.floor(Math.random() * 1000000)}-${Math.random().toString(36).substring(7)}`,
       gateway_response: { status: 'success', message: 'Payment processed' },
       ...(hasPaidAt && { paid_at: new Date() }),
-      ...(hasRefund && { refund_amount: order.total_amount }),
+      ...(hasRefund && { refund_amount: Number(order.total_amount) }),
       ...(hasRefundedAt && { refunded_at: new Date() }),
     });
     payments.push(payment);
@@ -833,11 +868,19 @@ export async function seedDatabase(dataSource: DataSource) {
   // ===============================
   console.log('Seeding user favorites...');
   const userFavorites: UserFavorite[] = [];
+  const favoritesPairs = new Set<string>(); // Track unique user-restaurant pairs
 
-  for (let i = 0; i < 100; i++) {
-    const customer = customers[i % customers.length];
+  while (userFavorites.length < 100) {
+    const customer = customers[Math.floor(Math.random() * customers.length)];
     const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)];
+    const pairKey = `${customer.id}-${restaurant.id}`;
 
+    // Skip if this pair already exists
+    if (favoritesPairs.has(pairKey)) {
+      continue;
+    }
+
+    favoritesPairs.add(pairKey);
     const favorite = userFavoriteRepository.create({
       user_id: customer.id,
       restaurant_id: restaurant.id,

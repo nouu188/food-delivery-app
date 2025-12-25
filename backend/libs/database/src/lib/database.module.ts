@@ -13,7 +13,7 @@ const entities = Object.values(AllEntities);
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         host: configService.get('DATABASE_HOST', configService.get('DB_HOST', 'localhost')),
-        port: configService.get('DATABASE_PORT', configService.get('DB_PORT', 5432)),
+        port: configService.get('DATABASE_PORT', configService.get('DB_PORT', 5436)),
         username: configService.get('DATABASE_USER', configService.get('POSTGRES_USER', 'postgres')),
         password: configService.get('DATABASE_PASSWORD', configService.get('POSTGRES_PASSWORD', 'postgres')),
         database: configService.get('DATABASE_NAME', configService.get('DB_NAME', 'food_delivery')),

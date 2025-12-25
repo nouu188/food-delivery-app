@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-food_delivery}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5436}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -92,7 +92,7 @@ services:
       PORT: 3001
       MICROSERVICE_PORT: 4001
       DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5436
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
@@ -123,7 +123,7 @@ services:
       PORT: 3002
       MICROSERVICE_PORT: 4002
       DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5436
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
@@ -153,7 +153,7 @@ services:
       PORT: 3003
       MICROSERVICE_PORT: 4003
       DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5436
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
@@ -183,7 +183,7 @@ services:
       PORT: 3004
       MICROSERVICE_PORT: 4004
       DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5436
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
@@ -213,7 +213,7 @@ services:
       PORT: 3005
       MICROSERVICE_PORT: 4005
       DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5436
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
@@ -243,7 +243,7 @@ services:
       PORT: 3006
       MICROSERVICE_PORT: 4006
       DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5436
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
@@ -273,7 +273,7 @@ services:
       PORT: 3007
       MICROSERVICE_PORT: 4007
       DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5436
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
@@ -303,7 +303,7 @@ services:
       PORT: 3008
       MICROSERVICE_PORT: 4008
       DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5436
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
@@ -333,7 +333,7 @@ services:
       PORT: 3009
       MICROSERVICE_PORT: 4009
       DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
+      DATABASE_PORT: 5436
       DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
