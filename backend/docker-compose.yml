@@ -91,11 +91,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3001
       MICROSERVICE_PORT: 4001
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5436
-      DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_xNAME: ${DB_NAME:-food_delivery}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
@@ -122,11 +122,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3002
       MICROSERVICE_PORT: 4002
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5436
-      DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-food_delivery}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
@@ -152,11 +152,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3003
       MICROSERVICE_PORT: 4003
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5436
-      DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-food_delivery}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
@@ -182,11 +182,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3004
       MICROSERVICE_PORT: 4004
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5436
-      DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-food_delivery}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
@@ -212,11 +212,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3005
       MICROSERVICE_PORT: 4005
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5436
-      DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-food_delivery}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
@@ -242,11 +242,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3006
       MICROSERVICE_PORT: 4006
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5436
-      DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-food_delivery}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
@@ -272,11 +272,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3007
       MICROSERVICE_PORT: 4007
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5436
-      DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-food_delivery}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
@@ -302,11 +302,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3008
       MICROSERVICE_PORT: 4008
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5436
-      DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-food_delivery}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}
@@ -332,11 +332,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3009
       MICROSERVICE_PORT: 4009
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5436
-      DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_NAME: ${POSTGRES_DB:-food_delivery}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-food_delivery}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis}

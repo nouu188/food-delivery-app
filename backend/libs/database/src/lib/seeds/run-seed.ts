@@ -15,11 +15,11 @@ const entities = Object.values(AllEntities);
 
 const AppDataSource = new DataSource({
   type: 'postgres',
-  host: configService.get('DATABASE_HOST', configService.get('DB_HOST', 'localhost')),
-  port: parseInt(configService.get('DATABASE_PORT', configService.get('DB_PORT', '5436'))), // Ensure port is a number
-  username: configService.get('DATABASE_USER', configService.get('POSTGRES_USER', 'postgres')),
-  password: configService.get('DATABASE_PASSWORD', configService.get('POSTGRES_PASSWORD', 'postgres')),
-  database: configService.get('DATABASE_NAME', configService.get('DB_NAME', 'food_delivery')),
+  host: configService.get('POSTGRES_HOST', 'localhost'),
+  port: Number(configService.get('POSTGRES_PORT', '5432')),
+  username: configService.get('POSTGRES_USER', 'postgres'),
+  password: configService.get('POSTGRES_PASSWORD', 'postgres'),
+  database: configService.get('POSTGRES_NAME', 'food_delivery'),
   entities: entities,
   synchronize: true,
   logging: true,
