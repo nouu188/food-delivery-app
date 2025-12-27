@@ -5,7 +5,7 @@ import ContactIcon from "./ContactIcon.svg";
 import DessertIcon from "./Dessert.svg";
 import DrinksIcon from "./Drinks.svg";
 import EmptyOrder from "./EmptyOrder.svg";
-import Facebook from "./facebook.svg";
+import Facebook from "./Facebook.svg";
 import FavourIcon from "./FavourIcon.svg";
 import FilterIcon from "./FilterIcon.svg";
 import Gmail from "./Gmail.svg";

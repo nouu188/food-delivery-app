@@ -31,14 +31,11 @@ const getCategoryIcon = (name: string): React.FC<SvgProps> | null => {
 };
 
 interface CategoriesProps {
-    selectedCategory?: string;
-    onSelectCategory?: (categoryId: string) => void;
+    selectedCategory?: string | null;
+    onSelectCategory?: (categoryId: string | null) => void;
 }
 
-const Categories: React.FC<CategoriesProps> = ({
-    selectedCategory,
-    onSelectCategory,
-}) => {
+const Categories: React.FC<CategoriesProps> = ({ selectedCategory, onSelectCategory }) => {
     const router = useRouter();
     const [selected, setSelected] = useState<string | null>(selectedCategory || null);
     const [categories, setCategories] = useState<RestaurantCategory[]>([]);
@@ -65,7 +62,7 @@ const Categories: React.FC<CategoriesProps> = ({
                 setCategories([]);
             }
         } catch (error) {
-            console.error('Failed to load categories:', error);
+            console.error("Failed to load categories:", error);
             setCategories([]);
         } finally {
             setIsLoading(false);
@@ -77,10 +74,10 @@ const Categories: React.FC<CategoriesProps> = ({
         setSelected(newSelection);
 
         if (onSelectCategory) {
-            onSelectCategory(categoryId);
+            onSelectCategory(newSelection);
         } else {
             router.push({
-                pathname: '/Search',
+                pathname: "/Search",
                 params: newSelection ? { category: newSelection } : {},
             });
         }
@@ -121,33 +118,32 @@ const Categories: React.FC<CategoriesProps> = ({
                             style={{ width: 80 }}
                         >
                             <View
-                                className="w-16 h-16 rounded-2xl items-center justify-center mb-2 shadow-sm"
+                                className="w-16 h-16 rounded-2xl items-center justify-center mb-2"
                                 style={{
-                                    backgroundColor: isActive ? "#E95322" : "#FFE3D6",
-                                    shadowColor: isActive ? "#E95322" : "#000",
+                                    backgroundColor: isActive ? "#FFFFFF" : "#FFE3D6",
+                                    borderWidth: isActive ? 2 : 0,
+                                    borderColor: "#E95322",
+                                    shadowColor: "#000",
                                     shadowOffset: { width: 0, height: 2 },
-                                    shadowOpacity: isActive ? 0.3 : 0.1,
+                                    shadowOpacity: 0.08,
                                     shadowRadius: 4,
-                                    elevation: isActive ? 6 : 2,
+                                    elevation: 2,
                                 }}
                             >
                                 {category.icon_url ? (
                                     <Image
                                         source={{ uri: category.icon_url }}
-                                        style={{ width: 32, height: 32, tintColor: isActive ? "#FFFFFF" : "#E95322" }}
+                                        style={{ width: 32, height: 32, tintColor: "#E95322" }}
                                         resizeMode="contain"
                                     />
                                 ) : Icon ? (
-                                    <Icon width={32} height={32} color={isActive ? "#FFFFFF" : "#E95322"} />
+                                    <Icon width={32} height={32} color="#E95322" />
                                 ) : (
                                     <View
                                         className="w-8 h-8 rounded-full items-center justify-center"
-                                        style={{ backgroundColor: isActive ? "#FFFFFF" : "#E95322" }}
+                                        style={{ backgroundColor: "#E95322" }}
                                     >
-                                        <Text
-                                            className="font-bold text-xs"
-                                            style={{ color: isActive ? "#E95322" : "#FFFFFF" }}
-                                        >
+                                        <Text className="font-bold text-xs" style={{ color: "#FFFFFF" }}>
                                             {category.name.charAt(0).toUpperCase()}
                                         </Text>
                                     </View>
@@ -156,7 +152,7 @@ const Categories: React.FC<CategoriesProps> = ({
                             <Text
                                 className="text-xs font-semibold text-center"
                                 style={{
-                                    color: isActive ? "#E95322" : "#391713",
+                                    color: "#391713",
                                 }}
                                 numberOfLines={2}
                             >

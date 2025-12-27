@@ -1,12 +1,14 @@
 import Header from "@/components/common/Header";
 import { Heart } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import userService from "@/services/api/user.service";
 import { FavoriteRestaurant } from "@/types/api/user";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useFocusEffect } from "@react-navigation/native";
+import restaurantService from "@/services/api/restaurant.service";
 
 const FavoritesScreen = () => {
     const router = useRouter();
@@ -14,43 +16,74 @@ const FavoritesScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const fetchFavorites = async (showRefreshIndicator = false) => {
-        try {
-            if (showRefreshIndicator) {
-                setIsRefreshing(true);
-            } else {
-                setIsLoading(true);
-            }
+    const enrichFavorites = useCallback(async (items: FavoriteRestaurant[]): Promise<FavoriteRestaurant[]> => {
+        const missing = items
+            .filter((f) => !f?.restaurant)
+            .map((f) => f.restaurant_id)
+            .filter(Boolean);
+        const uniqueMissing = Array.from(new Set(missing));
+        if (uniqueMissing.length === 0) return items;
 
-            const response = await userService.getFavorites();
+        const results = await Promise.all(
+            uniqueMissing.map(async (restaurantId) => {
+                const restaurant = await restaurantService.getRestaurantById(restaurantId).catch(() => null);
+                return [restaurantId, restaurant] as const;
+            })
+        );
 
-            if (Array.isArray(response)) {
-                setFavorites(response);
-            } else {
-                setFavorites([]);
-            }
-        } catch (error) {
-            showErrorAlert(error, 'Failed to Load Favorites');
-            setFavorites([]);
-        } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
-        }
-    };
+        const restaurantById = new Map(results.filter(([, r]) => !!r));
 
-    useEffect(() => {
-        fetchFavorites();
+        return items.map((fav) => {
+            if (!fav) return fav;
+            if (fav.restaurant) return fav;
+            const restaurant = restaurantById.get(fav.restaurant_id);
+            return restaurant ? { ...fav, restaurant } : fav;
+        });
     }, []);
 
+    const fetchFavorites = useCallback(
+        async (showRefreshIndicator = false) => {
+            try {
+                if (showRefreshIndicator) {
+                    setIsRefreshing(true);
+                } else {
+                    setIsLoading(true);
+                }
+
+                const response = await userService.getFavorites();
+
+                if (Array.isArray(response)) {
+                    const enriched = await enrichFavorites(response);
+                    setFavorites(enriched);
+                } else {
+                    setFavorites([]);
+                }
+            } catch (error) {
+                showErrorAlert(error, "Failed to Load Favorites");
+                setFavorites([]);
+            } finally {
+                setIsLoading(false);
+                setIsRefreshing(false);
+            }
+        },
+        [enrichFavorites]
+    );
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchFavorites();
+        }, [fetchFavorites])
+    );
+
     const handleToggleLike = async (restaurantId: string) => {
-        const updatedFavorites = favorites.filter(fav => fav.restaurant_id !== restaurantId);
+        const updatedFavorites = favorites.filter((fav) => fav.restaurant_id !== restaurantId);
         setFavorites(updatedFavorites);
 
         try {
             await userService.removeFavorite(restaurantId);
         } catch (error) {
             fetchFavorites();
-            showErrorAlert(error, 'Failed to Remove Favorite');
+            showErrorAlert(error, "Failed to Remove Favorite");
         }
     };
 
@@ -83,12 +116,14 @@ const FavoritesScreen = () => {
                         {favorites.length === 0 ? (
                             <View className="items-center py-20">
                                 <Heart size={80} color="#E95322" />
-                                <Text className="text-xl font-medium text-gray-600 mt-6">No favorite restaurants yet</Text>
+                                <Text className="text-xl font-medium text-gray-600 mt-6">
+                                    No favorite restaurants yet
+                                </Text>
                                 <Text className="text-gray-500 text-center mt-2 px-8">
                                     Explore and tap the heart to save your favorites!
                                 </Text>
                                 <TouchableOpacity
-                                    onPress={() => router.push('/(main)/(tabs)/Home')}
+                                    onPress={() => router.push("/(main)/(tabs)/Home")}
                                     className="mt-6 px-8 py-3 rounded-full bg-[#E95322]"
                                 >
                                     <Text className="text-white font-semibold">Explore Restaurants</Text>
@@ -100,7 +135,7 @@ const FavoritesScreen = () => {
                                     if (!favorite) return null;
 
                                     const restaurant = favorite.restaurant || {};
-                                    const restaurantName = restaurant.name || 'Restaurant';
+                                    const restaurantName = restaurant.name || "Restaurant";
                                     const minOrderAmount = Number(restaurant.min_order_amount) || 0;
                                     const logoUrl = restaurant.logo_url;
 
@@ -109,14 +144,20 @@ const FavoritesScreen = () => {
                                             key={favorite.id}
                                             className="w-[48%] mb-7 relative"
                                             activeOpacity={0.9}
-                                            onPress={() => router.push({
-                                                pathname: "/restaurant/[id]",
-                                                params: { id: favorite.restaurant_id }
-                                            })}
+                                            onPress={() =>
+                                                router.push({
+                                                    pathname: "/restaurant/[id]",
+                                                    params: { id: favorite.restaurant_id },
+                                                })
+                                            }
                                         >
                                             <View className="relative">
                                                 {logoUrl ? (
-                                                    <Image source={{ uri: logoUrl }} className="w-full h-36 rounded-2xl" resizeMode="cover" />
+                                                    <Image
+                                                        source={{ uri: logoUrl }}
+                                                        className="w-full h-36 rounded-2xl"
+                                                        resizeMode="cover"
+                                                    />
                                                 ) : (
                                                     <View className="w-full h-36 bg-gray-200 rounded-2xl" />
                                                 )}
@@ -132,7 +173,10 @@ const FavoritesScreen = () => {
                                             </View>
 
                                             <View className="mt-3">
-                                                <Text className="font-bold text-sm text-orange-600 leading-5" numberOfLines={2}>
+                                                <Text
+                                                    className="font-bold text-sm text-orange-600 leading-5"
+                                                    numberOfLines={2}
+                                                >
                                                     {restaurantName}
                                                 </Text>
                                                 {minOrderAmount > 0 ? (
@@ -144,8 +188,11 @@ const FavoritesScreen = () => {
                                                         No minimum order
                                                     </Text>
                                                 )}
-                                                <Text className="text-gray-500 text-xs mt-1 leading-4" numberOfLines={2}>
-                                                    {restaurant.description || 'Your favorite restaurant'}
+                                                <Text
+                                                    className="text-gray-500 text-xs mt-1 leading-4"
+                                                    numberOfLines={2}
+                                                >
+                                                    {restaurant.description || "Your favorite restaurant"}
                                                 </Text>
                                             </View>
                                         </TouchableOpacity>
