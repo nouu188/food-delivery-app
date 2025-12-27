@@ -19,6 +19,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { formatPrice } from "@/utils/format";
 import { CartItem } from "@/types/api/order";
 import CartItemDetailsModal from "./CartItemDetailsModal";
+import VoucherInput from "../voucher/VoucherInput";
 
 const { width } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.86;
@@ -38,7 +39,9 @@ export default function CartSidebar() {
         deselectAllItems,
         selectedTotal,
         selectedCount,
-        fetchCart
+        fetchCart,
+        appliedVoucher,
+        getDiscountedTotal
     } = useCartStore();
 
     const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
@@ -394,12 +397,30 @@ export default function CartSidebar() {
                             </View>
                         )}
 
+                        {cart?.restaurant_id && items.length > 0 && (
+                            <VoucherInput restaurantId={cart.restaurant_id} />
+                        )}
+
                         <View style={styles.totalRow}>
-                            <Text style={styles.totalLabel}>
-                                {selectedItemIds.size === items.length ? 'Total' : 'Selected Total'}
-                            </Text>
+                            <Text style={styles.totalLabel}>Subtotal</Text>
                             <Text style={styles.totalValue}>${formatPrice(totalAmount)}</Text>
                         </View>
+
+                        {appliedVoucher && (
+                            <View style={styles.discountRow}>
+                                <Text style={styles.discountLabel}>Discount</Text>
+                                <Text style={styles.discountValue}>
+                                    -${formatPrice(appliedVoucher.discount_amount)}
+                                </Text>
+                            </View>
+                        )}
+
+                        {appliedVoucher && (
+                            <View style={[styles.totalRow, styles.finalTotalRow]}>
+                                <Text style={styles.finalTotalLabel}>Final Total</Text>
+                                <Text style={styles.finalTotalValue}>${formatPrice(getDiscountedTotal())}</Text>
+                            </View>
+                        )}
 
                         <TouchableOpacity
                             activeOpacity={0.9}
@@ -512,6 +533,24 @@ const styles = StyleSheet.create({
     totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10 },
     totalLabel: { fontSize: 16, fontWeight: "800", color: "#FFFFFF" },
     totalValue: { fontSize: 18, fontWeight: "900", color: "#FFD34E" },
+    discountRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 8,
+        borderTopWidth: 1,
+        borderTopColor: "rgba(255,255,255,0.2)",
+        borderStyle: "dashed",
+    },
+    discountLabel: { fontSize: 15, fontWeight: "700", color: "#FFFFFF", opacity: 0.9 },
+    discountValue: { fontSize: 16, fontWeight: "800", color: "#10B981" },
+    finalTotalRow: {
+        paddingTop: 12,
+        borderTopWidth: 2,
+        borderTopColor: "#FFD34E",
+    },
+    finalTotalLabel: { fontSize: 17, fontWeight: "900", color: "#FFFFFF" },
+    finalTotalValue: { fontSize: 20, fontWeight: "900", color: "#FFD34E" },
     checkoutBtn: {
         marginTop: 6,
         backgroundColor: "#FFFFFF",

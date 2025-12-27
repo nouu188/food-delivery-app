@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import orderService from "@/services/api/order.service";
+import voucherService from "@/services/api/voucher.service";
 import { Cart, AddToCartRequest } from "@/types/api/order";
+import { AppliedVoucher, VoucherValidationResponse } from "@/types/api/voucher";
 
 interface CartState {
     cart: Cart | null;
@@ -8,6 +10,10 @@ interface CartState {
     isLoading: boolean;
     error: string | null;
     selectedItemIds: Set<string>;
+
+    appliedVoucher: AppliedVoucher | null;
+    voucherValidating: boolean;
+    voucherError: string | null;
 
     openDrawer: () => void;
     closeDrawer: () => void;
@@ -26,6 +32,10 @@ interface CartState {
     deselectAllItems: () => void;
     clearSelection: () => void;
 
+    applyVoucher: (code: string, restaurantId: string) => Promise<VoucherValidationResponse>;
+    removeVoucher: () => void;
+    getDiscountedTotal: () => number;
+
     subtotal: () => number;
     total: () => number;
     itemCount: () => number;
@@ -40,6 +50,10 @@ export const useCartStore = create<CartState>((set, get) => ({
     isLoading: false,
     error: null,
     selectedItemIds: new Set<string>(),
+
+    appliedVoucher: null,
+    voucherValidating: false,
+    voucherError: null,
 
     openDrawer: () => set({ isDrawerOpen: true }),
     closeDrawer: () => set({ isDrawerOpen: false }),
@@ -213,5 +227,64 @@ export const useCartStore = create<CartState>((set, get) => ({
         return cart.items
             .filter(item => selectedIds.has(item.id))
             .reduce((sum, item) => sum + item.quantity, 0);
+    },
+
+    applyVoucher: async (code: string, restaurantId: string) => {
+        set({ voucherValidating: true, voucherError: null });
+        try {
+            const orderAmount = get().total();
+
+            const validation = await voucherService.validateVoucher({
+                code,
+                restaurant_id: restaurantId,
+                order_amount: orderAmount,
+            });
+
+            if (validation.is_valid && validation.voucher && validation.discount_amount !== undefined && validation.final_amount !== undefined) {
+                set({
+                    appliedVoucher: {
+                        voucher: validation.voucher,
+                        discount_amount: validation.discount_amount,
+                        final_amount: validation.final_amount,
+                    },
+                    voucherValidating: false,
+                    voucherError: null,
+                });
+            } else {
+                set({
+                    appliedVoucher: null,
+                    voucherValidating: false,
+                    voucherError: validation.message || 'Invalid voucher',
+                });
+            }
+
+            return validation;
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to validate voucher';
+            set({
+                appliedVoucher: null,
+                voucherValidating: false,
+                voucherError: errorMessage,
+            });
+            throw error;
+        }
+    },
+
+    removeVoucher: () => {
+        set({
+            appliedVoucher: null,
+            voucherError: null,
+        });
+    },
+
+    getDiscountedTotal: () => {
+        const total = get().total();
+        const appliedVoucher = get().appliedVoucher;
+
+        if (appliedVoucher) {
+            return total - appliedVoucher.discount_amount;
+        }
+
+        return total;
     },
 }));

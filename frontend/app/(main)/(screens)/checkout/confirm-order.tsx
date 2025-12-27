@@ -6,11 +6,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAddressStore } from "@/store/useAddressStore";
 import { useCartStore } from "@/store/useCartStore";
 import { showErrorAlert } from "@/utils/error-handler";
+import VoucherInput from "@/components/common/voucher/VoucherInput";
 
 export default function ConfirmOrderScreen() {
     const router = useRouter();
     const { addresses, selectedAddressId, fetchAddresses } = useAddressStore();
-    const { cart, selectedItemIds, selectedTotal, isLoading: isCartLoading, fetchCart } = useCartStore();
+    const { cart, selectedItemIds, selectedTotal, isLoading: isCartLoading, fetchCart, appliedVoucher, getDiscountedTotal } = useCartStore();
     const [isLoading, setIsLoading] = useState(true);
 
     const selectedAddress = selectedAddressId
@@ -41,7 +42,7 @@ export default function ConfirmOrderScreen() {
         const subtotal = selectedTotal();
         const deliveryFee = Number(cart?.delivery_fee) || 0;
         const taxAmount = Number(cart?.tax_amount) || 0;
-        const discountAmount = Number(cart?.discount_amount) || 0;
+        const discountAmount = appliedVoucher ? appliedVoucher.discount_amount : (Number(cart?.discount_amount) || 0);
         return subtotal + deliveryFee + taxAmount - discountAmount;
     };
 
@@ -102,6 +103,13 @@ export default function ConfirmOrderScreen() {
                                 </>
                             )}
                         </View>
+
+                        {cart?.restaurant_id && selectedItems.length > 0 && (
+                            <View className="mt-6">
+                                <Text className="text-[#070707] font-bold mb-3">Apply Voucher</Text>
+                                <VoucherInput restaurantId={cart.restaurant_id} />
+                            </View>
+                        )}
 
                         <View className="flex-row items-center justify-between mt-8 mb-2">
                             <Text className="text-[#070707] font-bold">Order Summary</Text>
@@ -178,7 +186,20 @@ export default function ConfirmOrderScreen() {
                                     </Text>
                                 </View>
                             )}
-                            {cart && Number(cart.discount_amount) > 0 && (
+                            {appliedVoucher && appliedVoucher.discount_amount > 0 && (
+                                <View className="flex-row justify-between mb-3">
+                                    <View>
+                                        <Text className="text-[#6B7280]">Discount</Text>
+                                        <Text className="text-[#10B981] text-xs font-semibold mt-0.5">
+                                            {appliedVoucher.voucher.code}
+                                        </Text>
+                                    </View>
+                                    <Text className="font-semibold text-green-600">
+                                        -${appliedVoucher.discount_amount.toFixed(2)}
+                                    </Text>
+                                </View>
+                            )}
+                            {!appliedVoucher && cart && Number(cart.discount_amount) > 0 && (
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Discount</Text>
                                     <Text className="font-semibold text-green-600">

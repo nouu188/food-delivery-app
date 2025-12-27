@@ -25,7 +25,7 @@ const PAYMENT_METHODS: Array<{
 export default function PaymentScreen() {
     const router = useRouter();
     const { addresses, selectedAddressId } = useAddressStore();
-    const { cart, selectedItemIds, removeBulkItems, clearSelection, fetchCart } = useCartStore();
+    const { cart, selectedItemIds, removeBulkItems, clearSelection, fetchCart, appliedVoucher } = useCartStore();
     const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(PaymentMethod.COD);
     const [isProcessing, setIsProcessing] = useState(false);
     const [specialInstructions, setSpecialInstructions] = useState("");
@@ -53,6 +53,7 @@ export default function PaymentScreen() {
                 delivery_address_id: selectedAddress.id,
                 payment_method: selectedPayment,
                 special_instructions: specialInstructions.trim() || undefined,
+                voucher_code: appliedVoucher?.voucher.code,
             });
 
             const selectedIds = Array.from(selectedItemIds);
