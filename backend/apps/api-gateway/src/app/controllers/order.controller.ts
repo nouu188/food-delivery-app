@@ -34,7 +34,21 @@ export class OrderController {
   @Get('cart')
   @UseGuards(JwtAuthGuard)
   async getCart(@Request() req: AuthenticatedRequest) {
-    return firstValueFrom(this.orderService.send(ORDER_PATTERNS.GET_CART, { userId: req.user.id }));
+    try {
+      return await firstValueFrom(this.orderService.send(ORDER_PATTERNS.GET_CART, { userId: req.user.id }));
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 404) {
+        throw new HttpException('Cart not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(errorData.message || 'Failed to get cart', errorData.statusCode);
+      }
+
+      throw error;
+    }
   }
 
   @Post('cart/items')
@@ -77,24 +91,44 @@ export class OrderController {
     @Param('id') id: string,
     @Body() data: UpdateCartItemDto
   ) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.UPDATE_CART_ITEM, {
-        userId: req.user.id,
-        itemId: id,
-        ...data,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.UPDATE_CART_ITEM, {
+          userId: req.user.id,
+          itemId: id,
+          ...data,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode) {
+        throw new HttpException(errorData.message || 'Failed to update cart item', errorData.statusCode);
+      }
+
+      throw error;
+    }
   }
 
   @Delete('cart/items/:id')
   @UseGuards(JwtAuthGuard)
   async removeCartItem(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.REMOVE_FROM_CART, {
-        userId: req.user.id,
-        itemId: id,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.REMOVE_FROM_CART, {
+          userId: req.user.id,
+          itemId: id,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode) {
+        throw new HttpException(errorData.message || 'Failed to remove cart item', errorData.statusCode);
+      }
+
+      throw error;
+    }
   }
 
   @Delete('cart')

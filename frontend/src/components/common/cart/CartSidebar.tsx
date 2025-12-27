@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     Animated,
     Dimensions,
     FlatList,
@@ -14,18 +16,32 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCartStore } from "@/store/useCartStore";
+import { formatPrice } from "@/utils/format";
 
 const { width } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.86;
 
 export default function CartSidebar() {
     const router = useRouter();
-    const { cart, isDrawerOpen, closeDrawer, updateQuantity, removeItem, subtotal } = useCartStore();
+    const { cart, isDrawerOpen, closeDrawer, updateQuantity, removeItem, subtotal, fetchCart } = useCartStore();
 
     const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
+    // Track loading states for individual items
+    const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
+    const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+
     const items = cart?.items || [];
+
+    // Fetch cart when drawer opens
+    useEffect(() => {
+        if (isDrawerOpen) {
+            fetchCart().catch(() => {
+                // Silent fail - cart might not exist yet
+            });
+        }
+    }, [isDrawerOpen, fetchCart]);
 
     const openSidebar = useCallback(() => {
         Animated.parallel([
@@ -46,6 +62,68 @@ export default function CartSidebar() {
     useEffect(() => {
         if (isDrawerOpen) openSidebar();
     }, [isDrawerOpen, openSidebar]);
+
+    const handleUpdateQuantity = async (itemId: string, currentQuantity: number, newQuantity: number) => {
+        if (newQuantity < 1) {
+            // If quantity would be 0 or less, remove the item instead
+            handleRemoveItem(itemId);
+            return;
+        }
+
+        if (newQuantity === currentQuantity) return;
+
+        setLoadingItems(prev => new Set(prev).add(itemId));
+        try {
+            await updateQuantity(itemId, newQuantity);
+        } catch (error: any) {
+            Alert.alert(
+                "Update Failed",
+                error.message || "Failed to update item quantity. Please try again.",
+                [{ text: "OK" }]
+            );
+        } finally {
+            setLoadingItems(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(itemId);
+                return newSet;
+            });
+        }
+    };
+
+    const handleRemoveItem = async (itemId: string) => {
+        Alert.alert(
+            "Remove Item",
+            "Are you sure you want to remove this item from your cart?",
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel",
+                },
+                {
+                    text: "Remove",
+                    style: "destructive",
+                    onPress: async () => {
+                        setRemovingItems(prev => new Set(prev).add(itemId));
+                        try {
+                            await removeItem(itemId);
+                        } catch (error: any) {
+                            Alert.alert(
+                                "Remove Failed",
+                                error.message || "Failed to remove item. Please try again.",
+                                [{ text: "OK" }]
+                            );
+                        } finally {
+                            setRemovingItems(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(itemId);
+                                return newSet;
+                            });
+                        }
+                    },
+                },
+            ]
+        );
+    };
 
     const total = subtotal;
 
@@ -77,50 +155,74 @@ export default function CartSidebar() {
                         data={items}
                         keyExtractor={(x) => x.id}
                         contentContainerStyle={{ paddingBottom: 16 }}
-                        renderItem={({ item }) => (
-                            <View style={styles.itemRow}>
-                                <View style={styles.thumb}>
-                                    {item.menu_item?.image_url ? (
-                                        <Image source={{ uri: item.menu_item.image_url }} style={styles.thumbImg} />
-                                    ) : (
-                                        <View style={[styles.thumbImg, { backgroundColor: "#FFE3D6" }]} />
-                                    )}
-                                </View>
+                        renderItem={({ item }) => {
+                            const isLoading = loadingItems.has(item.id);
+                            const isRemoving = removingItems.has(item.id);
+                            const isDisabled = isLoading || isRemoving;
 
-                                <View style={{ flex: 1 }}>
-                                    <Text numberOfLines={1} style={styles.itemTitle}>
-                                        {item.menu_item?.name || item.item_name}
-                                    </Text>
-                                    <Text style={styles.itemPrice}>${item.unit_price}</Text>
+                            return (
+                                <View style={[styles.itemRow, isRemoving && styles.itemRemoving]}>
+                                    <View style={styles.thumb}>
+                                        {item.menu_item?.image_url ? (
+                                            <Image source={{ uri: item.menu_item.image_url }} style={styles.thumbImg} />
+                                        ) : (
+                                            <View style={[styles.thumbImg, { backgroundColor: "#FFE3D6" }]} />
+                                        )}
+                                        {isRemoving && (
+                                            <View style={styles.thumbOverlay}>
+                                                <ActivityIndicator size="small" color="#E5634D" />
+                                            </View>
+                                        )}
+                                    </View>
 
-                                    <View style={styles.qtyRow}>
-                                        <TouchableOpacity
-                                            onPress={() => updateQuantity(item.id, item.quantity - 1)}
-                                            activeOpacity={0.8}
-                                            style={styles.qtyBtn}
-                                        >
-                                            <Feather name="minus" size={16} color="#E5634D" />
-                                        </TouchableOpacity>
-                                        <Text style={styles.qtyText}>{item.quantity}</Text>
-                                        <TouchableOpacity
-                                            onPress={() => updateQuantity(item.id, item.quantity + 1)}
-                                            activeOpacity={0.8}
-                                            style={[styles.qtyBtn, { backgroundColor: "#E5634D" }]}
-                                        >
-                                            <Feather name="plus" size={16} color="#FFFFFF" />
-                                        </TouchableOpacity>
+                                    <View style={{ flex: 1 }}>
+                                        <Text numberOfLines={1} style={styles.itemTitle}>
+                                            {item.menu_item?.name || item.item_name}
+                                        </Text>
+                                        <Text style={styles.itemPrice}>${formatPrice(item.unit_price)}</Text>
 
-                                        <TouchableOpacity
-                                            onPress={() => removeItem(item.id)}
-                                            activeOpacity={0.8}
-                                            style={styles.removeBtn}
-                                        >
-                                            <Feather name="trash-2" size={16} color="#E5634D" />
-                                        </TouchableOpacity>
+                                        <View style={styles.qtyRow}>
+                                            {isLoading ? (
+                                                <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
+                                            ) : (
+                                                <>
+                                                    <TouchableOpacity
+                                                        onPress={() => handleUpdateQuantity(item.id, item.quantity, item.quantity - 1)}
+                                                        activeOpacity={0.8}
+                                                        style={[styles.qtyBtn, isDisabled && styles.btnDisabled]}
+                                                        disabled={isDisabled}
+                                                    >
+                                                        <Feather name="minus" size={16} color={isDisabled ? "#CCC" : "#E5634D"} />
+                                                    </TouchableOpacity>
+                                                    <Text style={styles.qtyText}>{item.quantity}</Text>
+                                                    <TouchableOpacity
+                                                        onPress={() => handleUpdateQuantity(item.id, item.quantity, item.quantity + 1)}
+                                                        activeOpacity={0.8}
+                                                        style={[styles.qtyBtn, { backgroundColor: isDisabled ? "#CCC" : "#E5634D" }]}
+                                                        disabled={isDisabled}
+                                                    >
+                                                        <Feather name="plus" size={16} color="#FFFFFF" />
+                                                    </TouchableOpacity>
+                                                </>
+                                            )}
+
+                                            <TouchableOpacity
+                                                onPress={() => handleRemoveItem(item.id)}
+                                                activeOpacity={0.8}
+                                                style={[styles.removeBtn, isDisabled && styles.btnDisabled]}
+                                                disabled={isDisabled}
+                                            >
+                                                {isRemoving ? (
+                                                    <ActivityIndicator size="small" color="#E5634D" />
+                                                ) : (
+                                                    <Feather name="trash-2" size={16} color={isDisabled ? "#CCC" : "#E5634D"} />
+                                                )}
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                        )}
+                            );
+                        }}
                         ListEmptyComponent={
                             <View style={{ paddingVertical: 24 }}>
                                 <Text style={styles.emptyText}>Your cart is empty.</Text>
@@ -131,7 +233,7 @@ export default function CartSidebar() {
                     <View style={styles.footer}>
                         <View style={styles.totalRow}>
                             <Text style={styles.totalLabel}>Total</Text>
-                            <Text style={styles.totalValue}>${total}</Text>
+                            <Text style={styles.totalValue}>${formatPrice(total)}</Text>
                         </View>
 
                         <TouchableOpacity
@@ -244,4 +346,16 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     checkoutText: { color: "#E5634D", fontWeight: "900", fontSize: 16 },
+    btnDisabled: {
+        opacity: 0.5,
+    },
+    itemRemoving: {
+        opacity: 0.6,
+    },
+    thumbOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: "rgba(255,255,255,0.8)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
 });

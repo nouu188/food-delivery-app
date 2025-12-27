@@ -28,12 +28,12 @@ export class OrderController {
 
   @MessagePattern(ORDER_PATTERNS.UPDATE_CART_ITEM)
   async updateCartItem(data: any) {
-    return this.orderService.updateCartItem(data.userId, data.id, data);
+    return this.orderService.updateCartItem(data.userId, data.itemId, data);
   }
 
   @MessagePattern(ORDER_PATTERNS.REMOVE_FROM_CART)
-  async removeCartItem(data: { userId: string; id: string }) {
-    return this.orderService.removeCartItem(data.userId, data.id);
+  async removeCartItem(data: { userId: string; itemId: string }) {
+    return this.orderService.removeCartItem(data.userId, data.itemId);
   }
 
   @MessagePattern(ORDER_PATTERNS.CLEAR_CART)

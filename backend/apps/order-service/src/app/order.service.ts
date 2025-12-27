@@ -24,10 +24,10 @@ export class OrderService {
     private readonly restaurantRepository: Repository<Restaurant>,
   ) {}
 
-  async getCart(userId: string) {
+  private async getOrCreateCart(userId: string) {
     let cart = await this.cartRepository.findOne({
       where: { user_id: userId },
-      relations: ['items'],
+      relations: ['items', 'items.menu_item'],
     });
 
     if (!cart) {
@@ -42,29 +42,90 @@ export class OrderService {
     return cart;
   }
 
+  async getCart(userId: string) {
+    const cart = await this.cartRepository.findOne({
+      where: { user_id: userId },
+      relations: ['items', 'items.menu_item'],
+    });
+
+    if (!cart) {
+      throw new RpcException({
+        statusCode: 404,
+        message: 'Cart not found',
+      });
+    }
+
+    const response: any = {
+      ...cart,
+      delivery_fee: 0,
+      tax_amount: 0,
+      discount_amount: 0,
+      total: cart.subtotal,
+      items: [],
+    };
+
+    if (cart.items && cart.items.length > 0) {
+      response.items = cart.items.map(item => ({
+        ...item,
+        item_name: item.menu_item?.name || 'Unknown Item',
+        total_price: Number(item.unit_price) * item.quantity,
+        menu_item: item.menu_item ? {
+          id: item.menu_item.id,
+          name: item.menu_item.name,
+          image_url: item.menu_item.image_url,
+          price: item.menu_item.price,
+        } : null,
+      }));
+    }
+
+    if (cart.restaurant_id) {
+      const restaurant = await this.restaurantRepository.findOne({
+        where: { id: cart.restaurant_id },
+      });
+      if (restaurant) {
+        response.restaurant_name = restaurant.name;
+      }
+    }
+
+    return response;
+  }
+
   async addToCart(userId: string, data: any) {
     try {
       if (!data.menu_item_id) {
-        throw new BadRequestException('menu_item_id is required');
+        throw new RpcException({
+          statusCode: 400,
+          message: 'menu_item_id is required',
+        });
       }
 
       if (!data.quantity || data.quantity < 1) {
-        throw new BadRequestException('quantity must be at least 1');
+        throw new RpcException({
+          statusCode: 400,
+          message: 'quantity must be at least 1',
+        });
       }
 
       const menuItem = await this.menuItemRepository.findOne({
         where: { id: data.menu_item_id },
+        relations: ['restaurant'],
       });
 
       if (!menuItem) {
-        throw new NotFoundException(`Menu item with ID ${data.menu_item_id} not found`);
+        throw new RpcException({
+          statusCode: 404,
+          message: `Menu item with ID ${data.menu_item_id} not found`,
+        });
       }
 
       if (!menuItem.is_available) {
-        throw new BadRequestException('This menu item is currently unavailable');
+        throw new RpcException({
+          statusCode: 400,
+          message: 'This menu item is currently unavailable',
+        });
       }
 
-      const cart = await this.getCart(userId);
+      const cart = await this.getOrCreateCart(userId);
 
       if (cart.restaurant_id && cart.restaurant_id !== menuItem.restaurant_id) {
         const [currentRestaurant, newRestaurant] = await Promise.all([
@@ -103,7 +164,23 @@ export class OrderService {
         existingItem.special_instructions = data.special_instructions || existingItem.special_instructions;
         const updated = await this.cartItemRepository.save(existingItem);
         await this.updateCartTotal(cart.id);
-        return updated;
+
+        const reloaded = await this.cartItemRepository.findOne({
+          where: { id: updated.id },
+          relations: ['menu_item'],
+        });
+
+        return {
+          ...reloaded,
+          item_name: reloaded.menu_item?.name || 'Unknown Item',
+          total_price: Number(reloaded.unit_price) * reloaded.quantity,
+          menu_item: reloaded.menu_item ? {
+            id: reloaded.menu_item.id,
+            name: reloaded.menu_item.name,
+            image_url: reloaded.menu_item.image_url,
+            price: reloaded.menu_item.price,
+          } : null,
+        };
       }
 
       const cartItem = this.cartItemRepository.create({
@@ -119,7 +196,22 @@ export class OrderService {
 
       await this.updateCartTotal(cart.id);
 
-      return savedItem;
+      const reloaded = await this.cartItemRepository.findOne({
+        where: { id: savedItem.id },
+        relations: ['menu_item'],
+      });
+
+      return {
+        ...reloaded,
+        item_name: reloaded.menu_item?.name || 'Unknown Item',
+        total_price: Number(reloaded.unit_price) * reloaded.quantity,
+        menu_item: reloaded.menu_item ? {
+          id: reloaded.menu_item.id,
+          name: reloaded.menu_item.name,
+          image_url: reloaded.menu_item.image_url,
+          price: reloaded.menu_item.price,
+        } : null,
+      };
     } catch (error) {
       console.error('[addToCart] Error:', error);
       throw error;
@@ -128,18 +220,25 @@ export class OrderService {
 
   async updateCartItem(userId: string, itemId: string, data: any) {
     try {
-      const cart = await this.getCart(userId);
+      const cart = await this.getOrCreateCart(userId);
       const item = await this.cartItemRepository.findOne({
         where: { id: itemId, cart_id: cart.id },
+        relations: ['menu_item'],
       });
 
       if (!item) {
-        throw new NotFoundException('Cart item not found');
+        throw new RpcException({
+          statusCode: 404,
+          message: 'Cart item not found',
+        });
       }
 
       if (data.quantity !== undefined) {
         if (data.quantity < 1) {
-          throw new BadRequestException('Quantity must be at least 1');
+          throw new RpcException({
+            statusCode: 400,
+            message: 'Quantity must be at least 1',
+          });
         }
         item.quantity = data.quantity;
       }
@@ -156,7 +255,17 @@ export class OrderService {
 
       await this.updateCartTotal(cart.id);
 
-      return updated;
+      return {
+        ...updated,
+        item_name: updated.menu_item?.name || 'Unknown Item',
+        total_price: Number(updated.unit_price) * updated.quantity,
+        menu_item: updated.menu_item ? {
+          id: updated.menu_item.id,
+          name: updated.menu_item.name,
+          image_url: updated.menu_item.image_url,
+          price: updated.menu_item.price,
+        } : null,
+      };
     } catch (error) {
       console.error('[updateCartItem] Error:', error);
       throw error;
@@ -165,7 +274,7 @@ export class OrderService {
 
   async removeCartItem(userId: string, itemId: string) {
     try {
-      const cart = await this.getCart(userId);
+      const cart = await this.getOrCreateCart(userId);
 
       const item = await this.cartItemRepository.findOne({
         where: {
@@ -175,7 +284,10 @@ export class OrderService {
       });
 
       if (!item) {
-        throw new NotFoundException('Cart item not found');
+        throw new RpcException({
+          statusCode: 404,
+          message: 'Cart item not found',
+        });
       }
 
       await this.cartItemRepository.softDelete({ id: itemId });
@@ -190,7 +302,7 @@ export class OrderService {
 
   async clearCart(userId: string) {
     try {
-      const cart = await this.getCart(userId);
+      const cart = await this.getOrCreateCart(userId);
 
       const items = await this.cartItemRepository.find({
         where: { cart_id: cart.id },
