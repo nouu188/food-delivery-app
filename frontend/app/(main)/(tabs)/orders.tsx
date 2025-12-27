@@ -1,4 +1,3 @@
-// app/(tabs)/orders/index.tsx
 import Header from '@/components/common/Header';
 import OrderItem from '@/components/common/orders/OrderItem';
 import OrderTabHeader from '@/components/common/orders/OrderTabHeader';
@@ -24,7 +23,6 @@ export default function MyOrders() {
         setIsLoading(true);
       }
 
-      // Determine which statuses to fetch based on active tab
       let statuses: OrderStatus[] = [];
       if (activeTab === 'Active') {
         statuses = [
@@ -43,13 +41,13 @@ export default function MyOrders() {
 
       const response = await orderService.getOrders({
         page: 1,
-        limit: 50, // Get more orders for better UX
+        limit: 50,
       });
 
-      // Filter orders by status on client side (backend may not support status filtering)
-      const filteredOrders = response.items.filter(order =>
-        statuses.includes(order.status)
-      );
+      const orderData = response?.data || [];
+      const filteredOrders = Array.isArray(orderData)
+        ? orderData.filter(order => statuses.includes(order.status))
+        : [];
 
       setOrders(filteredOrders);
     } catch (error) {
@@ -74,7 +72,6 @@ export default function MyOrders() {
 
   return (
     <SafeAreaView className="flex-1 bg-YellowBase">
-      {/* Header với nút View History ở bên phải */}
       <Header 
         title="My Orders"
         rightComponent={
@@ -90,12 +87,9 @@ export default function MyOrders() {
         }
       />
 
-      {/* Phần nội dung trắng bo góc */}
       <View className="flex-1 bg-white rounded-t-3xl px-5 pt-6">
-        {/* Tab Active | Completed | Cancelled */}
         <OrderTabHeader activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Danh sách đơn hàng */}
         {isLoading ? (
           <View className="flex-1 items-center justify-center pt-20">
             <ActivityIndicator size="large" color="#E95322" />
@@ -129,7 +123,6 @@ export default function MyOrders() {
                 </View>
               ) : (
                 orders.map((order) => {
-                  // Get first item name or restaurant name
                   const displayName = order.items?.[0]?.menu_item?.name || 'Order';
                   const itemCount = order.items?.length || 0;
 
@@ -138,7 +131,7 @@ export default function MyOrders() {
                       key={order.id}
                       id={order.id}
                       name={displayName}
-                      price={`$${order.total_amount.toFixed(2)}`}
+                      price={`$${order.total_amount}`}
                       date={formatDate(order.created_at)}
                       itemsCount={itemCount}
                       image={order.items?.[0]?.menu_item?.image_url

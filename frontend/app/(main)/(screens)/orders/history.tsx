@@ -29,8 +29,10 @@ export default function HistoryScreen() {
             });
 
             let historyOrders: Order[] = [];
-            if (response?.items && Array.isArray(response.items)) {
-                historyOrders = response.items.filter(order =>
+            const orderData = response?.data || [];
+
+            if (Array.isArray(orderData)) {
+                historyOrders = orderData.filter(order =>
                     [OrderStatus.DELIVERED, OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(order.status)
                 );
             }
@@ -41,7 +43,9 @@ export default function HistoryScreen() {
                 setOrders(prev => [...prev, ...historyOrders]);
             }
 
-            setHasMore(response?.meta?.has_next_page ?? false);
+            const currentPage = response?.page || pageNum;
+            const totalPages = response?.total_pages || 1;
+            setHasMore(currentPage < totalPages);
         } catch (error) {
             showErrorAlert(error, 'Failed to Load Order History');
             if (pageNum === 1) {
@@ -162,7 +166,7 @@ export default function HistoryScreen() {
 
                                                 <View className="items-end">
                                                     <Text className="text-2xl font-bold text-red-600">
-                                                        ${order.total_amount.toFixed(2)}
+                                                        ${order.total_amount}
                                                     </Text>
                                                     <Text className="text-sm text-gray-500">
                                                         {order.items?.length || 0} items

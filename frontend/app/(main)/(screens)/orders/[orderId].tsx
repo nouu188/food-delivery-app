@@ -168,7 +168,7 @@ export default function OrderDetails() {
                       {item.menu_item?.name || item.item_name}
                     </Text>
                     <Text className="text-sm text-gray-500 mt-1">
-                      ${item.unit_price.toFixed(2)}
+                      ${item.unit_price}
                     </Text>
                   </View>
                   <Text className="text-base text-gray-700 font-medium">
@@ -181,14 +181,14 @@ export default function OrderDetails() {
                 <View className="flex-row justify-between mb-4">
                   <Text className="text-base text-gray-600">Subtotal</Text>
                   <Text className="text-base font-medium">
-                    ${order.subtotal.toFixed(2)}
+                    ${order.subtotal}
                   </Text>
                 </View>
                 {order.tax_amount > 0 && (
                   <View className="flex-row justify-between mb-4">
                     <Text className="text-base text-gray-600">Tax and Fees</Text>
                     <Text className="text-base font-medium">
-                      ${order.tax_amount.toFixed(2)}
+                      ${order.tax_amount}
                     </Text>
                   </View>
                 )}
@@ -196,7 +196,7 @@ export default function OrderDetails() {
                   <View className="flex-row justify-between mb-4">
                     <Text className="text-base text-gray-600">Delivery</Text>
                     <Text className="text-base font-medium">
-                      ${order.delivery_fee.toFixed(2)}
+                      ${order.delivery_fee}
                     </Text>
                   </View>
                 )}
@@ -204,7 +204,7 @@ export default function OrderDetails() {
                   <View className="flex-row justify-between mb-4">
                     <Text className="text-base text-green-600">Discount</Text>
                     <Text className="text-base font-medium text-green-600">
-                      -${order.discount_amount.toFixed(2)}
+                      -${order.discount_amount}
                     </Text>
                   </View>
                 )}
@@ -212,7 +212,7 @@ export default function OrderDetails() {
                 <View className="flex-row justify-between pb-6 border-b border-gray-200">
                   <Text className="text-xl font-bold text-gray-900">Total</Text>
                   <Text className="text-xl font-bold text-red-600">
-                    ${order.total_amount.toFixed(2)}
+                    ${order.total_amount}
                   </Text>
                 </View>
               </View>

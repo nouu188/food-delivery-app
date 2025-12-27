@@ -91,7 +91,7 @@ export default function CartSidebar() {
                                     <Text numberOfLines={1} style={styles.itemTitle}>
                                         {item.menu_item?.name || item.item_name}
                                     </Text>
-                                    <Text style={styles.itemPrice}>${item.unit_price.toFixed(2)}</Text>
+                                    <Text style={styles.itemPrice}>${item.unit_price}</Text>
 
                                     <View style={styles.qtyRow}>
                                         <TouchableOpacity
@@ -131,7 +131,7 @@ export default function CartSidebar() {
                     <View style={styles.footer}>
                         <View style={styles.totalRow}>
                             <Text style={styles.totalLabel}>Total</Text>
-                            <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+                            <Text style={styles.totalValue}>${total}</Text>
                         </View>
 
                         <TouchableOpacity

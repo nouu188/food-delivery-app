@@ -152,12 +152,9 @@ export interface GetOrdersRequest {
 }
 
 export interface GetOrdersResponse {
-  items: Order[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    total_pages: number;
-    has_next_page: boolean;
-  };
+  data: Order[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
 }

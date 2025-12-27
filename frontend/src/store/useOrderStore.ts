@@ -13,6 +13,7 @@ interface OrderState {
     createOrder: (data: CreateOrderRequest) => Promise<Order>;
     cancelOrder: (orderId: string, reason: string) => Promise<void>;
     reorder: (orderId: string) => Promise<Order>;
+    clearOrders: () => void;
     setOrders: (orders: Order[]) => void;
     getOrdersByStatus: (status: OrderStatus) => Order[];
 }
@@ -26,7 +27,8 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await orderService.getOrders({ status });
-            const orders = response?.items && Array.isArray(response.items) ? response.items : [];
+            const orderData = response?.data || response?.items || [];
+            const orders = Array.isArray(orderData) ? orderData : [];
             set({ orders, isLoading: false });
         } catch (error: any) {
             set({ error: error.message, isLoading: false, orders: [] });
@@ -109,6 +111,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     setOrders: (orders) => set({ orders }),
 
     getOrdersByStatus: (status) => {
-        return get().orders.filter((o) => o.status === status);
+        const orders = get().orders;
+        return Array.isArray(orders) ? orders.filter((o) => o.status === status) : [];
     },
 }));

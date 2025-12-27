@@ -93,7 +93,7 @@ export default function PaymentScreen() {
                             <Text className="text-[#070707] font-bold">Order Summary</Text>
                             <Text className="text-xs text-[#6B7280] mt-1">{cart?.items && Array.isArray(cart.items) ? cart.items.length : 0} items</Text>
                         </View>
-                        <Text className="font-extrabold text-[#E95322]">${cart?.subtotal.toFixed(2) || '0.00'}</Text>
+                        <Text className="font-extrabold text-[#E95322]">${cart?.subtotal || '0.00'}</Text>
                     </View>
 
                     <Text className="mt-8 text-[#070707] font-bold mb-3">Payment Method</Text>

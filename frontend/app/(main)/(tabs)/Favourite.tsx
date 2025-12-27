@@ -1,8 +1,7 @@
-import { FavoriteItem } from "@/components/common/favourites/FavoriteItem";
 import Header from "@/components/common/Header";
 import { Heart } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import userService from "@/services/api/user.service";
@@ -25,8 +24,8 @@ const FavoritesScreen = () => {
 
             const response = await userService.getFavorites();
 
-            if (response?.items && Array.isArray(response.items)) {
-                setFavorites(response.items);
+            if (Array.isArray(response)) {
+                setFavorites(response);
             } else {
                 setFavorites([]);
             }
@@ -50,14 +49,9 @@ const FavoritesScreen = () => {
         try {
             await userService.removeFavorite(restaurantId);
         } catch (error) {
-
             fetchFavorites();
             showErrorAlert(error, 'Failed to Remove Favorite');
         }
-    };
-
-    const handleNavigateToRestaurant = (restaurantId: string) => {
-        router.push(`/restaurant/${restaurantId}`);
     };
 
     return (
@@ -102,17 +96,61 @@ const FavoritesScreen = () => {
                             </View>
                         ) : (
                             <View className="flex-row flex-wrap justify-between">
-                                {favorites.map((favorite) => (
-                                    <FavoriteItem
-                                        key={favorite.id}
-                                        id={favorite.restaurant_id}
-                                        name={favorite.restaurant.name}
-                                        price={0} 
-                                        image={favorite.restaurant.logo_url ? { uri: favorite.restaurant.logo_url } : null}
-                                        liked={true}
-                                        onToggleLike={() => handleToggleLike(favorite.restaurant_id)}
-                                    />
-                                ))}
+                                {favorites.map((favorite) => {
+                                    if (!favorite) return null;
+
+                                    const restaurant = favorite.restaurant || {};
+                                    const restaurantName = restaurant.name || 'Restaurant';
+                                    const minOrderAmount = Number(restaurant.min_order_amount) || 0;
+                                    const logoUrl = restaurant.logo_url;
+
+                                    return (
+                                        <TouchableOpacity
+                                            key={favorite.id}
+                                            className="w-[48%] mb-7 relative"
+                                            activeOpacity={0.9}
+                                            onPress={() => router.push({
+                                                pathname: "/restaurant/[id]",
+                                                params: { id: favorite.restaurant_id }
+                                            })}
+                                        >
+                                            <View className="relative">
+                                                {logoUrl ? (
+                                                    <Image source={{ uri: logoUrl }} className="w-full h-36 rounded-2xl" resizeMode="cover" />
+                                                ) : (
+                                                    <View className="w-full h-36 bg-gray-200 rounded-2xl" />
+                                                )}
+                                                <TouchableOpacity
+                                                    onPress={(e) => {
+                                                        e.stopPropagation();
+                                                        handleToggleLike(favorite.restaurant_id);
+                                                    }}
+                                                    className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full shadow-md"
+                                                >
+                                                    <Heart size={22} color="#E95322" fill="#E95322" />
+                                                </TouchableOpacity>
+                                            </View>
+
+                                            <View className="mt-3">
+                                                <Text className="font-bold text-sm text-orange-600 leading-5" numberOfLines={2}>
+                                                    {restaurantName}
+                                                </Text>
+                                                {minOrderAmount > 0 ? (
+                                                    <Text className="text-orange-600 font-bold text-base mt-1">
+                                                        ${minOrderAmount} min
+                                                    </Text>
+                                                ) : (
+                                                    <Text className="text-gray-500 font-semibold text-sm mt-1">
+                                                        No minimum order
+                                                    </Text>
+                                                )}
+                                                <Text className="text-gray-500 text-xs mt-1 leading-4" numberOfLines={2}>
+                                                    {restaurant.description || 'Your favorite restaurant'}
+                                                </Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })}
                             </View>
                         )}
                     </ScrollView>

@@ -124,7 +124,7 @@ export default function CancelOrderScreen() {
                             {order.restaurant_name || 'Restaurant'} • {order.items && Array.isArray(order.items) ? order.items.length : 0} item{order.items && Array.isArray(order.items) && order.items.length > 1 ? 's' : ''}
                         </Text>
                         <Text className="text-[#E95322] font-bold text-lg mt-2">
-                            ${order.total_amount.toFixed(2)}
+                            ${order.total_amount}
                         </Text>
                     </View>
 

@@ -78,7 +78,7 @@ export default function OrderConfirmedScreen() {
                                 </View>
                                 <View className="flex-row justify-between mb-2">
                                     <Text className="text-[#6B7280]">Total Amount</Text>
-                                    <Text className="font-bold text-[#E95322]">${order.total_amount.toFixed(2)}</Text>
+                                    <Text className="font-bold text-[#E95322]">${order.total_amount}</Text>
                                 </View>
                                 <View className="flex-row justify-between">
                                     <Text className="text-[#6B7280]">Estimated Delivery</Text>

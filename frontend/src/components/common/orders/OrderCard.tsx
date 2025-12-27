@@ -28,7 +28,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onCancel, onReview, onReor
             <View style={styles.detailsContainer}>
                 <View style={styles.row}>
                     <Text style={styles.name}>{order.restaurant_name || 'Restaurant'}</Text>
-                    <Text style={styles.price}>${order.total_amount.toFixed(2)}</Text>
+                    <Text style={styles.price}>${order.total_amount}</Text>
                 </View>
 
                 <View style={[styles.row, { marginTop: 4 }]}>

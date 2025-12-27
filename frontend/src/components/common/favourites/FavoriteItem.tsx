@@ -21,7 +21,6 @@ export const FavoriteItem = ({ id, name, price, image, liked, onToggleLike }: Fa
             activeOpacity={0.9}
             onPress={() => router.push(`/food/${id}`)}
         >
-            {/* Ảnh món */}
             <View className="relative">
                 {image && <Image source={image} className="w-full h-36 rounded-2xl" resizeMode="cover" />}
                 {!image && <View className="w-full h-36 bg-gray-200 rounded-2xl" />}
@@ -36,12 +35,11 @@ export const FavoriteItem = ({ id, name, price, image, liked, onToggleLike }: Fa
                 </TouchableOpacity>
             </View>
 
-            {/* Thông tin */}
             <View className="mt-3">
                 <Text className="font-bold text-sm text-orange-600 leading-5" numberOfLines={2}>
                     {name}
                 </Text>
-                <Text className="text-orange-600 font-bold text-base mt-1">${price.toFixed(2)}</Text>
+                <Text className="text-orange-600 font-bold text-base mt-1">${price}</Text>
                 <Text className="text-gray-500 text-xs mt-1 leading-4" numberOfLines={2}>
                     Lorem ipsum dolor sit amet, consectetur...
                 </Text>

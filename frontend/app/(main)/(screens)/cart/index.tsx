@@ -128,7 +128,7 @@ export default function CartScreen() {
                                                 {item.menu_item?.name || item.item_name}
                                             </Text>
                                             <Text className="text-[#E95322] font-bold mt-1">
-                                                ${item.unit_price.toFixed(2)}
+                                                ${item.unit_price}
                                             </Text>
 
                                             <View className="flex-row items-center mt-3">
@@ -171,7 +171,7 @@ export default function CartScreen() {
                                 <View className="mt-8 flex-row items-center justify-between">
                                     <Text className="text-lg font-extrabold text-[#070707]">Subtotal</Text>
                                     <Text className="text-lg font-extrabold text-[#070707]">
-                                        ${cart.subtotal.toFixed(2)}
+                                        ${cart.subtotal}
                                     </Text>
                                 </View>
 
@@ -179,7 +179,7 @@ export default function CartScreen() {
                                     <View className="mt-2 flex-row items-center justify-between">
                                         <Text className="text-sm text-green-600">Discount</Text>
                                         <Text className="text-sm text-green-600">
-                                            -${cart.discount_amount.toFixed(2)}
+                                            -${cart.discount_amount}
                                         </Text>
                                     </View>
                                 )}

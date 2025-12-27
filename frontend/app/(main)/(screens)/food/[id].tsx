@@ -316,8 +316,8 @@ export default function FoodDetail() {
                                                 const priceText = option.price_adjustment === 0
                                                     ? 'Included'
                                                     : option.price_adjustment > 0
-                                                        ? `+$${option.price_adjustment.toFixed(2)}`
-                                                        : `-$${Math.abs(option.price_adjustment).toFixed(2)}`;
+                                                        ? `+$${option.price_adjustment}`
+                                                        : `-$${Math.abs(option.price_adjustment)}`;
 
                                                 return (
                                                     <View key={option.id}>
@@ -359,7 +359,7 @@ export default function FoodDetail() {
                     <View className="flex-row items-center justify-between mb-3">
                         <Text className="text-[#6B7280] text-sm">Total</Text>
                         <Text className="text-[#E95322] text-2xl font-extrabold">
-                            ${calculateTotalPrice().toFixed(2)}
+                            ${calculateTotalPrice()}
                         </Text>
                     </View>
 

@@ -105,7 +105,7 @@ export default function ConfirmOrderScreen() {
                                         </Text>
                                         <Text className="text-[#6B7280] text-xs mt-1">{item.quantity} items</Text>
                                     </View>
-                                    <Text className="font-bold text-[#E95322]">${item.total_price.toFixed(2)}</Text>
+                                    <Text className="font-bold text-[#E95322]">${item.total_price}</Text>
                                 </View>
                             ))}
                         </View>
@@ -113,29 +113,29 @@ export default function ConfirmOrderScreen() {
                         <View className="mt-8">
                             <View className="flex-row justify-between mb-3">
                                 <Text className="text-[#6B7280]">Subtotal</Text>
-                                <Text className="font-semibold text-[#070707]">${cart?.subtotal.toFixed(2) || '0.00'}</Text>
+                                <Text className="font-semibold text-[#070707]">${cart?.subtotal || '0.00'}</Text>
                             </View>
                             {cart && cart.tax_amount > 0 && (
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Tax and Fees</Text>
-                                    <Text className="font-semibold text-[#070707]">${cart.tax_amount.toFixed(2)}</Text>
+                                    <Text className="font-semibold text-[#070707]">${cart.tax_amount}</Text>
                                 </View>
                             )}
                             {cart && cart.delivery_fee > 0 && (
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Delivery</Text>
-                                    <Text className="font-semibold text-[#070707]">${cart.delivery_fee.toFixed(2)}</Text>
+                                    <Text className="font-semibold text-[#070707]">${cart.delivery_fee}</Text>
                                 </View>
                             )}
                             {cart && cart.discount_amount > 0 && (
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Discount</Text>
-                                    <Text className="font-semibold text-green-600">-${cart.discount_amount.toFixed(2)}</Text>
+                                    <Text className="font-semibold text-green-600">-${cart.discount_amount}</Text>
                                 </View>
                             )}
                             <View className="flex-row justify-between border-t pt-5" style={{ borderTopColor: "#FFD8C7" }}>
                                 <Text className="text-lg font-extrabold text-[#070707]">Total</Text>
-                                <Text className="text-lg font-extrabold text-[#E95322]">${cart?.total.toFixed(2) || '0.00'}</Text>
+                                <Text className="text-lg font-extrabold text-[#E95322]">${cart?.total || '0.00'}</Text>
                             </View>
                         </View>
 
