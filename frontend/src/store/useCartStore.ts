@@ -8,20 +8,17 @@ interface CartState {
     isLoading: boolean;
     error: string | null;
 
-    // Drawer actions
     openDrawer: () => void;
     closeDrawer: () => void;
     toggleDrawer: () => void;
     setDrawerOpen: (open: boolean) => void;
 
-    // Cart actions
     fetchCart: () => Promise<void>;
     addToCart: (data: AddToCartRequest) => Promise<void>;
     updateQuantity: (itemId: string, quantity: number) => Promise<void>;
     removeItem: (itemId: string) => Promise<void>;
     clearCart: () => Promise<void>;
 
-    // Computed
     get subtotal(): number;
     get itemCount(): number;
 }
@@ -54,8 +51,9 @@ export const useCartStore = create<CartState>((set, get) => ({
     addToCart: async (data) => {
         set({ isLoading: true, error: null });
         try {
-            const updatedCart = await orderService.addToCart(data);
-            set({ cart: updatedCart, isLoading: false });
+            await orderService.addToCart(data);
+            const cart = await orderService.getCart();
+            set({ cart, isLoading: false });
         } catch (error: any) {
             set({ error: error.message, isLoading: false });
             if (error.response?.status === 409) {
@@ -68,19 +66,10 @@ export const useCartStore = create<CartState>((set, get) => ({
     updateQuantity: async (itemId, quantity) => {
         set({ isLoading: true, error: null });
         try {
-            const updatedItem = await orderService.updateCartItem(itemId, { quantity });
-            set((state) => {
-                if (state.cart) {
-                    const items = state.cart.items.map((item) =>
-                        item.id === itemId ? updatedItem : item
-                    );
-                    return {
-                        cart: { ...state.cart, items },
-                        isLoading: false
-                    };
-                }
-                return { isLoading: false };
-            });
+            await orderService.updateCartItem(itemId, { quantity });
+
+            const cart = await orderService.getCart();
+            set({ cart, isLoading: false });
         } catch (error: any) {
             set({ error: error.message, isLoading: false });
             throw error;
@@ -91,16 +80,17 @@ export const useCartStore = create<CartState>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             await orderService.removeCartItem(itemId);
-            set((state) => {
-                if (state.cart) {
-                    const items = state.cart.items.filter((item) => item.id !== itemId);
-                    return {
-                        cart: { ...state.cart, items },
-                        isLoading: false
-                    };
+
+            try {
+                const cart = await orderService.getCart();
+                set({ cart, isLoading: false });
+            } catch (error: any) {
+                if (error.response?.status === 404) {
+                    set({ cart: null, isLoading: false });
+                } else {
+                    throw error;
                 }
-                return { isLoading: false };
-            });
+            }
         } catch (error: any) {
             set({ error: error.message, isLoading: false });
             throw error;

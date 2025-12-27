@@ -9,9 +9,14 @@ import { showErrorAlert } from "@/utils/error-handler";
 
 export default function ConfirmOrderScreen() {
     const router = useRouter();
-    const { addresses, selectedAddressId, selectedAddress, fetchAddresses } = useAddressStore();
+    const { addresses, selectedAddressId, fetchAddresses } = useAddressStore();
     const { cart, isLoading: isCartLoading, fetchCart } = useCartStore();
     const [isLoading, setIsLoading] = useState(true);
+
+    // Compute selected address from store state (not using getter)
+    const selectedAddress = selectedAddressId
+        ? addresses.find(a => a.id === selectedAddressId) || null
+        : null;
 
     useEffect(() => {
         loadData();
@@ -29,6 +34,15 @@ export default function ConfirmOrderScreen() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const calculateTotal = () => {
+        if (!cart) return 0;
+        const subtotal = Number(cart.subtotal) || 0;
+        const deliveryFee = Number(cart.delivery_fee) || 0;
+        const taxAmount = Number(cart.tax_amount) || 0;
+        const discountAmount = Number(cart.discount_amount) || 0;
+        return subtotal + deliveryFee + taxAmount - discountAmount;
     };
 
     const handlePlaceOrder = () => {
@@ -66,7 +80,7 @@ export default function ConfirmOrderScreen() {
                                 <Text className="text-[#E95322] font-semibold text-xs">Edit</Text>
                             </TouchableOpacity>
                         </View>
-                        <View className="mt-3 rounded-2xl px-4 py-3" style={{ backgroundColor: "#FFF5D6" }}>
+                        <View className="mt-3 rounded-2xl px-4 py-3" style={{ backgroundColor: selectedAddress ? "#FFF5D6" : "#FEE2E2" }}>
                             {selectedAddress ? (
                                 <>
                                     <Text className="text-[#070707] font-semibold">{selectedAddress.label}</Text>
@@ -75,13 +89,32 @@ export default function ConfirmOrderScreen() {
                                     </Text>
                                 </>
                             ) : (
-                                <Text className="text-[#9CA3AF] text-sm">No address selected</Text>
+                                <>
+                                    <Text className="text-red-600 font-semibold text-sm">No delivery address selected</Text>
+                                    <TouchableOpacity
+                                        onPress={() => router.push('/delivery-address/add')}
+                                        className="mt-2 self-start"
+                                    >
+                                        <Text className="text-[#E95322] font-semibold text-xs underline">Add Address Now</Text>
+                                    </TouchableOpacity>
+                                </>
                             )}
                         </View>
 
                         <Text className="mt-8 text-[#070707] font-bold">Order Summary</Text>
                         <View className="mt-4">
-                            {cart?.items && Array.isArray(cart.items) && cart.items.map((item) => (
+                            {!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0 ? (
+                                <View className="py-10 items-center">
+                                    <Text className="text-gray-400 text-center">Your cart is empty</Text>
+                                    <TouchableOpacity
+                                        onPress={() => router.push('/(main)/(tabs)/Home')}
+                                        className="mt-4 px-6 py-3 bg-[#E95322] rounded-full"
+                                    >
+                                        <Text className="text-white font-semibold">Start Shopping</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : (
+                                cart.items.map((item) => (
                                 <View
                                     key={item.id}
                                     className="flex-row items-center py-4 border-b"
@@ -103,51 +136,70 @@ export default function ConfirmOrderScreen() {
                                         <Text className="font-semibold text-[#070707]" numberOfLines={1}>
                                             {item.menu_item?.name || item.item_name}
                                         </Text>
-                                        <Text className="text-[#6B7280] text-xs mt-1">{item.quantity} items</Text>
+                                        <Text className="text-[#6B7280] text-xs mt-1">
+                                            {item.quantity} × ${Number(item.unit_price).toFixed(2)}
+                                        </Text>
                                     </View>
-                                    <Text className="font-bold text-[#E95322]">${item.total_price}</Text>
+                                    <Text className="font-bold text-[#E95322]">
+                                        ${(Number(item.unit_price) * Number(item.quantity)).toFixed(2)}
+                                    </Text>
                                 </View>
-                            ))}
+                                ))
+                            )}
                         </View>
 
                         <View className="mt-8">
                             <View className="flex-row justify-between mb-3">
                                 <Text className="text-[#6B7280]">Subtotal</Text>
-                                <Text className="font-semibold text-[#070707]">${cart?.subtotal || '0.00'}</Text>
+                                <Text className="font-semibold text-[#070707]">
+                                    ${cart?.subtotal ? Number(cart.subtotal).toFixed(2) : '0.00'}
+                                </Text>
                             </View>
-                            {cart && cart.tax_amount > 0 && (
+                            {cart && Number(cart.tax_amount) > 0 && (
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Tax and Fees</Text>
-                                    <Text className="font-semibold text-[#070707]">${cart.tax_amount}</Text>
+                                    <Text className="font-semibold text-[#070707]">
+                                        ${Number(cart.tax_amount).toFixed(2)}
+                                    </Text>
                                 </View>
                             )}
-                            {cart && cart.delivery_fee > 0 && (
+                            {cart && Number(cart.delivery_fee) > 0 && (
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Delivery</Text>
-                                    <Text className="font-semibold text-[#070707]">${cart.delivery_fee}</Text>
+                                    <Text className="font-semibold text-[#070707]">
+                                        ${Number(cart.delivery_fee).toFixed(2)}
+                                    </Text>
                                 </View>
                             )}
-                            {cart && cart.discount_amount > 0 && (
+                            {cart && Number(cart.discount_amount) > 0 && (
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Discount</Text>
-                                    <Text className="font-semibold text-green-600">-${cart.discount_amount}</Text>
+                                    <Text className="font-semibold text-green-600">
+                                        -${Number(cart.discount_amount).toFixed(2)}
+                                    </Text>
                                 </View>
                             )}
                             <View className="flex-row justify-between border-t pt-5" style={{ borderTopColor: "#FFD8C7" }}>
                                 <Text className="text-lg font-extrabold text-[#070707]">Total</Text>
-                                <Text className="text-lg font-extrabold text-[#E95322]">${cart?.total || '0.00'}</Text>
+                                <Text className="text-lg font-extrabold text-[#E95322]">
+                                    ${calculateTotal().toFixed(2)}
+                                </Text>
                             </View>
                         </View>
 
-                        <TouchableOpacity
-                            activeOpacity={0.9}
-                            onPress={handlePlaceOrder}
-                            disabled={!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0 || !selectedAddress}
-                            className="self-center mt-10 px-16 py-4 rounded-full"
-                            style={{ backgroundColor: (!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0 || !selectedAddress) ? "#9CA3AF" : "#E95322" }}
-                        >
-                            <Text className="text-white font-semibold">Continue to Payment</Text>
-                        </TouchableOpacity>
+                        {cart && cart.items && Array.isArray(cart.items) && cart.items.length > 0 && (
+                            <TouchableOpacity
+                                activeOpacity={0.9}
+                                onPress={handlePlaceOrder}
+                                disabled={!selectedAddress}
+                                className="self-center mt-10 px-16 py-4 rounded-full"
+                                style={{ backgroundColor: !selectedAddress ? "#9CA3AF" : "#E95322" }}
+                            >
+                                <Text className="text-white font-semibold">
+                                    {selectedAddress ? 'Continue to Payment' : 'Select Address First'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </ScrollView>
                 )}
             </View>

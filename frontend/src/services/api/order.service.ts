@@ -17,7 +17,7 @@ class OrderService {
     return response.data;
   }
 
-  async addToCart(data: AddToCartRequest): Promise<Cart> {
+  async addToCart(data: AddToCartRequest): Promise<CartItem> {
     const response = await apiClient.post('/cart/items', data);
     return response.data;
   }

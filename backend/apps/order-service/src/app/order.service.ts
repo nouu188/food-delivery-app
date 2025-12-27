@@ -127,47 +127,89 @@ export class OrderService {
   }
 
   async updateCartItem(userId: string, itemId: string, data: any) {
-    const cart = await this.getCart(userId);
-    const item = await this.cartItemRepository.findOne({
-      where: { id: itemId, cart_id: cart.id },
-    });
+    try {
+      const cart = await this.getCart(userId);
+      const item = await this.cartItemRepository.findOne({
+        where: { id: itemId, cart_id: cart.id },
+      });
 
-    if (!item) {
-      throw new NotFoundException('Cart item not found');
+      if (!item) {
+        throw new NotFoundException('Cart item not found');
+      }
+
+      if (data.quantity !== undefined) {
+        if (data.quantity < 1) {
+          throw new BadRequestException('Quantity must be at least 1');
+        }
+        item.quantity = data.quantity;
+      }
+
+      if (data.special_instructions !== undefined) {
+        item.special_instructions = data.special_instructions;
+      }
+
+      if (data.selected_options !== undefined) {
+        item.selected_options = data.selected_options;
+      }
+
+      const updated = await this.cartItemRepository.save(item);
+
+      await this.updateCartTotal(cart.id);
+
+      return updated;
+    } catch (error) {
+      console.error('[updateCartItem] Error:', error);
+      throw error;
     }
-
-    Object.assign(item, data);
-    const updated = await this.cartItemRepository.save(item);
-
-    await this.updateCartTotal(cart.id);
-
-    return updated;
   }
 
   async removeCartItem(userId: string, itemId: string) {
-    const cart = await this.getCart(userId);
-    const result = await this.cartItemRepository.delete({
-      id: itemId,
-      cart_id: cart.id,
-    });
+    try {
+      const cart = await this.getCart(userId);
 
-    if (result.affected === 0) {
-      throw new NotFoundException('Cart item not found');
+      const item = await this.cartItemRepository.findOne({
+        where: {
+          id: itemId,
+          cart_id: cart.id,
+        },
+      });
+
+      if (!item) {
+        throw new NotFoundException('Cart item not found');
+      }
+
+      await this.cartItemRepository.softDelete({ id: itemId });
+      await this.updateCartTotal(cart.id);
+
+      return { message: 'Item removed from cart' };
+    } catch (error) {
+      console.error('[removeCartItem] Error:', error);
+      throw error;
     }
-
-    await this.updateCartTotal(cart.id);
-
-    return { message: 'Item removed from cart' };
   }
 
   async clearCart(userId: string) {
-    const cart = await this.getCart(userId);
-    await this.cartItemRepository.delete({ cart_id: cart.id });
-    cart.subtotal = 0;
-    cart.restaurant_id = null;
-    await this.cartRepository.save(cart);
+    try {
+      const cart = await this.getCart(userId);
 
-    return { message: 'Cart cleared' };
+      const items = await this.cartItemRepository.find({
+        where: { cart_id: cart.id },
+      });
+
+      if (items.length > 0) {
+        const itemIds = items.map(item => item.id);
+        await this.cartItemRepository.softDelete(itemIds);
+      }
+
+      cart.subtotal = 0;
+      cart.restaurant_id = null;
+      await this.cartRepository.save(cart);
+
+      return { message: 'Cart cleared' };
+    } catch (error) {
+      console.error('[clearCart] Error:', error);
+      throw error;
+    }
   }
 
   async createOrder(userId: string, data: any) {

@@ -27,7 +27,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await orderService.getOrders({ status });
-            const orderData = response?.data || response?.items || [];
+            const orderData = response?.data || [];
             const orders = Array.isArray(orderData) ? orderData : [];
             set({ orders, isLoading: false });
         } catch (error: any) {

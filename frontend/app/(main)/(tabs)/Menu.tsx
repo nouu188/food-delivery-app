@@ -177,7 +177,6 @@ export default function MenuScreen() {
 
     return (
         <View className="flex-1 bg-[#F9CF63]">
-            {/* Header + Search + Categories */}
             <View className="bg-[#F9CF63] pt-14 pb-2">
                 <View className="px-5">
                     <SearchNav
@@ -187,14 +186,13 @@ export default function MenuScreen() {
                 </View>
 
                 <View
-                    className="bg-[#E95322] pb-10 z-1"
+                    className="bg-[#E95322] pb-10"
                     style={{
                         shadowColor: "#000",
                         shadowOpacity: 0.1,
                         shadowOffset: { width: 0, height: 6 },
                         shadowRadius: 12,
                         elevation: 2,
-                        zIndex: 1,
                         transform: [{ translateY: 30 }],
                         borderTopRightRadius: 32,
                         borderTopLeftRadius: 32,
@@ -210,11 +208,8 @@ export default function MenuScreen() {
                     backgroundColor: "#fff",
                     borderTopRightRadius: 32,
                     borderTopLeftRadius: 32,
-
-                    zIndex: 100,
                 }}
             >
-                {/* Dòng Sort By */}
                 <View className="flex-row items-center justify-between px-5 mb-4">
                     <View className="w-20" />
                     <TouchableOpacity
@@ -234,7 +229,6 @@ export default function MenuScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Danh sách kết quả */}
                 {isLoading ? (
                     <View className="flex-1 items-center justify-center">
                         <ActivityIndicator size="large" color="#E95322" />

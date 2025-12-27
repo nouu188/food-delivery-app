@@ -95,7 +95,7 @@ export default function OrderConfirmedScreen() {
                                 if (order) {
                                     router.replace(`/orders/${order.id}`);
                                 } else {
-                                    router.replace('/(main)/(tabs)/orders');
+                                    router.replace('/(main)/(tabs)/Orders');
                                 }
                             }}
                             className="mt-8 px-10 py-4 rounded-full"

@@ -24,11 +24,15 @@ const PAYMENT_METHODS: Array<{
 
 export default function PaymentScreen() {
     const router = useRouter();
-    const { selectedAddress } = useAddressStore();
+    const { addresses, selectedAddressId } = useAddressStore();
     const { cart, fetchCart } = useCartStore();
     const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(PaymentMethod.COD);
     const [isProcessing, setIsProcessing] = useState(false);
     const [specialInstructions, setSpecialInstructions] = useState("");
+
+    const selectedAddress = selectedAddressId
+        ? addresses.find(a => a.id === selectedAddressId) || null
+        : null;
 
     const handlePlaceOrder = async () => {
         if (!selectedAddress) {

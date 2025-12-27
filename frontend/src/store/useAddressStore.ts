@@ -28,14 +28,27 @@ export const useAddressStore = create<AddressState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const addresses = await userService.getAddresses();
-      set({ addresses, isLoading: false });
+      const validAddresses = Array.isArray(addresses) ? addresses : [];
+      set({ addresses: validAddresses, isLoading: false });
 
-      const defaultAddr = addresses.find((a) => a.is_default);
-      if (defaultAddr && !get().selectedAddressId) {
-        set({ selectedAddressId: defaultAddr.id });
+      const currentSelectedId = get().selectedAddressId;
+      const defaultAddr = validAddresses.find((a) => a.is_default);
+      const firstAddr = validAddresses[0];
+
+      if (!currentSelectedId) {
+        if (defaultAddr) {
+          set({ selectedAddressId: defaultAddr.id });
+        } else if (firstAddr) {
+          set({ selectedAddressId: firstAddr.id });
+        }
+      } else {
+        const selectedStillExists = validAddresses.some(a => a.id === currentSelectedId);
+        if (!selectedStillExists && firstAddr) {
+          set({ selectedAddressId: firstAddr.id });
+        }
       }
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({ error: error.message, isLoading: false, addresses: [] });
     }
   },
 
@@ -43,10 +56,19 @@ export const useAddressStore = create<AddressState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const newAddress = await userService.createAddress(data);
-      set((state) => ({
-        addresses: [...state.addresses, newAddress],
-        isLoading: false,
-      }));
+      set((state) => {
+        const updatedAddresses = [...state.addresses, newAddress];
+        const updates: any = {
+          addresses: updatedAddresses,
+          isLoading: false,
+        };
+
+        if (updatedAddresses.length === 1 || newAddress.is_default) {
+          updates.selectedAddressId = newAddress.id;
+        }
+
+        return updates;
+      });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       throw error;

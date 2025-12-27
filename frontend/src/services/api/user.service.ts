@@ -23,7 +23,14 @@ class UserService {
 
   async getAddresses(): Promise<UserAddress[]> {
     const response = await apiClient.get('/users/addresses');
-    return response.data;
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      return data;
+    } else if (data && typeof data === 'object') {
+      return [data];
+    }
+    return [];
   }
 
   async createAddress(data: CreateAddressRequest): Promise<UserAddress> {
