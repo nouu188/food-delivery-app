@@ -57,10 +57,11 @@ export class OrderService {
 
     const response: any = {
       ...cart,
+      subtotal: Number(cart.subtotal),
       delivery_fee: 0,
       tax_amount: 0,
       discount_amount: 0,
-      total: cart.subtotal,
+      total: Number(cart.subtotal),
       items: [],
     };
 
@@ -447,16 +448,39 @@ export class OrderService {
 
     await this.clearCart(userId);
 
+    const cart = await this.getOrCreateCart(userId);
+
+    cart.restaurant_id = order.restaurant_id;
+    await this.cartRepository.save(cart);
+
     for (const item of order.items) {
-      await this.addToCart(userId, {
-        restaurant_id: order.restaurant_id,
+      const menuItem = await this.menuItemRepository.findOne({
+        where: { id: item.menu_item_id },
+      });
+
+      if (!menuItem) {
+        console.warn(`Menu item ${item.menu_item_id} not found, skipping`);
+        continue;
+      }
+
+      if (!menuItem.is_available) {
+        console.warn(`Menu item ${item.menu_item_id} is not available, skipping`);
+        continue;
+      }
+
+      const cartItem = this.cartItemRepository.create({
+        cart_id: cart.id,
         menu_item_id: item.menu_item_id,
         quantity: item.quantity,
-        unit_price: item.unit_price,
-        selected_options: item.selected_options,
-        special_instructions: item.special_instructions,
+        unit_price: menuItem.price,
+        selected_options: item.selected_options || null,
+        special_instructions: item.special_instructions || null,
       });
+
+      await this.cartItemRepository.save(cartItem);
     }
+
+    await this.updateCartTotal(cart.id);
 
     return { message: 'Items added to cart' };
   }
@@ -523,10 +547,13 @@ export class OrderService {
       where: { cart_id: cartId },
     });
 
-    const subtotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+    const subtotal = items.reduce((sum, item) => {
+      const itemTotal = Number(item.unit_price) * item.quantity;
+      return sum + itemTotal;
+    }, 0);
 
     if (items.length === 0) {
-      await this.cartRepository.update(cartId, { subtotal, restaurant_id: null });
+      await this.cartRepository.update(cartId, { subtotal: 0, restaurant_id: null });
     } else {
       await this.cartRepository.update(cartId, { subtotal });
     }

@@ -19,8 +19,9 @@ interface CartState {
     removeItem: (itemId: string) => Promise<void>;
     clearCart: () => Promise<void>;
 
-    get subtotal(): number;
-    get itemCount(): number;
+    subtotal: () => number;
+    total: () => number;
+    itemCount: () => number;
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
@@ -108,11 +109,15 @@ export const useCartStore = create<CartState>((set, get) => ({
         }
     },
 
-    get subtotal() {
+    subtotal: () => {
         return get().cart?.subtotal || 0;
     },
 
-    get itemCount() {
+    total: () => {
+        return get().cart?.total || 0;
+    },
+
+    itemCount: () => {
         const cart = get().cart;
         if (!cart?.items || !Array.isArray(cart.items)) return 0;
         return cart.items.reduce((sum, item) => sum + item.quantity, 0);

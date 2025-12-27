@@ -1,13 +1,14 @@
 import Header from "@/components/common/Header";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Star } from "@tamagui/lucide-icons";
 
 export default function OrderDeliveredScreen() {
     const router = useRouter();
-    const [rating, setRating] = React.useState(1);
+    const { orderId } = useLocalSearchParams<{ orderId?: string }>();
+    const [rating, setRating] = React.useState(5);
 
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
@@ -50,11 +51,35 @@ export default function OrderDeliveredScreen() {
 
                 <TouchableOpacity
                     activeOpacity={0.9}
-                    onPress={() => router.push("/review/2001")}
+                    onPress={() => {
+                        if (!orderId) {
+                            Alert.alert('Error', 'Order ID not found');
+                            router.back();
+                            return;
+                        }
+
+                        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                        if (!uuidRegex.test(orderId)) {
+                            Alert.alert('Error', 'Invalid order format');
+                            router.back();
+                            return;
+                        }
+
+                        router.push(`/review/${orderId}`);
+                    }}
                     className="mt-10 px-12 py-3 rounded-full"
                     style={{ backgroundColor: "#E95322" }}
                 >
                     <Text className="text-white font-semibold">Leave a Review</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => router.push('/(main)/(tabs)/Orders')}
+                    className="mt-4 px-12 py-3 rounded-full"
+                    style={{ backgroundColor: "#FFE3D6" }}
+                >
+                    <Text className="text-[#E95322] font-semibold">View My Orders</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

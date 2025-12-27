@@ -123,7 +123,7 @@ export default function MyOrders() {
                 </View>
               ) : (
                 orders.map((order) => {
-                  const displayName = order.items?.[0]?.menu_item?.name || 'Order';
+                  const displayName = order.restaurant_name || order.items?.[0]?.menu_item?.name || 'Order';
                   const itemCount = order.items?.length || 0;
 
                   return (
@@ -139,6 +139,8 @@ export default function MyOrders() {
                         : undefined
                       }
                       status={activeTab}
+                      restaurantId={order.restaurant_id}
+                      hasReview={false}
                     />
                   );
                 })

@@ -42,6 +42,7 @@ export default function OrderDetails() {
 
   useEffect(() => {
     fetchOrder();
+    fetchCart(); // Fetch cart to check for conflicts
   }, [orderId]);
 
   const formatDate = (dateString: string) => {
@@ -88,10 +89,39 @@ export default function OrderDetails() {
   const handleReorder = async () => {
     if (!order) return;
 
+    const { cart, clearCart: clearCartStore } = useCartStore.getState();
+
+    if (cart && cart.restaurant_id && cart.restaurant_id !== order.restaurant_id && cart.items && cart.items.length > 0) {
+      Alert.alert(
+        'Clear Cart?',
+        `Your cart contains items from ${cart.restaurant_name || 'another restaurant'}. Clear your cart to reorder from this restaurant?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Clear & Reorder',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await clearCartStore();
+                await proceedWithReorder();
+              } catch (error) {
+                showErrorAlert(error, 'Failed to Clear Cart');
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    await proceedWithReorder();
+  };
+
+  const proceedWithReorder = async () => {
     setIsReordering(true);
     try {
-      await orderService.reorder(order.id);
-      await fetchCart(); // Refresh cart
+      await orderService.reorder(order!.id);
+      await fetchCart(); 
       Alert.alert(
         'Items Added to Cart',
         'Order items have been added to your cart',

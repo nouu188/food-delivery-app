@@ -23,7 +23,7 @@ const SIDEBAR_WIDTH = width * 0.86;
 
 export default function CartSidebar() {
     const router = useRouter();
-    const { cart, isDrawerOpen, closeDrawer, updateQuantity, removeItem, subtotal, fetchCart } = useCartStore();
+    const { cart, isDrawerOpen, closeDrawer, updateQuantity, removeItem, total, fetchCart } = useCartStore();
 
     const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -33,6 +33,7 @@ export default function CartSidebar() {
     const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
 
     const items = cart?.items || [];
+    const totalAmount = total();
 
     // Fetch cart when drawer opens
     useEffect(() => {
@@ -124,8 +125,6 @@ export default function CartSidebar() {
             ]
         );
     };
-
-    const total = subtotal;
 
     if (!isDrawerOpen) return null;
 
@@ -233,7 +232,7 @@ export default function CartSidebar() {
                     <View style={styles.footer}>
                         <View style={styles.totalRow}>
                             <Text style={styles.totalLabel}>Total</Text>
-                            <Text style={styles.totalValue}>${formatPrice(total)}</Text>
+                            <Text style={styles.totalValue}>${formatPrice(totalAmount)}</Text>
                         </View>
 
                         <TouchableOpacity
