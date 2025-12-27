@@ -214,7 +214,7 @@ export default function CartSidebar() {
     if (!isDrawerOpen) return null;
 
     return (
-        <View style={StyleSheet.absoluteFill} pointerEvents="auto">
+        <View style={[StyleSheet.absoluteFill, { zIndex: 9999 }]} pointerEvents="auto">
             <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
                 <Pressable style={StyleSheet.absoluteFill} onPress={closeSidebar} />
             </Animated.View>
@@ -430,6 +430,7 @@ const styles = StyleSheet.create({
     overlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: "rgba(0,0,0,0.5)",
+        zIndex: 1,
     },
     sidebarContainer: {
         position: "absolute",
@@ -446,6 +447,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.28,
         shadowRadius: 10,
         elevation: 10,
+        zIndex: 2,
     },
     safeArea: { flex: 1 },
     header: {

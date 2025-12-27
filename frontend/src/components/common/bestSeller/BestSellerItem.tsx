@@ -1,6 +1,6 @@
 import Snack from '@/assets/icons/SnacksIcon.svg';
 import { useRouter } from 'expo-router';
-import { Heart, ShoppingCart, Star } from 'lucide-react-native';
+import { Heart, Star } from 'lucide-react-native';
 import React from 'react';
 import { Image, ImageSourcePropType, Text, TouchableOpacity, View } from 'react-native';
 import { formatPrice, formatRating } from '@/utils/format';
@@ -14,28 +14,42 @@ type Props = {
     liked: boolean;
     onToggleLike: (id: string) => void;
     onAddToCart?: (id: string) => void;
+    description?: string | null;
+    isOpen?: boolean;
 };
 
-export const BestSellerItem = ({ id, name, price, rating, image, liked, onToggleLike, onAddToCart }: Props) => {
+export const BestSellerItem = ({ id, name, price, rating, image, liked, onToggleLike, onAddToCart, description, isOpen }: Props) => {
     const router = useRouter();
     return (
-        <TouchableOpacity className="w-[48%] mb-5" activeOpacity={0.9} onPress={() => router.push(`/food/${id}`)}>
+        <TouchableOpacity className="w-[48%] mb-5" activeOpacity={0.9} onPress={() => router.push({
+            pathname: "/restaurant/[id]",
+            params: { id },
+        })}>
             <View>
-                {/* Card siêu gọn */}
                 <View className="bg-white rounded-3xl overflow-hidden shadow-lg h-72">
-                    {/* Ảnh */}
                     <View className="relative">
                         {image && <Image source={image} className="w-full h-40" resizeMode="cover" />}
-                        {!image && <View className="w-full h-40 bg-gray-200" />}
+                        {!image && (
+                            <View className="w-full h-40 bg-gray-200 items-center justify-center">
+                                <Snack width={48} height={48} color="#E5E7EB" />
+                            </View>
+                        )}
 
-                        {/* Icon Snack */}
-                        <View className="absolute top-2.5 left-2.5 bg-white rounded-full p-1.5 shadow-md">
-                            <Snack width={24} height={24} />
-                        </View>
+                        {isOpen !== undefined && (
+                            <View className={`absolute top-2.5 left-2.5 px-3 py-1 rounded-full ${
+                                isOpen ? 'bg-green-500' : 'bg-red-500'
+                            }`}>
+                                <Text className="text-white text-xs font-bold">
+                                    {isOpen ? 'OPEN' : 'CLOSED'}
+                                </Text>
+                            </View>
+                        )}
 
-                        {/* Heart */}
                         <TouchableOpacity
-                            onPress={() => onToggleLike(id)}
+                            onPress={(e) => {
+                                e.stopPropagation();
+                                onToggleLike(id);
+                            }}
                             className="absolute top-2.5 right-2.5 bg-white rounded-full p-1.5 shadow-md"
                         >
                             <Heart
@@ -46,15 +60,12 @@ export const BestSellerItem = ({ id, name, price, rating, image, liked, onToggle
                             />
                         </TouchableOpacity>
 
-                        {/* Price nhỏ xinh */}
                         <View className="absolute bottom-2.5 right-2.5 bg-orange-600 px-3 py-1 rounded-full shadow-xl">
                             <Text className="text-white text-sm font-bold">${formatPrice(price)}</Text>
                         </View>
                     </View>
 
-                    {/* Nội dung dưới */}
                     <View className="flex-1 px-3 pt-3">
-                        {/* Dòng 1: Tên món (trái) + Rating (phải) */}
                         <View className="flex-row justify-between items-center">
                             <Text
                                 className="text-[15px] font-bold text-gray-900 flex-1 pr-3"
@@ -70,18 +81,10 @@ export const BestSellerItem = ({ id, name, price, rating, image, liked, onToggle
                             </View>
                         </View>
 
-                        {/* Dòng 2: Mô tả (trái) + Giỏ hàng (phải) – luôn sát đáy */}
-                        <View className="flex-row justify-between items-center mt-4">
-                            <Text className="text-xs text-gray-500 leading-4 flex-1 pr-3" numberOfLines={2}>
-                                Lorem ipsum dolor sit amet...
+                        <View className="mt-4">
+                            <Text className="text-xs text-gray-500 leading-4" numberOfLines={2}>
+                                {description || 'Delicious food from this restaurant'}
                             </Text>
-
-                            <TouchableOpacity
-                                onPress={() => onAddToCart?.(id)}
-                                className="bg-orange-100 p-2 rounded-full"
-                            >
-                                <ShoppingCart size={18} color="#E95322" />
-                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>

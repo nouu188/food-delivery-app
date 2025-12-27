@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 24,
         right: 20,
-        zIndex: 1000,
+        zIndex: 100,
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
