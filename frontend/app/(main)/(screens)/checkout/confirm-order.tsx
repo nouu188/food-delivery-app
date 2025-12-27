@@ -10,13 +10,14 @@ import { showErrorAlert } from "@/utils/error-handler";
 export default function ConfirmOrderScreen() {
     const router = useRouter();
     const { addresses, selectedAddressId, fetchAddresses } = useAddressStore();
-    const { cart, isLoading: isCartLoading, fetchCart } = useCartStore();
+    const { cart, selectedItemIds, selectedTotal, isLoading: isCartLoading, fetchCart } = useCartStore();
     const [isLoading, setIsLoading] = useState(true);
 
-    // Compute selected address from store state (not using getter)
     const selectedAddress = selectedAddressId
         ? addresses.find(a => a.id === selectedAddressId) || null
         : null;
+
+    const selectedItems = cart?.items?.filter(item => selectedItemIds.has(item.id)) || [];
 
     useEffect(() => {
         loadData();
@@ -37,11 +38,10 @@ export default function ConfirmOrderScreen() {
     };
 
     const calculateTotal = () => {
-        if (!cart) return 0;
-        const subtotal = Number(cart.subtotal) || 0;
-        const deliveryFee = Number(cart.delivery_fee) || 0;
-        const taxAmount = Number(cart.tax_amount) || 0;
-        const discountAmount = Number(cart.discount_amount) || 0;
+        const subtotal = selectedTotal();
+        const deliveryFee = Number(cart?.delivery_fee) || 0;
+        const taxAmount = Number(cart?.tax_amount) || 0;
+        const discountAmount = Number(cart?.discount_amount) || 0;
         return subtotal + deliveryFee + taxAmount - discountAmount;
     };
 
@@ -54,8 +54,10 @@ export default function ConfirmOrderScreen() {
             return;
         }
 
-        if (!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0) {
-            Alert.alert('Empty Cart', 'Your cart is empty. Add items to cart before placing an order.');
+        if (selectedItems.length === 0) {
+            Alert.alert('No Items Selected', 'Please select items from your cart to checkout.', [
+                { text: 'OK', onPress: () => router.back() }
+            ]);
             return;
         }
 
@@ -101,20 +103,25 @@ export default function ConfirmOrderScreen() {
                             )}
                         </View>
 
-                        <Text className="mt-8 text-[#070707] font-bold">Order Summary</Text>
-                        <View className="mt-4">
-                            {!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0 ? (
+                        <View className="flex-row items-center justify-between mt-8 mb-2">
+                            <Text className="text-[#070707] font-bold">Order Summary</Text>
+                            <Text className="text-[#6B7280] text-xs">
+                                {selectedItems.length} of {cart?.items?.length || 0} items selected
+                            </Text>
+                        </View>
+                        <View className="mt-2">
+                            {selectedItems.length === 0 ? (
                                 <View className="py-10 items-center">
-                                    <Text className="text-gray-400 text-center">Your cart is empty</Text>
+                                    <Text className="text-gray-400 text-center">No items selected</Text>
                                     <TouchableOpacity
-                                        onPress={() => router.push('/(main)/(tabs)/Home')}
+                                        onPress={() => router.back()}
                                         className="mt-4 px-6 py-3 bg-[#E95322] rounded-full"
                                     >
-                                        <Text className="text-white font-semibold">Start Shopping</Text>
+                                        <Text className="text-white font-semibold">Go Back to Cart</Text>
                                     </TouchableOpacity>
                                 </View>
                             ) : (
-                                cart.items.map((item) => (
+                                selectedItems.map((item) => (
                                 <View
                                     key={item.id}
                                     className="flex-row items-center py-4 border-b"
@@ -137,11 +144,11 @@ export default function ConfirmOrderScreen() {
                                             {item.menu_item?.name || item.item_name}
                                         </Text>
                                         <Text className="text-[#6B7280] text-xs mt-1">
-                                            {item.quantity} × ${Number(item.unit_price).toFixed(2)}
+                                            {item.quantity} × ${Number(item.unit_price)}
                                         </Text>
                                     </View>
                                     <Text className="font-bold text-[#E95322]">
-                                        ${(Number(item.unit_price) * Number(item.quantity)).toFixed(2)}
+                                        ${(Number(item.unit_price) * Number(item.quantity))}
                                     </Text>
                                 </View>
                                 ))
@@ -150,16 +157,16 @@ export default function ConfirmOrderScreen() {
 
                         <View className="mt-8">
                             <View className="flex-row justify-between mb-3">
-                                <Text className="text-[#6B7280]">Subtotal</Text>
+                                <Text className="text-[#6B7280]">Subtotal ({selectedItems.length} items)</Text>
                                 <Text className="font-semibold text-[#070707]">
-                                    ${cart?.subtotal ? Number(cart.subtotal).toFixed(2) : '0.00'}
+                                    ${selectedTotal()}
                                 </Text>
                             </View>
                             {cart && Number(cart.tax_amount) > 0 && (
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Tax and Fees</Text>
                                     <Text className="font-semibold text-[#070707]">
-                                        ${Number(cart.tax_amount).toFixed(2)}
+                                        ${Number(cart.tax_amount)}
                                     </Text>
                                 </View>
                             )}
@@ -167,7 +174,7 @@ export default function ConfirmOrderScreen() {
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Delivery</Text>
                                     <Text className="font-semibold text-[#070707]">
-                                        ${Number(cart.delivery_fee).toFixed(2)}
+                                        ${Number(cart.delivery_fee)}
                                     </Text>
                                 </View>
                             )}
@@ -175,19 +182,19 @@ export default function ConfirmOrderScreen() {
                                 <View className="flex-row justify-between mb-3">
                                     <Text className="text-[#6B7280]">Discount</Text>
                                     <Text className="font-semibold text-green-600">
-                                        -${Number(cart.discount_amount).toFixed(2)}
+                                        -${Number(cart.discount_amount)}
                                     </Text>
                                 </View>
                             )}
                             <View className="flex-row justify-between border-t pt-5" style={{ borderTopColor: "#FFD8C7" }}>
                                 <Text className="text-lg font-extrabold text-[#070707]">Total</Text>
                                 <Text className="text-lg font-extrabold text-[#E95322]">
-                                    ${calculateTotal().toFixed(2)}
+                                    ${calculateTotal()}
                                 </Text>
                             </View>
                         </View>
 
-                        {cart && cart.items && Array.isArray(cart.items) && cart.items.length > 0 && (
+                        {selectedItems.length > 0 && (
                             <TouchableOpacity
                                 activeOpacity={0.9}
                                 onPress={handlePlaceOrder}
@@ -196,7 +203,7 @@ export default function ConfirmOrderScreen() {
                                 style={{ backgroundColor: !selectedAddress ? "#9CA3AF" : "#E95322" }}
                             >
                                 <Text className="text-white font-semibold">
-                                    {selectedAddress ? 'Continue to Payment' : 'Select Address First'}
+                                    {selectedAddress ? `Continue to Payment (${selectedItems.length})` : 'Select Address First'}
                                 </Text>
                             </TouchableOpacity>
                         )}

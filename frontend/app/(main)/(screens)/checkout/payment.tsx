@@ -25,7 +25,7 @@ const PAYMENT_METHODS: Array<{
 export default function PaymentScreen() {
     const router = useRouter();
     const { addresses, selectedAddressId } = useAddressStore();
-    const { cart, fetchCart } = useCartStore();
+    const { cart, selectedItemIds, removeBulkItems, clearSelection, fetchCart } = useCartStore();
     const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(PaymentMethod.COD);
     const [isProcessing, setIsProcessing] = useState(false);
     const [specialInstructions, setSpecialInstructions] = useState("");
@@ -34,14 +34,16 @@ export default function PaymentScreen() {
         ? addresses.find(a => a.id === selectedAddressId) || null
         : null;
 
+    const selectedItems = cart?.items?.filter(item => selectedItemIds.has(item.id)) || [];
+
     const handlePlaceOrder = async () => {
         if (!selectedAddress) {
             Alert.alert('Error', 'Please select a delivery address');
             return;
         }
 
-        if (!cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0) {
-            Alert.alert('Error', 'Your cart is empty');
+        if (selectedItems.length === 0) {
+            Alert.alert('Error', 'No items selected for checkout');
             return;
         }
 
@@ -53,7 +55,10 @@ export default function PaymentScreen() {
                 special_instructions: specialInstructions.trim() || undefined,
             });
 
-            await fetchCart();
+            const selectedIds = Array.from(selectedItemIds);
+            await removeBulkItems(selectedIds);
+
+            clearSelection();
 
             router.replace({
                 pathname: '/checkout/order-confirmed',
@@ -95,9 +100,13 @@ export default function PaymentScreen() {
                     <View className="mt-8 flex-row items-center justify-between">
                         <View>
                             <Text className="text-[#070707] font-bold">Order Summary</Text>
-                            <Text className="text-xs text-[#6B7280] mt-1">{cart?.items && Array.isArray(cart.items) ? cart.items.length : 0} items</Text>
+                            <Text className="text-xs text-[#6B7280] mt-1">
+                                {selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''} selected
+                            </Text>
                         </View>
-                        <Text className="font-extrabold text-[#E95322]">${cart?.subtotal || '0.00'}</Text>
+                        <Text className="font-extrabold text-[#E95322]">
+                            ${selectedItems.reduce((sum, item) => sum + (Number(item.unit_price) * item.quantity), 0).toFixed(2)}
+                        </Text>
                     </View>
 
                     <Text className="mt-8 text-[#070707] font-bold mb-3">Payment Method</Text>
@@ -138,10 +147,10 @@ export default function PaymentScreen() {
                     <TouchableOpacity
                         activeOpacity={0.9}
                         onPress={handlePlaceOrder}
-                        disabled={isProcessing || !selectedAddress || !cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0}
+                        disabled={isProcessing || !selectedAddress || selectedItems.length === 0}
                         className="self-center mt-10 px-16 py-4 rounded-full"
                         style={{
-                            backgroundColor: (isProcessing || !selectedAddress || !cart || !cart.items || !Array.isArray(cart.items) || cart.items.length === 0)
+                            backgroundColor: (isProcessing || !selectedAddress || selectedItems.length === 0)
                                 ? "#9CA3AF"
                                 : "#E95322"
                         }}
@@ -150,7 +159,11 @@ export default function PaymentScreen() {
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
                             <Text className="text-white font-semibold text-base">
-                                {selectedPayment === PaymentMethod.COD ? 'Place Order' : 'Proceed to Payment'}
+                                {selectedItems.length === 0
+                                    ? 'No Items Selected'
+                                    : selectedPayment === PaymentMethod.COD
+                                        ? `Place Order (${selectedItems.length})`
+                                        : `Proceed to Payment (${selectedItems.length})`}
                             </Text>
                         )}
                     </TouchableOpacity>

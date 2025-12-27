@@ -649,7 +649,7 @@ export async function seedDatabase(dataSource: DataSource) {
     }
 
     // Update cart subtotal
-    cart.subtotal = Number(cartSubtotal.toFixed(2));
+    cart.subtotal = Number(cartSubtotal);
   }
 
   await cartItemRepository.save(cartItems);
@@ -681,10 +681,10 @@ export async function seedDatabase(dataSource: DataSource) {
       restaurant_id: restaurant.id,
       delivery_address_id: userAddress.id,
       status: orderStatuses[Math.floor(Math.random() * orderStatuses.length)],
-      subtotal: Number(subtotal.toFixed(2)),
-      delivery_fee: Number(deliveryFee.toFixed(2)),
-      discount_amount: Number(discountAmount.toFixed(2)),
-      total_amount: Number((subtotal + deliveryFee - discountAmount).toFixed(2)),
+      subtotal: Number(subtotal),
+      delivery_fee: Number(deliveryFee),
+      discount_amount: Number(discountAmount),
+      total_amount: Number((subtotal + deliveryFee - discountAmount)),
       ...(hasVoucher && { voucher_id: vouchers[Math.floor(Math.random() * vouchers.length)].id }),
       payment_method: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
       ...(hasSpecialInstructions && { special_instructions: 'Please ring the doorbell' }),
@@ -718,8 +718,8 @@ export async function seedDatabase(dataSource: DataSource) {
         menu_item_id: menuItem.id,
         item_name: menuItem.name,
         quantity,
-        unit_price: Number(unitPrice.toFixed(2)),
-        total_price: Number((unitPrice * quantity).toFixed(2)),
+        unit_price: Number(unitPrice),
+        total_price: Number((unitPrice * quantity)),
         selected_options: { size: 'Medium', extras: ['Extra Cheese'] },
         ...(hasSpecialInstructions && { special_instructions: 'Extra spicy' }),
       });
@@ -760,7 +760,7 @@ export async function seedDatabase(dataSource: DataSource) {
       pickup_longitude: restaurant.longitude,
       dropoff_latitude: deliveryAddress.latitude,
       dropoff_longitude: deliveryAddress.longitude,
-      distance_km: Number((Math.random() * 10 + 1).toFixed(2)),
+      distance_km: Number((Math.random() * 10 + 1)),
       estimated_duration: Math.floor(Math.random() * 30) + 15,
       assigned_at: new Date(Date.now() - (Math.floor(Math.random() * 60) + 30) * 60 * 1000),
       ...(hasPickedUpAt && { picked_up_at: new Date(Date.now() - (Math.floor(Math.random() * 30) + 10) * 60 * 1000) }),

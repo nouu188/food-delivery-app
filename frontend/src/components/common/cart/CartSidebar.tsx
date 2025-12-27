@@ -23,7 +23,21 @@ const SIDEBAR_WIDTH = width * 0.86;
 
 export default function CartSidebar() {
     const router = useRouter();
-    const { cart, isDrawerOpen, closeDrawer, updateQuantity, removeItem, total, fetchCart } = useCartStore();
+    const {
+        cart,
+        isDrawerOpen,
+        closeDrawer,
+        updateQuantity,
+        removeItem,
+        removeBulkItems,
+        selectedItemIds,
+        toggleItemSelection,
+        selectAllItems,
+        deselectAllItems,
+        selectedTotal,
+        selectedCount,
+        fetchCart
+    } = useCartStore();
 
     const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -31,9 +45,12 @@ export default function CartSidebar() {
     // Track loading states for individual items
     const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
     const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
     const items = cart?.items || [];
-    const totalAmount = total();
+    const totalAmount = selectedTotal();
+    const selectedItemCount = selectedCount();
+    const allSelected = items.length > 0 && items.every(item => selectedItemIds.has(item.id));
 
     // Fetch cart when drawer opens
     useEffect(() => {
@@ -126,6 +143,58 @@ export default function CartSidebar() {
         );
     };
 
+    const handleBulkDelete = async () => {
+        const selectedIds = Array.from(selectedItemIds);
+        if (selectedIds.length === 0) {
+            Alert.alert("No Items Selected", "Please select items to delete.");
+            return;
+        }
+
+        Alert.alert(
+            "Delete Selected Items",
+            `Are you sure you want to remove ${selectedIds.length} item${selectedIds.length > 1 ? 's' : ''} from your cart?`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        setIsBulkDeleting(true);
+                        try {
+                            await removeBulkItems(selectedIds);
+                            Alert.alert("Success", "Selected items removed from cart");
+                        } catch (error: any) {
+                            Alert.alert(
+                                "Delete Failed",
+                                error.message || "Failed to remove items. Please try again.",
+                                [{ text: "OK" }]
+                            );
+                        } finally {
+                            setIsBulkDeleting(false);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleToggleSelectAll = () => {
+        if (allSelected) {
+            deselectAllItems();
+        } else {
+            selectAllItems();
+        }
+    };
+
+    const handleCheckout = () => {
+        if (selectedItemIds.size === 0) {
+            Alert.alert("No Items Selected", "Please select items to checkout.");
+            return;
+        }
+        closeSidebar();
+        requestAnimationFrame(() => router.push("/checkout/confirm-order"));
+    };
+
     if (!isDrawerOpen) return null;
 
     return (
@@ -148,6 +217,41 @@ export default function CartSidebar() {
                         </TouchableOpacity>
                     </View>
 
+                    {items.length > 0 && (
+                        <View style={styles.selectionRow}>
+                            <TouchableOpacity
+                                onPress={handleToggleSelectAll}
+                                activeOpacity={0.7}
+                                style={styles.selectAllBtn}
+                            >
+                                <View style={[styles.checkbox, allSelected && styles.checkboxChecked]}>
+                                    {allSelected && <Feather name="check" size={14} color="#FFFFFF" />}
+                                </View>
+                                <Text style={styles.selectAllText}>Select All</Text>
+                            </TouchableOpacity>
+
+                            {selectedItemIds.size > 0 && (
+                                <TouchableOpacity
+                                    onPress={handleBulkDelete}
+                                    activeOpacity={0.8}
+                                    style={styles.bulkDeleteBtn}
+                                    disabled={isBulkDeleting}
+                                >
+                                    {isBulkDeleting ? (
+                                        <ActivityIndicator size="small" color="#FFFFFF" />
+                                    ) : (
+                                        <>
+                                            <Feather name="trash-2" size={16} color="#FFFFFF" />
+                                            <Text style={styles.bulkDeleteText}>
+                                                Delete ({selectedItemIds.size})
+                                            </Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
+
                     <View style={styles.divider} />
 
                     <FlatList
@@ -158,9 +262,21 @@ export default function CartSidebar() {
                             const isLoading = loadingItems.has(item.id);
                             const isRemoving = removingItems.has(item.id);
                             const isDisabled = isLoading || isRemoving;
+                            const isSelected = selectedItemIds.has(item.id);
 
                             return (
                                 <View style={[styles.itemRow, isRemoving && styles.itemRemoving]}>
+                                    <TouchableOpacity
+                                        onPress={() => toggleItemSelection(item.id)}
+                                        activeOpacity={0.7}
+                                        style={styles.checkboxWrapper}
+                                        disabled={isDisabled}
+                                    >
+                                        <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
+                                            {isSelected && <Feather name="check" size={14} color="#FFFFFF" />}
+                                        </View>
+                                    </TouchableOpacity>
+
                                     <View style={styles.thumb}>
                                         {item.menu_item?.image_url ? (
                                             <Image source={{ uri: item.menu_item.image_url }} style={styles.thumbImg} />
@@ -230,21 +346,33 @@ export default function CartSidebar() {
                     />
 
                     <View style={styles.footer}>
+                        {selectedItemIds.size > 0 && (
+                            <View style={styles.selectedInfo}>
+                                <Feather name="check-circle" size={16} color="#FFD34E" />
+                                <Text style={styles.selectedInfoText}>
+                                    {selectedItemIds.size} item{selectedItemIds.size > 1 ? 's' : ''} selected ({selectedItemCount} total qty)
+                                </Text>
+                            </View>
+                        )}
+
                         <View style={styles.totalRow}>
-                            <Text style={styles.totalLabel}>Total</Text>
+                            <Text style={styles.totalLabel}>
+                                {selectedItemIds.size === items.length ? 'Total' : 'Selected Total'}
+                            </Text>
                             <Text style={styles.totalValue}>${formatPrice(totalAmount)}</Text>
                         </View>
 
                         <TouchableOpacity
                             activeOpacity={0.9}
-                            onPress={() => {
-                                closeSidebar();
-                                requestAnimationFrame(() => router.push("/checkout/confirm-order"));
-                            }}
-                            style={[styles.checkoutBtn, { opacity: items.length ? 1 : 0.5 }]}
-                            disabled={!items.length}
+                            onPress={handleCheckout}
+                            style={[styles.checkoutBtn, { opacity: selectedItemIds.size > 0 ? 1 : 0.5 }]}
+                            disabled={selectedItemIds.size === 0}
                         >
-                            <Text style={styles.checkoutText}>Checkout</Text>
+                            <Text style={styles.checkoutText}>
+                                {selectedItemIds.size === 0
+                                    ? 'Select Items to Checkout'
+                                    : `Checkout (${selectedItemIds.size})`}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </SafeAreaView>
@@ -356,5 +484,70 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(255,255,255,0.8)",
         alignItems: "center",
         justifyContent: "center",
+    },
+    selectionRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingVertical: 12,
+        paddingHorizontal: 4,
+    },
+    selectAllBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+    selectAllText: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#FFFFFF",
+    },
+    bulkDeleteBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        backgroundColor: "rgba(255,255,255,0.2)",
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    bulkDeleteText: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "#FFFFFF",
+    },
+    checkboxWrapper: {
+        padding: 4,
+        marginRight: 8,
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: "#FFFFFF",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "transparent",
+    },
+    checkboxChecked: {
+        backgroundColor: "#FFD34E",
+        borderColor: "#FFD34E",
+    },
+    selectedInfo: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        backgroundColor: "rgba(255,255,255,0.15)",
+        borderRadius: 12,
+        marginBottom: 8,
+    },
+    selectedInfoText: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "#FFFFFF",
+        flex: 1,
     },
 });
