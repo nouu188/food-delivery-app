@@ -32,9 +32,12 @@ export const useNotificationStore = create<NotificationState>()(
             page: 1,
             limit: 50,
           });
-          set({ notifications: response.items, isLoading: false });
+          set({
+            notifications: Array.isArray(response?.items) ? response.items : [],
+            isLoading: false
+          });
         } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+          set({ error: error.message, isLoading: false, notifications: [] });
         }
       },
 
@@ -42,9 +45,11 @@ export const useNotificationStore = create<NotificationState>()(
         try {
           await notificationService.markAsRead(id);
           set((state) => ({
-            notifications: state.notifications.map((n) =>
-              n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
-            ),
+            notifications: Array.isArray(state.notifications)
+              ? state.notifications.map((n) =>
+                  n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
+                )
+              : [],
           }));
         } catch (error: any) {
           console.error('Mark as read error:', error);
@@ -55,11 +60,13 @@ export const useNotificationStore = create<NotificationState>()(
         try {
           await notificationService.markAllAsRead();
           set((state) => ({
-            notifications: state.notifications.map((n) => ({
-              ...n,
-              is_read: true,
-              read_at: new Date().toISOString(),
-            })),
+            notifications: Array.isArray(state.notifications)
+              ? state.notifications.map((n) => ({
+                  ...n,
+                  is_read: true,
+                  read_at: new Date().toISOString(),
+                }))
+              : [],
           }));
         } catch (error: any) {
           console.error('Mark all as read error:', error);
@@ -70,7 +77,9 @@ export const useNotificationStore = create<NotificationState>()(
         try {
           await notificationService.deleteNotification(id);
           set((state) => ({
-            notifications: state.notifications.filter((n) => n.id !== id),
+            notifications: Array.isArray(state.notifications)
+              ? state.notifications.filter((n) => n.id !== id)
+              : [],
           }));
         } catch (error: any) {
           console.error('Delete notification error:', error);
@@ -78,12 +87,23 @@ export const useNotificationStore = create<NotificationState>()(
       },
 
       get unreadCount() {
-        return get().notifications.filter((n) => !n.is_read).length;
+        const notifications = get().notifications;
+        return Array.isArray(notifications)
+          ? notifications.filter((n) => !n.is_read).length
+          : 0;
       },
     }),
     {
       name: 'notification-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        notifications: Array.isArray(state.notifications) ? state.notifications : [],
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state && !Array.isArray(state.notifications)) {
+          state.notifications = [];
+        }
+      },
     }
   )
 );

@@ -37,7 +37,9 @@ const NotificationSidebar: React.FC<NotificationSidebarProps> = ({ isVisible, on
     const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
-    const { notifications, isLoading, fetchNotifications, markAsRead, markAllAsRead } = useNotificationStore();
+    const { notifications: rawNotifications, isLoading, fetchNotifications, markAsRead, markAllAsRead } = useNotificationStore();
+
+    const notifications = Array.isArray(rawNotifications) ? rawNotifications : [];
 
     const openSidebar = useCallback(() => {
         Animated.parallel([
@@ -92,12 +94,10 @@ const NotificationSidebar: React.FC<NotificationSidebarProps> = ({ isVisible, on
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="auto">
-            {/* Overlay */}
             <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
                 <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
             </Animated.View>
 
-            {/* Sidebar */}
             <Animated.View style={[styles.sidebarContainer, { transform: [{ translateX: slideAnim }] }]}>
                 <SafeAreaView style={styles.safeArea}>
                     <View style={styles.header}>
