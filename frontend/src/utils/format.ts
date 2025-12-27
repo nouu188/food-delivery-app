@@ -9,7 +9,7 @@
  * @param decimals - Number of decimal places (default: 2)
  * @returns Formatted price string or '0.00' if invalid
  */
-export const formatPrice = (value: string | number | null | undefined, decimals: number = 2): string => {
+export const formatPrice = (value: string | number | null | undefined, decimals: number = 0): string => {
   if (value === null || value === undefined || value === '') {
     return '0.' + '0'.repeat(decimals);
   }

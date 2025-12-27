@@ -17,6 +17,8 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCartStore } from "@/store/useCartStore";
 import { formatPrice } from "@/utils/format";
+import { CartItem } from "@/types/api/order";
+import CartItemDetailsModal from "./CartItemDetailsModal";
 
 const { width } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.86;
@@ -46,6 +48,10 @@ export default function CartSidebar() {
     const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
     const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+    // Details modal state
+    const [selectedItemForDetails, setSelectedItemForDetails] = useState<CartItem | null>(null);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
 
     const items = cart?.items || [];
     const totalAmount = selectedTotal();
@@ -195,6 +201,16 @@ export default function CartSidebar() {
         requestAnimationFrame(() => router.push("/checkout/confirm-order"));
     };
 
+    const handleViewDetails = (item: CartItem) => {
+        setSelectedItemForDetails(item);
+        setShowDetailsModal(true);
+    };
+
+    const handleCloseDetails = () => {
+        setShowDetailsModal(false);
+        setSelectedItemForDetails(null);
+    };
+
     if (!isDrawerOpen) return null;
 
     return (
@@ -277,7 +293,12 @@ export default function CartSidebar() {
                                         </View>
                                     </TouchableOpacity>
 
-                                    <View style={styles.thumb}>
+                                    <TouchableOpacity
+                                        style={styles.thumb}
+                                        onPress={() => handleViewDetails(item)}
+                                        activeOpacity={0.8}
+                                        disabled={isDisabled}
+                                    >
                                         {item.menu_item?.image_url ? (
                                             <Image source={{ uri: item.menu_item.image_url }} style={styles.thumbImg} />
                                         ) : (
@@ -288,13 +309,31 @@ export default function CartSidebar() {
                                                 <ActivityIndicator size="small" color="#E5634D" />
                                             </View>
                                         )}
-                                    </View>
+                                        <View style={styles.viewDetailsOverlay}>
+                                            <Feather name="eye" size={12} color="#FFFFFF" />
+                                        </View>
+                                    </TouchableOpacity>
 
                                     <View style={{ flex: 1 }}>
-                                        <Text numberOfLines={1} style={styles.itemTitle}>
-                                            {item.menu_item?.name || item.item_name}
-                                        </Text>
+                                        <TouchableOpacity
+                                            onPress={() => handleViewDetails(item)}
+                                            activeOpacity={0.7}
+                                            disabled={isDisabled}
+                                        >
+                                            <Text numberOfLines={1} style={styles.itemTitle}>
+                                                {item.menu_item?.name || item.item_name}
+                                            </Text>
+                                        </TouchableOpacity>
                                         <Text style={styles.itemPrice}>${formatPrice(item.unit_price)}</Text>
+
+                                        {item.selected_options && Array.isArray(item.selected_options) && item.selected_options.length > 0 && (
+                                            <View style={styles.optionsSummary}>
+                                                <Feather name="plus-circle" size={10} color="#E95322" style={{ marginRight: 4 }} />
+                                                <Text numberOfLines={1} style={styles.optionsSummaryText}>
+                                                    {item.selected_options.map(opt => opt.name).join(', ')}
+                                                </Text>
+                                            </View>
+                                        )}
 
                                         <View style={styles.qtyRow}>
                                             {isLoading ? (
@@ -377,6 +416,12 @@ export default function CartSidebar() {
                     </View>
                 </SafeAreaView>
             </Animated.View>
+
+            <CartItemDetailsModal
+                visible={showDetailsModal}
+                item={selectedItemForDetails}
+                onClose={handleCloseDetails}
+            />
         </View>
     );
 }
@@ -548,6 +593,34 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: "600",
         color: "#FFFFFF",
+        flex: 1,
+    },
+    viewDetailsOverlay: {
+        position: "absolute",
+        bottom: 4,
+        right: 4,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    optionsSummary: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        backgroundColor: "rgba(255, 255, 255, 0.15)",
+        borderRadius: 8,
+        alignSelf: "flex-start",
+        maxWidth: "100%",
+    },
+    optionsSummaryText: {
+        fontSize: 11,
+        color: "#FFD34E",
+        fontWeight: "600",
         flex: 1,
     },
 });

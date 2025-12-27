@@ -105,7 +105,7 @@ export default function PaymentScreen() {
                             </Text>
                         </View>
                         <Text className="font-extrabold text-[#E95322]">
-                            ${selectedItems.reduce((sum, item) => sum + (Number(item.unit_price) * item.quantity), 0).toFixed(2)}
+                            ${selectedItems.reduce((sum, item) => sum + (Number(item.unit_price) * item.quantity), 0)}
                         </Text>
                     </View>
 

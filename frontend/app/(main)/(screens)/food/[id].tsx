@@ -93,7 +93,7 @@ export default function FoodDetail() {
         if (!menuItem) return 0;
 
         const basePrice = Number(menuItem.price);
-        const optionsPrice = selectedOptions.reduce((sum, opt) => sum + opt.price_adjustment, 0);
+        const optionsPrice = selectedOptions.reduce((sum, opt) => sum + opt.price_modifier, 0);
         const totalPrice = (basePrice + optionsPrice) * qty;
 
         return totalPrice;
@@ -114,8 +114,8 @@ export default function FoodDetail() {
                 quantity: qty,
                 selected_options: selectedOptions.map(opt => ({
                     option_group: opt.option_group,
-                    option_name: opt.option_name,
-                    price_adjustment: opt.price_adjustment,
+                    name: opt.name,
+                    price_modifier: opt.price_modifier,
                 })),
             });
 
@@ -313,11 +313,11 @@ export default function FoodDetail() {
                                         <View className="mt-3 rounded-2xl overflow-hidden border border-[#F2DFA2]">
                                             {groupOptions.map((option, idx) => {
                                                 const selected = isOptionSelected(option);
-                                                const priceText = option.price_adjustment === 0
+                                                const priceText = option.price_modifier === 0
                                                     ? 'Included'
-                                                    : option.price_adjustment > 0
-                                                        ? `+$${option.price_adjustment}`
-                                                        : `-$${Math.abs(option.price_adjustment)}`;
+                                                    : option.price_modifier > 0
+                                                        ? `+$${option.price_modifier}`
+                                                        : `-$${Math.abs(option.price_modifier)}`;
 
                                                 return (
                                                     <View key={option.id}>
@@ -327,7 +327,7 @@ export default function FoodDetail() {
                                                             activeOpacity={0.8}
                                                         >
                                                             <Text className="text-[#391713] text-sm flex-1">
-                                                                {option.option_name}
+                                                                {option.name}
                                                             </Text>
 
                                                             <View className="flex-row items-center">

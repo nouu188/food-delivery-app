@@ -5,11 +5,18 @@ import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, Text, Touc
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCartStore } from "@/store/useCartStore";
 import { showErrorAlert } from "@/utils/error-handler";
+import { CartItem } from "@/types/api/order";
+import CartItemDetailsModal from "@/components/common/cart/CartItemDetailsModal";
+import { Feather } from "@expo/vector-icons";
 
 export default function CartScreen() {
     const router = useRouter();
     const { cart, isLoading, fetchCart, updateQuantity, removeItem, clearCart } = useCartStore();
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
+
+    // Details modal state
+    const [selectedItemForDetails, setSelectedItemForDetails] = useState<CartItem | null>(null);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
 
     useEffect(() => {
         fetchCart();
@@ -80,6 +87,16 @@ export default function CartScreen() {
         router.push("/checkout/confirm-order");
     };
 
+    const handleViewDetails = (item: CartItem) => {
+        setSelectedItemForDetails(item);
+        setShowDetailsModal(true);
+    };
+
+    const handleCloseDetails = () => {
+        setShowDetailsModal(false);
+        setSelectedItemForDetails(null);
+    };
+
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
             <Header title="Cart" />
@@ -110,8 +127,10 @@ export default function CartScreen() {
                                         className="flex-row items-center py-4 border-b"
                                         style={{ borderBottomColor: "#FFD8C7" }}
                                     >
-                                        <View
-                                            className="w-16 h-16 rounded-2xl overflow-hidden"
+                                        <TouchableOpacity
+                                            onPress={() => handleViewDetails(item)}
+                                            activeOpacity={0.8}
+                                            className="w-16 h-16 rounded-2xl overflow-hidden relative"
                                             style={{ backgroundColor: "#FFE3D6" }}
                                         >
                                             {item.menu_item?.image_url ? (
@@ -121,15 +140,32 @@ export default function CartScreen() {
                                                     <Text className="text-gray-400 text-xs">No Image</Text>
                                                 </View>
                                             )}
-                                        </View>
+                                            <View className="absolute bottom-1 right-1 w-6 h-6 rounded-full items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+                                                <Feather name="eye" size={12} color="#FFFFFF" />
+                                            </View>
+                                        </TouchableOpacity>
 
                                         <View className="flex-1 ml-4">
-                                            <Text className="font-semibold text-[#070707]" numberOfLines={1}>
-                                                {item.menu_item?.name || item.item_name}
-                                            </Text>
+                                            <TouchableOpacity
+                                                onPress={() => handleViewDetails(item)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text className="font-semibold text-[#070707]" numberOfLines={1}>
+                                                    {item.menu_item?.name || item.item_name}
+                                                </Text>
+                                            </TouchableOpacity>
                                             <Text className="text-[#E95322] font-bold mt-1">
                                                 ${item.unit_price}
                                             </Text>
+
+                                            {item.selected_options && Array.isArray(item.selected_options) && item.selected_options.length > 0 && (
+                                                <View className="flex-row items-center mt-2 px-2 py-1 rounded-lg self-start" style={{ backgroundColor: "#FFF5E6" }}>
+                                                    <Feather name="plus-circle" size={10} color="#E95322" style={{ marginRight: 4 }} />
+                                                    <Text numberOfLines={1} className="text-[10px] text-[#E95322] font-semibold flex-1">
+                                                        {item.selected_options.map(opt => opt.name).join(', ')}
+                                                    </Text>
+                                                </View>
+                                            )}
 
                                             <View className="flex-row items-center mt-3">
                                                 <TouchableOpacity
@@ -208,6 +244,12 @@ export default function CartScreen() {
                     </ScrollView>
                 )}
             </View>
+
+            <CartItemDetailsModal
+                visible={showDetailsModal}
+                item={selectedItemForDetails}
+                onClose={handleCloseDetails}
+            />
         </SafeAreaView>
     );
 }

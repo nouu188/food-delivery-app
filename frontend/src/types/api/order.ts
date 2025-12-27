@@ -37,8 +37,8 @@ export interface CartItem {
   total_price: number;
   selected_options: Array<{
     option_group: string;
-    option_name: string;
-    price_adjustment: number;
+    name: string;
+    price_modifier: number;
   }>;
   special_instructions: string | null;
   // Populated menu item details
@@ -71,8 +71,8 @@ export interface AddToCartRequest {
   quantity: number;
   selected_options?: Array<{
     option_group: string;
-    option_name: string;
-    price_adjustment: number;
+    name: string;
+    price_modifier: number;
   }>;
   special_instructions?: string;
 }

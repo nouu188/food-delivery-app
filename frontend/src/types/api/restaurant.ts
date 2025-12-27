@@ -77,9 +77,12 @@ export interface MenuItemOption {
   id: string;
   menu_item_id: string;
   option_group: string; // 'Size', 'Spice Level'
-  option_name: string; // 'Large', 'Extra Spicy'
-  price_adjustment: number; // Can be negative
+  name: string; // 'Large', 'Extra Spicy'
+  price_modifier: number; // Can be negative
   is_default: boolean;
+  is_required: boolean;
+  max_selections: number;
+  is_available: boolean;
 }
 
 // Request types
