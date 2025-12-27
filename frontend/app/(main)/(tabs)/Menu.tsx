@@ -9,6 +9,7 @@ import restaurantService from "@/services/api/restaurant.service";
 import userService from "@/services/api/user.service";
 import { Restaurant } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
+import { formatRating } from "@/utils/format";
 
 export default function MenuScreen() {
     const [sortBy, setSortBy] = useState<"popular" | "rating" | "name">("popular");
@@ -38,13 +39,13 @@ export default function MenuScreen() {
                 userService.getFavorites().catch(() => null),
             ]);
 
-            if (restaurantsData?.items && Array.isArray(restaurantsData.items)) {
+            if (restaurantsData?.data && Array.isArray(restaurantsData.data)) {
                 if (pageNum === 1) {
-                    setRestaurants(restaurantsData.items);
+                    setRestaurants(restaurantsData.data);
                 } else {
-                    setRestaurants(prev => [...prev, ...restaurantsData.items]);
+                    setRestaurants(prev => [...prev, ...restaurantsData.data]);
                 }
-                setHasMore(restaurantsData.meta?.has_next_page ?? false);
+                setHasMore(restaurantsData.page < restaurantsData.total_pages);
             } else {
                 if (pageNum === 1) {
                     setRestaurants([]);
@@ -52,8 +53,8 @@ export default function MenuScreen() {
                 setHasMore(false);
             }
 
-            if (favoritesData?.items && Array.isArray(favoritesData.items)) {
-                setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+            if (favoritesData && Array.isArray(favoritesData)) {
+                setFavorites(new Set(favoritesData.map(f => f.restaurant_id)));
             } else {
                 setFavorites(new Set());
             }
@@ -142,7 +143,7 @@ export default function MenuScreen() {
                                 <View className="absolute right-3 top-3 bg-white/90 rounded-full px-2 py-1 flex-row items-center">
                                     <Star size={12} color="#F15A24" fill="#F15A24" />
                                     <Text className="text-[#F15A24] text-xs font-bold ml-1">
-                                        {item.average_rating.toFixed(1)}
+                                        {formatRating(item.average_rating)}
                                     </Text>
                                 </View>
                             )}

@@ -58,6 +58,9 @@ export const useCartStore = create<CartState>((set, get) => ({
             set({ cart: updatedCart, isLoading: false });
         } catch (error: any) {
             set({ error: error.message, isLoading: false });
+            if (error.response?.status === 409) {
+                throw { isConflict: true, ...error };
+            }
             throw error;
         }
     },

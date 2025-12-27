@@ -3,12 +3,13 @@ import { useRouter } from 'expo-router';
 import { Heart, ShoppingCart, Star } from 'lucide-react-native';
 import React from 'react';
 import { Image, ImageSourcePropType, Text, TouchableOpacity, View } from 'react-native';
+import { formatPrice, formatRating } from '@/utils/format';
 
 type Props = {
     id: string;
     name: string;
-    price: number;
-    rating: number;
+    price: string;
+    rating: string;
     image: ImageSourcePropType | null;
     liked: boolean;
     onToggleLike: (id: string) => void;
@@ -47,7 +48,7 @@ export const BestSellerItem = ({ id, name, price, rating, image, liked, onToggle
 
                         {/* Price nhỏ xinh */}
                         <View className="absolute bottom-2.5 right-2.5 bg-orange-600 px-3 py-1 rounded-full shadow-xl">
-                            <Text className="text-white text-sm font-bold">${price.toFixed(2)}</Text>
+                            <Text className="text-white text-sm font-bold">${formatPrice(price)}</Text>
                         </View>
                     </View>
 
@@ -64,7 +65,7 @@ export const BestSellerItem = ({ id, name, price, rating, image, liked, onToggle
                             </Text>
 
                             <View className="flex-row items-center bg-orange-600 px-2.5 py-1 rounded-full">
-                                <Text className="text-white font-bold text-xs mr-0.5">{rating.toFixed(1)}</Text>
+                                <Text className="text-white font-bold text-xs mr-0.5">{formatRating(rating)}</Text>
                                 <Star size={13} color="#FFD700" fill="#FFD700" />
                             </View>
                         </View>

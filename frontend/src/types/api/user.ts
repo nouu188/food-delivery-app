@@ -71,6 +71,4 @@ export interface FavoriteRestaurant {
   restaurant?: any; // Full restaurant object when populated
 }
 
-export interface GetFavoritesResponse {
-  items: FavoriteRestaurant[];
-}
+export type GetFavoritesResponse = FavoriteRestaurant[];

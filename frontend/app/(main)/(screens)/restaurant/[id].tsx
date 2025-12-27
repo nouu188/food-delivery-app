@@ -18,6 +18,7 @@ import userService from "@/services/api/user.service";
 import { useCartStore } from "@/store/useCartStore";
 import { Restaurant, MenuItem } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
+import { formatPrice, formatRating } from "@/utils/format";
 
 export default function RestaurantDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,7 +32,7 @@ export default function RestaurantDetailsScreen() {
     const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
     const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
-    const { addToCart } = useCartStore();
+    const { addToCart, clearCart } = useCartStore();
 
     const fetchData = async (showRefreshIndicator = false) => {
         if (!id) return;
@@ -67,8 +68,8 @@ export default function RestaurantDetailsScreen() {
             }
             setMenuItems(allMenuItems);
 
-            if (favoritesData?.items && Array.isArray(favoritesData.items)) {
-                setIsFavorite(favoritesData.items.some(f => f.restaurant_id === id));
+            if (favoritesData && Array.isArray(favoritesData)) {
+                setIsFavorite(favoritesData.some(f => f.restaurant_id === id));
             } else {
                 setIsFavorite(false);
             }
@@ -109,7 +110,7 @@ export default function RestaurantDetailsScreen() {
         }
     };
 
-    const handleAddToCart = async (item: MenuItem) => {
+    const handleAddToCart = async (item: MenuItem, forceReplace = false) => {
         const quantity = quantities[item.id] || 1;
 
         if (quantity < 1) {
@@ -118,17 +119,49 @@ export default function RestaurantDetailsScreen() {
         }
 
         setAddingToCart(item.id);
+        let isConflictError = false;
         try {
+            if (forceReplace) {
+                await clearCart();
+            }
+
             await addToCart({
                 menu_item_id: item.id,
                 quantity: quantity,
             });
             Alert.alert("Success", `${item.name} added to cart!`);
             setQuantities(prev => ({ ...prev, [item.id]: 0 }));
-        } catch (error) {
+        } catch (error: any) {
+            if (error.isConflict && error.response?.data) {
+                isConflictError = true;
+                const conflictData = error.response.data;
+                const currentRestaurantName = conflictData.currentRestaurant?.name || 'another restaurant';
+                const newRestaurantName = conflictData.newRestaurant?.name || 'this restaurant';
+
+                Alert.alert(
+                    'Replace Cart Items?',
+                    `Your cart contains items from ${currentRestaurantName}. Do you want to clear your cart and add items from ${newRestaurantName} instead?`,
+                    [
+                        {
+                            text: 'Cancel',
+                            style: 'cancel',
+                            onPress: () => setAddingToCart(null),
+                        },
+                        {
+                            text: 'Replace Cart',
+                            style: 'destructive',
+                            onPress: () => handleAddToCart(item, true),
+                        },
+                    ],
+                    { cancelable: false }
+                );
+                return;
+            }
             showErrorAlert(error, 'Failed to Add to Cart');
         } finally {
-            setAddingToCart(null);
+            if (!isConflictError) {
+                setAddingToCart(null);
+            }
         }
     };
 
@@ -206,7 +239,7 @@ export default function RestaurantDetailsScreen() {
                             <View className="absolute top-4 left-4 bg-white/95 px-3 py-2 rounded-full flex-row items-center shadow-md">
                                 <Star size={16} color="#F4BA1B" fill="#F4BA1B" />
                                 <Text className="text-sm font-bold ml-1">
-                                    {restaurant.average_rating.toFixed(1)}
+                                    {formatRating(restaurant.average_rating)}
                                 </Text>
                             </View>
                         )}
@@ -278,7 +311,7 @@ export default function RestaurantDetailsScreen() {
                                             )}
                                             <View className="flex-row items-center justify-between mt-2">
                                                 <Text className="text-lg font-bold text-[#E95322]">
-                                                    ${item.price.toFixed(2)}
+                                                    ${formatPrice(item.price)}
                                                 </Text>
                                                 {!item.is_available && (
                                                     <Text className="text-xs text-red-600 font-semibold">

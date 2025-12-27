@@ -1,7 +1,9 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '../base.entity';
 import { Restaurant } from './restaurant.entity';
 import { DiscountType } from '@backend/shared';
+import { VoucherUsage } from './voucher-usage.entity';
+import { Order } from './order.entity';
 
 @Entity('vouchers')
 @Index(['code'], { unique: true })
@@ -52,4 +54,10 @@ export class Voucher extends BaseEntity {
 
   @Column({ type: 'boolean', default: true })
   is_active!: boolean;
+
+  @OneToMany(() => VoucherUsage, usage => usage.voucher)
+  usages!: VoucherUsage[];
+
+  @OneToMany(() => Order, order => order.voucher)
+  orders!: Order[];
 }

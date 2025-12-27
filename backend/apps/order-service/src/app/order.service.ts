@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Cart, CartItem, Order, OrderItem, OrderStatusHistory } from '@backend/database';
+import { Cart, CartItem, Order, OrderItem, OrderStatusHistory, MenuItem, Restaurant } from '@backend/database';
 import { OrderStatus, CancelledBy } from '@backend/shared';
 
 @Injectable()
@@ -17,6 +18,10 @@ export class OrderService {
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(OrderStatusHistory)
     private readonly statusHistoryRepository: Repository<OrderStatusHistory>,
+    @InjectRepository(MenuItem)
+    private readonly menuItemRepository: Repository<MenuItem>,
+    @InjectRepository(Restaurant)
+    private readonly restaurantRepository: Repository<Restaurant>,
   ) {}
 
   async getCart(userId: string) {
@@ -38,31 +43,87 @@ export class OrderService {
   }
 
   async addToCart(userId: string, data: any) {
-    const cart = await this.getCart(userId);
+    try {
+      if (!data.menu_item_id) {
+        throw new BadRequestException('menu_item_id is required');
+      }
 
-    if (cart.restaurant_id && cart.restaurant_id !== data.restaurant_id) {
-      throw new BadRequestException('Cart already contains items from another restaurant');
+      if (!data.quantity || data.quantity < 1) {
+        throw new BadRequestException('quantity must be at least 1');
+      }
+
+      const menuItem = await this.menuItemRepository.findOne({
+        where: { id: data.menu_item_id },
+      });
+
+      if (!menuItem) {
+        throw new NotFoundException(`Menu item with ID ${data.menu_item_id} not found`);
+      }
+
+      if (!menuItem.is_available) {
+        throw new BadRequestException('This menu item is currently unavailable');
+      }
+
+      const cart = await this.getCart(userId);
+
+      if (cart.restaurant_id && cart.restaurant_id !== menuItem.restaurant_id) {
+        const [currentRestaurant, newRestaurant] = await Promise.all([
+          this.restaurantRepository.findOne({ where: { id: cart.restaurant_id } }),
+          this.restaurantRepository.findOne({ where: { id: menuItem.restaurant_id } }),
+        ]);
+
+        throw new RpcException({
+          statusCode: 409,
+          message: 'Cart already contains items from another restaurant',
+          currentRestaurant: {
+            id: currentRestaurant?.id,
+            name: currentRestaurant?.name,
+          },
+          newRestaurant: {
+            id: newRestaurant?.id,
+            name: newRestaurant?.name,
+          },
+        });
+      }
+
+      if (!cart.restaurant_id) {
+        cart.restaurant_id = menuItem.restaurant_id;
+        await this.cartRepository.save(cart);
+      }
+
+      const existingItem = await this.cartItemRepository.findOne({
+        where: {
+          cart_id: cart.id,
+          menu_item_id: data.menu_item_id,
+        },
+      });
+
+      if (existingItem) {
+        existingItem.quantity += data.quantity;
+        existingItem.special_instructions = data.special_instructions || existingItem.special_instructions;
+        const updated = await this.cartItemRepository.save(existingItem);
+        await this.updateCartTotal(cart.id);
+        return updated;
+      }
+
+      const cartItem = this.cartItemRepository.create({
+        cart_id: cart.id,
+        menu_item_id: data.menu_item_id,
+        quantity: data.quantity,
+        unit_price: menuItem.price,
+        selected_options: data.selected_options || null,
+        special_instructions: data.special_instructions || null,
+      });
+
+      const savedItem = await this.cartItemRepository.save(cartItem);
+
+      await this.updateCartTotal(cart.id);
+
+      return savedItem;
+    } catch (error) {
+      console.error('[addToCart] Error:', error);
+      throw error;
     }
-
-    if (!cart.restaurant_id) {
-      cart.restaurant_id = data.restaurant_id;
-      await this.cartRepository.save(cart);
-    }
-
-    const cartItem = this.cartItemRepository.create({
-      cart_id: cart.id,
-      menu_item_id: data.menu_item_id,
-      quantity: data.quantity,
-      unit_price: data.unit_price,
-      selected_options: data.selected_options || [],
-      special_instructions: data.special_instructions,
-    });
-
-    const savedItem = await this.cartItemRepository.save(cartItem);
-
-    await this.updateCartTotal(cart.id);
-
-    return savedItem;
   }
 
   async updateCartItem(userId: string, itemId: string, data: any) {
@@ -310,6 +371,10 @@ export class OrderService {
 
     const subtotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
 
-    await this.cartRepository.update(cartId, { subtotal });
+    if (items.length === 0) {
+      await this.cartRepository.update(cartId, { subtotal, restaurant_id: null });
+    } else {
+      await this.cartRepository.update(cartId, { subtotal });
+    }
   }
 }

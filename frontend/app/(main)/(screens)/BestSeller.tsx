@@ -32,14 +32,14 @@ const BestSellerScreen = () => {
                 userService.getFavorites().catch(() => null),
             ]);
 
-            if (restaurantsData?.items && Array.isArray(restaurantsData.items)) {
-                setRestaurants(restaurantsData.items);
+            if (restaurantsData?.data && Array.isArray(restaurantsData.data)) {
+                setRestaurants(restaurantsData.data);
             } else {
                 setRestaurants([]);
             }
 
-            if (favoritesData?.items && Array.isArray(favoritesData.items)) {
-                setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+            if (favoritesData && Array.isArray(favoritesData)) {
+                setFavorites(new Set(favoritesData.map(f => f.restaurant_id)));
             } else {
                 setFavorites(new Set());
             }

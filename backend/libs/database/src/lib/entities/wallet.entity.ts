@@ -1,6 +1,7 @@
-import { Entity, Column, OneToOne, JoinColumn, Index, Check } from 'typeorm';
+import { Entity, Column, OneToOne, JoinColumn, Index, Check, OneToMany } from 'typeorm';
 import { BaseEntity } from '../base.entity';
 import { User } from './user.entity';
+import { WalletTransaction } from './wallet-transaction.entity';
 
 @Entity('wallets')
 @Index(['user_id'], { unique: true })
@@ -21,4 +22,7 @@ export class Wallet extends BaseEntity {
 
   @Column({ type: 'boolean', default: true })
   is_active!: boolean;
+
+  @OneToMany(() => WalletTransaction, transaction => transaction.wallet)
+  transactions!: WalletTransaction[];
 }

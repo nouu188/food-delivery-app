@@ -15,10 +15,10 @@ export class Cart extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ type: 'uuid' })
-  restaurant_id!: string;
+  @Column({ type: 'uuid', nullable: true })
+  restaurant_id!: string | null;
 
-  @ManyToOne(() => Restaurant)
+  @ManyToOne(() => Restaurant, { nullable: true })
   @JoinColumn({ name: 'restaurant_id' })
   restaurant!: Restaurant;
 

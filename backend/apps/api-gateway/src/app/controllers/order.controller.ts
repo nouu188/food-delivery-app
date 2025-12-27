@@ -10,9 +10,11 @@ import {
   UseGuards,
   Request,
   Inject,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, catchError } from 'rxjs';
 import { JwtAuthGuard, Roles, RolesGuard, AuthenticatedRequest } from '@backend/common';
 import {
   UserRole,
@@ -38,12 +40,34 @@ export class OrderController {
   @Post('cart/items')
   @UseGuards(JwtAuthGuard)
   async addToCart(@Request() req: AuthenticatedRequest, @Body() data: AddToCartDto) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.ADD_TO_CART, {
-        userId: req.user.id,
-        ...data,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.ADD_TO_CART, {
+          userId: req.user.id,
+          ...data,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 409) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            message: errorData.message || 'Cart already contains items from another restaurant',
+            currentRestaurant: errorData.currentRestaurant,
+            newRestaurant: errorData.newRestaurant,
+          },
+          HttpStatus.CONFLICT
+        );
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(errorData, errorData.statusCode);
+      }
+
+      throw error;
+    }
   }
 
   @Put('cart/items/:id')

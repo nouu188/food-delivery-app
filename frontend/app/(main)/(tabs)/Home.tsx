@@ -12,6 +12,7 @@ import restaurantService from "@/services/api/restaurant.service";
 import userService from "@/services/api/user.service";
 import { Restaurant } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
+import { formatRating } from "@/utils/format";
 
 const BANNERS = [
     {
@@ -56,11 +57,11 @@ const HomeScreen = () => {
                 userService.getFavorites().catch(() => null),
             ]);
 
-            setBestSellers(bestSellersData?.items ?? []);
-            setRecommended(recommendedData?.items ?? []);
+            setBestSellers(bestSellersData?.data ?? []);
+            setRecommended(recommendedData?.data ?? []);
 
-            if (favoritesData?.items && Array.isArray(favoritesData.items)) {
-                setFavorites(new Set(favoritesData.items.map(f => f.restaurant_id)));
+            if (favoritesData && Array.isArray(favoritesData)) {
+                setFavorites(new Set(favoritesData.map(f => f.restaurant_id)));
             } else {
                 setFavorites(new Set());
             }
@@ -185,7 +186,7 @@ const HomeScreen = () => {
                                             >
                                                 <Star size={10} color="#F4BA1B" fill="#F4BA1B" />
                                                 <Text className="text-xs font-semibold ml-1">
-                                                    {restaurant.average_rating.toFixed(1)}
+                                                    {formatRating(restaurant.average_rating)}
                                                 </Text>
                                             </View>
                                         )}
@@ -282,7 +283,7 @@ const HomeScreen = () => {
                                             {restaurant.average_rating && (
                                                 <View className="absolute left-3 top-3 bg-white/95 rounded-full px-2.5 py-1.5 flex-row items-center shadow-sm">
                                                     <Text className="text-[#151312] text-xs font-semibold mr-1">
-                                                        {restaurant.average_rating.toFixed(1)}
+                                                        {formatRating(restaurant.average_rating)}
                                                     </Text>
                                                     <Star size={12} color="#F4BA1B" fill="#F4BA1B" />
                                                 </View>

@@ -6,11 +6,12 @@ import restaurantService from "@/services/api/restaurant.service";
 import { useCartStore } from "@/store/useCartStore";
 import { MenuItem, MenuItemOption } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
+import { formatPrice, parseNumeric } from "@/utils/format";
 
 export default function FoodDetail() {
     const router = useRouter();
     const { id, restaurantId } = useLocalSearchParams<{ id: string; restaurantId: string }>();
-    const { addToCart } = useCartStore();
+    const { addToCart, clearCart } = useCartStore();
 
     const [menuItem, setMenuItem] = useState<MenuItem | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -91,18 +92,23 @@ export default function FoodDetail() {
     const calculateTotalPrice = (): number => {
         if (!menuItem) return 0;
 
-        const basePrice = menuItem.price;
+        const basePrice = Number(menuItem.price);
         const optionsPrice = selectedOptions.reduce((sum, opt) => sum + opt.price_adjustment, 0);
         const totalPrice = (basePrice + optionsPrice) * qty;
 
         return totalPrice;
     };
 
-    const handleAddToCart = async () => {
+    const handleAddToCart = async (forceReplace = false) => {
         if (!menuItem) return;
 
         setIsAddingToCart(true);
+        let isConflictError = false;
         try {
+            if (forceReplace) {
+                await clearCart();
+            }
+
             await addToCart({
                 menu_item_id: menuItem.id,
                 quantity: qty,
@@ -121,10 +127,37 @@ export default function FoodDetail() {
                     { text: 'View Cart', onPress: () => router.push('/cart') },
                 ]
             );
-        } catch (error) {
+        } catch (error: any) {
+            if (error.isConflict && error.response?.data) {
+                isConflictError = true;
+                const conflictData = error.response.data;
+                const currentRestaurantName = conflictData.currentRestaurant?.name || 'another restaurant';
+                const newRestaurantName = conflictData.newRestaurant?.name || 'this restaurant';
+
+                Alert.alert(
+                    'Replace Cart Items?',
+                    `Your cart contains items from ${currentRestaurantName}. Do you want to clear your cart and add items from ${newRestaurantName} instead?`,
+                    [
+                        {
+                            text: 'Cancel',
+                            style: 'cancel',
+                            onPress: () => setIsAddingToCart(false),
+                        },
+                        {
+                            text: 'Replace Cart',
+                            style: 'destructive',
+                            onPress: () => handleAddToCart(true),
+                        },
+                    ],
+                    { cancelable: false }
+                );
+                return;
+            }
             showErrorAlert(error, 'Failed to Add to Cart');
         } finally {
-            setIsAddingToCart(false);
+            if (!isConflictError) {
+                setIsAddingToCart(false);
+            }
         }
     };
 
@@ -152,7 +185,7 @@ export default function FoodDetail() {
     }
 
     const discount = menuItem.original_price && menuItem.original_price > menuItem.price
-        ? Math.round(((menuItem.original_price - menuItem.price) / menuItem.original_price) * 100)
+        ? Math.round(((Number(menuItem.original_price) - Number(menuItem.price)) / Number(menuItem.original_price)) * 100)
         : 0;
 
     return (
@@ -221,11 +254,11 @@ export default function FoodDetail() {
                         <View>
                             <View className="flex-row items-center">
                                 <Text className="text-[#E95322] text-2xl font-extrabold">
-                                    ${menuItem.price.toFixed(2)}
+                                    ${formatPrice(menuItem.price)}
                                 </Text>
-                                {menuItem.original_price && menuItem.original_price > menuItem.price && (
+                                {menuItem.original_price && parseNumeric(menuItem.original_price) > parseNumeric(menuItem.price) && (
                                     <Text className="text-[#9CA3AF] text-sm font-semibold line-through ml-2">
-                                        ${menuItem.original_price.toFixed(2)}
+                                        ${formatPrice(menuItem.original_price)}
                                     </Text>
                                 )}
                             </View>
@@ -334,7 +367,7 @@ export default function FoodDetail() {
                         activeOpacity={0.85}
                         className="rounded-full py-4 items-center flex-row justify-center"
                         style={{ backgroundColor: !menuItem.is_available || isAddingToCart ? "#9CA3AF" : "#E95322" }}
-                        onPress={handleAddToCart}
+                        onPress={() => handleAddToCart()}
                         disabled={!menuItem.is_available || isAddingToCart}
                     >
                         {isAddingToCart ? (

@@ -1,6 +1,7 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '../base.entity';
 import { Restaurant } from './restaurant.entity';
+import { MenuItem } from './menu-item.entity';
 
 @Entity('menu_categories')
 @Index(['restaurant_id'])
@@ -23,4 +24,7 @@ export class MenuCategory extends BaseEntity {
 
   @Column({ type: 'boolean', default: true })
   is_active!: boolean;
+
+  @OneToMany(() => MenuItem, item => item.category)
+  items!: MenuItem[];
 }

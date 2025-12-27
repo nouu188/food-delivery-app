@@ -1,7 +1,10 @@
-import { Entity, Column, OneToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, OneToOne, JoinColumn, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '../base.entity';
 import { User } from './user.entity';
 import { VehicleType, DriverStatus } from '@backend/shared';
+import { Delivery } from './delivery.entity';
+import { DriverLocation } from './driver-location.entity';
+import { Review } from './review.entity';
 
 @Entity('drivers')
 @Index(['user_id'], { unique: true })
@@ -39,4 +42,13 @@ export class Driver extends BaseEntity {
 
   @Column({ type: 'enum', enum: DriverStatus, default: DriverStatus.PENDING })
   status!: DriverStatus;
+
+  @OneToMany(() => Delivery, delivery => delivery.driver)
+  deliveries!: Delivery[];
+
+  @OneToMany(() => DriverLocation, location => location.driver)
+  locations!: DriverLocation[];
+
+  @OneToMany(() => Review, review => review.driver)
+  reviews!: Review[];
 }

@@ -11,14 +11,14 @@ export interface Restaurant {
   description: string | null;
   phone: string;
   address: string;
-  latitude: number;
-  longitude: number;
+  latitude: string;
+  longitude: string;
   logo_url: string | null;
   cover_image_url: string | null;
-  average_rating: number;
+  average_rating: string;
   total_reviews: number;
-  min_order_amount: number;
-  delivery_fee: number;
+  min_order_amount: string;
+  delivery_fee: string;
   estimated_prep_time: number; // minutes
   is_open: boolean;
   is_featured: boolean;
@@ -61,8 +61,8 @@ export interface MenuItem {
   category_id: string;
   name: string;
   description: string | null;
-  price: number;
-  original_price: number | null; // For discounts
+  price: string;
+  original_price: string | null; // For discounts
   image_url: string | null;
   is_available: boolean;
   is_featured: boolean;
@@ -108,14 +108,11 @@ export interface GetRestaurantsRequest {
 }
 
 export interface GetRestaurantsResponse {
-  items: Restaurant[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    total_pages: number;
-    has_next_page: boolean;
-  };
+  data: Restaurant[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
 }
 
 export interface CreateRestaurantRequest {
