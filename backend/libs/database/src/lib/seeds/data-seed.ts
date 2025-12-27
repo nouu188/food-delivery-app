@@ -223,10 +223,39 @@ export async function seedDatabase(dataSource: DataSource) {
     '741 Ba Thang Hai St, District 10',
   ];
 
+  const REALISTIC_COVERS = [
+    "https://images.unsplash.com/photo-1667388969250-1c7220bf3f37?q=80&w=2710&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000",
+    "https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=1000",
+    "https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1000", 
+    "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1000",
+    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=1000",
+    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=1000", 
+    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1000", 
+    "https://images.unsplash.com/photo-1729394405518-eaf2a0203aa7?q=80&w=1631&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+    "https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=1000",
+  ];
+
+  const REALISTIC_LOGOS = [
+    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=500",
+    "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=500",
+    "https://images.unsplash.com/photo-1565958011703-44f9829ba187?q=80&w=500",
+    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500",
+    "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=500",
+    "https://images.unsplash.com/photo-1651440204227-a9a5b9d19712?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=500",
+    "https://plus.unsplash.com/premium_photo-1663858367001-89e5c92d1e0e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGZvb2R8ZW58MHx8MHx8fDA%3D",
+    "https://plus.unsplash.com/premium_photo-1661777692723-ba8dd05065d9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=500",
+  ];
+
   for (let i = 0; i < 50; i++) {
     const owner = restaurantOwners[i % restaurantOwners.length];
-    const baseLatitude = 10.762622; // Ho Chi Minh City
+    const baseLatitude = 10.762622;
     const baseLongitude = 106.660172;
+
+    const coverUrl = REALISTIC_COVERS[i % REALISTIC_COVERS.length];
+    const logoUrl = REALISTIC_LOGOS[i % REALISTIC_LOGOS.length];
 
     const restaurant = restaurantRepository.create({
       owner_id: owner.id,
@@ -236,8 +265,8 @@ export async function seedDatabase(dataSource: DataSource) {
       address: addresses[i % addresses.length] + `, Ward ${i % 15 + 1}`,
       latitude: baseLatitude + (Math.random() - 0.5) * 0.1,
       longitude: baseLongitude + (Math.random() - 0.5) * 0.1,
-      logo_url: `https://picsum.photos/seed/restaurant${i}-logo/400/400`,
-      cover_image_url: `https://picsum.photos/seed/restaurant${i}-cover/1200/400`,
+      logo_url: logoUrl,
+      cover_image_url: coverUrl,
       average_rating: Number((3.5 + Math.random() * 1.5)),
       total_reviews: Math.floor(Math.random() * 200) + 10,
       min_order_amount: [0, 50000, 100000][Math.floor(Math.random() * 3)],
@@ -326,6 +355,45 @@ export async function seedDatabase(dataSource: DataSource) {
   // ===============================
   // SEED MENU ITEMS (500+)
   // ===============================
+  const getMenuImageUrl = (itemName: string): string => {
+    const name = itemName.toLowerCase();
+
+    if (name.includes('coffee') || name.includes('tea') || name.includes('latte'))
+      return "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=800"; // Coffee/Tea
+    if (name.includes('juice') || name.includes('smoothie') || name.includes('milkshake'))
+      return "https://images.unsplash.com/photo-1610970881699-44a5587cabec?q=80&w=800"; // Fresh Juice
+    if (name.includes('cake') || name.includes('tiramisu') || name.includes('panna cotta') || name.includes('dessert'))
+      return "https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=800"; // Cake
+    if (name.includes('ice cream') || name.includes('sundae'))
+      return "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?q=80&w=800"; // Ice Cream
+    if (name.includes('fruit'))
+      return "https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=800"; // Fruit
+
+    if (name.includes('pho') || name.includes('noodle') || name.includes('ramen') || name.includes('bun'))
+      return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?q=80&w=800"; // Noodle Soup
+    if (name.includes('rice') || name.includes('com tam') || name.includes('bibimbap'))
+      return "https://images.unsplash.com/photo-1516684732162-798a0062be99?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+    if (name.includes('roll') || name.includes('goi cuon') || name.includes('cha gio'))
+      return "https://plus.unsplash.com/premium_photo-1695756121533-3f60bee7ba7b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"; // Spring rolls
+    if (name.includes('sushi') || name.includes('sashimi'))
+      return "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=800"; // Sushi
+
+    if (name.includes('pizza'))
+      return "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=800"; // Pizza
+    if (name.includes('burger') || name.includes('sandwich') || name.includes('banh mi'))
+      return "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800"; // Burger/Banh mi
+    if (name.includes('spaghetti') || name.includes('pasta') || name.includes('carbonara'))
+      return "https://images.unsplash.com/photo-1612874742237-6526221588e3?q=80&w=800"; // Pasta
+    if (name.includes('steak') || name.includes('beef') || name.includes('grill'))
+      return "https://images.unsplash.com/photo-1600891964092-4316c288032e?q=80&w=800"; // Steak
+    if (name.includes('salad'))
+      return "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800"; // Salad
+    if (name.includes('fish') || name.includes('salmon') || name.includes('lobster') || name.includes('crab') || name.includes('oyster'))
+      return "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?q=80&w=800"; // Seafood
+
+    return "https://plus.unsplash.com/premium_photo-1673108852141-e8c3c22a4a22?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+  };
+
   console.log('Seeding menu items...');
   const menuItems: MenuItem[] = [];
   const itemNames = [
@@ -340,8 +408,11 @@ export async function seedDatabase(dataSource: DataSource) {
 
   for (const menuCategory of menuCategories) {
     const itemsPerCategory = Math.floor(Math.random() * 5) + 5;
+
     for (let i = 0; i < itemsPerCategory; i++) {
+      const currentItemName = itemNames[(menuItems.length + i) % itemNames.length];
       const hasOriginalPrice = Math.random() > 0.7;
+
       const menuItem = menuItemRepository.create({
         restaurant_id: menuCategory.restaurant_id,
         category_id: menuCategory.id,
@@ -349,7 +420,7 @@ export async function seedDatabase(dataSource: DataSource) {
         description: `Fresh and delicious ${itemNames[(menuItems.length + i) % itemNames.length]}`,
         price: (Math.floor(Math.random() * 150) + 30) * 1000,
         ...(hasOriginalPrice && { original_price: (Math.floor(Math.random() * 200) + 50) * 1000 }),
-        image_url: `https://picsum.photos/seed/menu${menuItems.length + i}/600/400`,
+        image_url: getMenuImageUrl(currentItemName),
         is_available: Math.random() > 0.1,
         is_featured: Math.random() > 0.8,
         preparation_time: [10, 15, 20, 25, 30][Math.floor(Math.random() * 5)],
@@ -446,19 +517,41 @@ export async function seedDatabase(dataSource: DataSource) {
     newDriverUsers.push(user);
   }
 
-  // Only save the new driver users, not the ones already saved
+  const LICENSE_DOC_IMAGES = [
+    "https://images.unsplash.com/photo-1562240020-ce31ccb0fa7d?q=80&w=800",
+    "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=800",
+    "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=800",
+    "https://images.unsplash.com/photo-1628102491629-778571d893a3?q=80&w=800",
+    "https://images.unsplash.com/photo-1557395703-5c5592ae708c?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  ];
+
+  const generateVNPlate = (type: VehicleType): string => {
+    const chars = "ABCDEFHKLMNPSTVXYZ";
+    const randomChar = chars.charAt(Math.floor(Math.random() * chars.length));
+    const num1 = Math.floor(Math.random() * 900) + 100;
+    const num2 = Math.floor(Math.random() * 90) + 10;
+
+    if (type === VehicleType.CAR) {
+      return `51${randomChar}-${num1}.${num2}`;
+    } else {
+      return `59-${randomChar}${Math.floor(Math.random() * 9) + 1} ${num1}.${num2}`;
+    }
+  };
+
   const savedNewDrivers = await userRepository.save(newDriverUsers);
   driverUsers.push(...savedNewDrivers);
 
   const vehicleTypes = [VehicleType.MOTORCYCLE, VehicleType.BICYCLE, VehicleType.CAR];
 
   for (let i = 0; i < 50; i++) {
+    const randomVehicleType = Math.random() > 0.8 ? VehicleType.CAR : VehicleType.MOTORCYCLE;
+
     const driver = driverRepository.create({
       user_id: driverUsers[i].id,
       vehicle_type: vehicleTypes[Math.floor(Math.random() * vehicleTypes.length)],
-      vehicle_plate: `${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 90) + 10}-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 9000) + 1000}`,
+      vehicle_plate: generateVNPlate(randomVehicleType),
       license_number: `DL${1000000 + i}`,
-      license_image_url: `https://picsum.photos/seed/license${i}/800/600`,
+      license_image_url: LICENSE_DOC_IMAGES[i % LICENSE_DOC_IMAGES.length],
       average_rating: Number((3.5 + Math.random() * 1.5)),
       total_deliveries: Math.floor(Math.random() * 500) + 50,
       is_online: Math.random() > 0.5,
@@ -847,13 +940,32 @@ export async function seedDatabase(dataSource: DataSource) {
   console.log('Seeding review images...');
   const reviewImages: ReviewImage[] = [];
 
+  const REALISTIC_REVIEW_PHOTOS = [
+    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800",
+    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=800",
+    "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?q=80&w=800",
+    "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=800",
+    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800",
+    "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800",
+    "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=800",
+    "https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=800",
+    "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=800",
+    "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=800",
+    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800",
+    "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?q=80&w=800",
+    "https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=800",
+    "https://images.unsplash.com/photo-1594007654729-407eedc4be65?q=80&w=800",
+  ];
+
   for (const review of reviews) {
     const numImages = Math.floor(Math.random() * 3) + 1;
 
     for (let i = 0; i < numImages; i++) {
+      const photoIndex = (reviewImages.length + i) % REALISTIC_REVIEW_PHOTOS.length;
+
       const reviewImage = reviewImageRepository.create({
         review_id: review.id,
-        image_url: `https://picsum.photos/seed/review${reviewImages.length + i}/800/600`,
+        image_url: REALISTIC_REVIEW_PHOTOS[photoIndex],
         display_order: i,
       });
       reviewImages.push(reviewImage);

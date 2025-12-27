@@ -22,7 +22,7 @@ export class OrderService {
     private readonly menuItemRepository: Repository<MenuItem>,
     @InjectRepository(Restaurant)
     private readonly restaurantRepository: Repository<Restaurant>,
-  ) {}
+  ) { }
 
   private async getOrCreateCart(userId: string) {
     let cart = await this.cartRepository.findOne({
@@ -377,8 +377,11 @@ export class OrderService {
   async getUserOrders(userId: string, query: any) {
     const { status, page = 1, limit = 20 } = query;
 
-    const queryBuilder = this.orderRepository.createQueryBuilder('order')
-      .where('order.user_id = :userId', { userId });
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'item')
+      .leftJoinAndSelect('item.menu_item', 'menuItem')
+      .where('order.user_id = :userId', { userId })
 
     if (status) {
       queryBuilder.andWhere('order.status = :status', { status });
@@ -405,9 +408,13 @@ export class OrderService {
   async getOrder(orderId: string) {
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
-      relations: ['items'],
+      relations: {
+        items: {
+          menu_item: true,
+        },
+      },
     });
-
+    
     if (!order) {
       throw new NotFoundException('Order not found');
     }
