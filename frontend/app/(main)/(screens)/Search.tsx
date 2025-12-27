@@ -1,15 +1,17 @@
 import { Star } from "@tamagui/lucide-icons";
-import { Link, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, View } from "react-native";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState, useCallback } from "react";
+import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, View, TouchableOpacity } from "react-native";
 import { SearchBar } from "@/components/common";
 import restaurantService from "@/services/api/restaurant.service";
 import userService from "@/services/api/user.service";
 import { Restaurant } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
 import { formatRating } from "@/utils/format";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SearchScreen() {
+    const router = useRouter();
     const params = useLocalSearchParams<{
         category?: string;
         minRating?: string;
@@ -22,24 +24,36 @@ export default function SearchScreen() {
     const [isLoading, setIsLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
-    const [appliedFilters, setAppliedFilters] = useState<{
-        category?: string;
-        minRating?: number;
-        maxPrice?: number;
-    }>({});
+
+    const categoryParam = params.category;
+    const minRatingParam = params.minRating;
+    const maxPriceParam = params.maxPrice;
+
+    const [filterCategory, setFilterCategory] = useState<string | undefined>(categoryParam);
+    const [filterMinRating, setFilterMinRating] = useState<number | undefined>(
+        minRatingParam ? parseInt(minRatingParam) : undefined
+    );
+    const [filterMaxPrice, setFilterMaxPrice] = useState<number | undefined>(
+        maxPriceParam ? parseInt(maxPriceParam) : undefined
+    );
 
     useEffect(() => {
-        if (params.category || params.minRating || params.maxPrice) {
-            setAppliedFilters({
-                category: params.category,
-                minRating: params.minRating ? parseInt(params.minRating) : undefined,
-                maxPrice: params.maxPrice ? parseInt(params.maxPrice) : undefined,
-            });
-        }
-    }, [params]);
+        setFilterCategory(categoryParam);
+    }, [categoryParam]);
 
-    const fetchRestaurants = async (searchQuery: string, showRefreshIndicator = false) => {
-        if (!searchQuery.trim() && !appliedFilters.category) {
+    useEffect(() => {
+        setFilterMinRating(minRatingParam ? parseInt(minRatingParam) : undefined);
+    }, [minRatingParam]);
+
+    useEffect(() => {
+        setFilterMaxPrice(maxPriceParam ? parseInt(maxPriceParam) : undefined);
+    }, [maxPriceParam]);
+
+    const fetchRestaurants = useCallback(async (searchQuery: string, showRefreshIndicator = false) => {
+        const hasQuery = searchQuery.trim().length > 0;
+        const hasFilters = filterCategory || (filterMinRating && filterMinRating > 0) || (filterMaxPrice && filterMaxPrice < 100);
+
+        if (!hasQuery && !hasFilters) {
             setRestaurants([]);
             setHasSearched(false);
             return;
@@ -55,35 +69,32 @@ export default function SearchScreen() {
             const [restaurantsData, favoritesData] = await Promise.all([
                 restaurantService.searchRestaurants({
                     search: searchQuery.trim() || undefined,
-                    category: appliedFilters.category,
+                    category_id: filterCategory,
                     page: 1,
                     limit: 50,
                 }).catch(() => null),
                 userService.getFavorites().catch(() => null),
             ]);
 
-            // Safely handle restaurant search results
             let filteredRestaurants: Restaurant[] = [];
             if (restaurantsData?.data && Array.isArray(restaurantsData.data)) {
                 filteredRestaurants = restaurantsData.data;
 
-                // Apply additional filters
-                if (appliedFilters.minRating && appliedFilters.minRating > 0) {
+                if (filterMinRating && filterMinRating > 0) {
                     filteredRestaurants = filteredRestaurants.filter(
-                        r => r.average_rating >= appliedFilters.minRating!
+                        r => Number(r.average_rating) >= filterMinRating
                     );
                 }
 
-                if (appliedFilters.maxPrice && appliedFilters.maxPrice > 1) {
+                if (filterMaxPrice && filterMaxPrice > 1) {
                     filteredRestaurants = filteredRestaurants.filter(
-                        r => r.min_order_amount <= appliedFilters.maxPrice!
+                        r => Number(r.min_order_amount) <= filterMaxPrice
                     );
                 }
             }
 
             setRestaurants(filteredRestaurants);
 
-            // Safely handle favorites data
             if (favoritesData && Array.isArray(favoritesData)) {
                 setFavorites(new Set(favoritesData.map(f => f.restaurant_id)));
             } else {
@@ -100,15 +111,21 @@ export default function SearchScreen() {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    };
+    }, [filterCategory, filterMinRating, filterMaxPrice]);
 
     useEffect(() => {
+        const hasFilters = filterCategory || (filterMinRating && filterMinRating > 0) || (filterMaxPrice && filterMaxPrice < 100);
+        if (hasFilters && !query) {
+            fetchRestaurants(query);
+            return;
+        }
+
         const debounceTimer = setTimeout(() => {
             fetchRestaurants(query);
         }, 500);
 
         return () => clearTimeout(debounceTimer);
-    }, [query, appliedFilters]);
+    }, [query, fetchRestaurants]);
 
     const renderItem = ({ item }: { item: Restaurant }) => {
         return (
@@ -176,13 +193,25 @@ export default function SearchScreen() {
 
     return (
         <View className="flex-1 bg-[#F9CF63]">
-            <View className="px-5 pt-16 pb-8">
-                <SearchBar
-                    isSearchPage={true}
-                    value={query}
-                    onChangeText={setQuery}
-                    placeholder="Search restaurants..."
-                />
+            <View className="flex flex-row px-5 pt-16 pb-6">
+                <View className="flex items-center">
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        activeOpacity={0.7}
+                        className="mr-3 w-12 h-12 rounded-full items-center justify-center"
+                        style={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }}
+                    >
+                        <Ionicons name="chevron-back-outline" size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
+                </View>
+                <View className="flex-1">
+                    <SearchBar
+                        isSearchPage={true}
+                        value={query}
+                        onChangeText={setQuery}
+                        placeholder="Search restaurants..."
+                    />
+                </View>
             </View>
 
             <View className="flex-1 bg-white rounded-t-3xl -mt-2 pt-6">
@@ -192,26 +221,26 @@ export default function SearchScreen() {
                             Search Result For: <Text className="text-[#E95322] font-semibold">{query}</Text>
                         </Text>
                     )}
-                    {(appliedFilters.category || appliedFilters.minRating || appliedFilters.maxPrice) && (
+                    {(filterCategory || filterMinRating || filterMaxPrice) && (
                         <View className="flex-row flex-wrap gap-2 mt-2">
-                            {appliedFilters.category && (
+                            {filterCategory && (
                                 <View className="bg-[#FFE3D6] px-3 py-1 rounded-full">
                                     <Text className="text-[#E95322] text-xs font-semibold">
                                         Category Filter
                                     </Text>
                                 </View>
                             )}
-                            {appliedFilters.minRating && appliedFilters.minRating > 0 && (
+                            {filterMinRating && filterMinRating > 0 && (
                                 <View className="bg-[#FFE3D6] px-3 py-1 rounded-full">
                                     <Text className="text-[#E95322] text-xs font-semibold">
-                                        {appliedFilters.minRating}+ Stars
+                                        {filterMinRating}+ Stars
                                     </Text>
                                 </View>
                             )}
-                            {appliedFilters.maxPrice && appliedFilters.maxPrice > 1 && (
+                            {filterMaxPrice && filterMaxPrice > 1 && (
                                 <View className="bg-[#FFE3D6] px-3 py-1 rounded-full">
                                     <Text className="text-[#E95322] text-xs font-semibold">
-                                        Max ${appliedFilters.maxPrice}
+                                        Max ${filterMaxPrice}
                                     </Text>
                                 </View>
                             )}

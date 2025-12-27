@@ -87,12 +87,17 @@ export interface MenuItemOption {
 
 // Request types
 export interface SearchRestaurantsRequest {
-  category?: string;
+  category_id?: string;
   search?: string;
   latitude?: number;
   longitude?: number;
   page?: number;
   limit?: number;
+  min_rating?: number;
+  is_open?: boolean;
+  is_featured?: boolean;
+  sort_by?: string;
+  sort_order?: 'ASC' | 'DESC';
 }
 
 export interface SearchRestaurantsResponse {
@@ -107,7 +112,7 @@ export interface GetRestaurantsRequest {
   page?: number;
   limit?: number;
   sort_by?: 'popular' | 'rating' | 'name';
-  category?: string;
+  category_id?: string;
 }
 
 export interface GetRestaurantsResponse {
