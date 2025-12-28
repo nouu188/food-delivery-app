@@ -27,8 +27,8 @@ const Login = () => {
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
         defaultValues: {
-            email: '',
-            password: '',
+            email: "",
+            password: "",
         },
     });
 
@@ -39,12 +39,11 @@ const Login = () => {
 
             await setTokens(response.access_token, response.refresh_token);
             await signIn();
-            
         } catch (error: any) {
             if (isErrorStatus(error, 401)) {
-                Alert.alert('Login Failed', 'Invalid email or password');
+                Alert.alert("Login Failed", "Invalid email or password");
             } else {
-                showErrorAlert(error, 'Login Failed');
+                showErrorAlert(error, "Login Failed");
             }
         } finally {
             setIsLoading(false);
@@ -87,9 +86,7 @@ const Login = () => {
                                 </View>
                             )}
                         />
-                        {errors.email && (
-                            <Text className="text-red-500 text-sm mt-1">{errors.email.message}</Text>
-                        )}
+                        {errors.email && <Text className="text-red-500 text-sm mt-1">{errors.email.message}</Text>}
                     </View>
 
                     <View className="mb-3">
@@ -154,7 +151,7 @@ const Login = () => {
                 </View>
 
                 <View className="flex-row justify-center items-center mb-2">
-                    <Text className="text-gray-600 text-sm">Don't have an account?</Text>
+                    <Text className="text-gray-600 text-sm">Do not have an account?</Text>
                     <TouchableOpacity onPress={handleSignUp} className="ml-1">
                         <Text className="text-orange-500 font-medium text-sm">Sign Up</Text>
                     </TouchableOpacity>

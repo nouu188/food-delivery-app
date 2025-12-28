@@ -25,7 +25,7 @@ export default function ReviewScreen() {
 
     const fetchOrder = async () => {
         if (!orderId) {
-            Alert.alert('Error', 'Order ID is required');
+            Alert.alert("Error", "Order ID is required");
             router.back();
             return;
         }
@@ -35,7 +35,7 @@ export default function ReviewScreen() {
             const orderData = await orderService.getOrderById(orderId);
             setOrder(orderData);
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Order');
+            showErrorAlert(error, "Failed to Load Order");
             router.back();
         } finally {
             setIsLoading(false);
@@ -46,7 +46,7 @@ export default function ReviewScreen() {
         if (!order) return;
 
         if (rating < 1 || rating > 5) {
-            Alert.alert('Error', 'Please select a rating');
+            Alert.alert("Error", "Please select a rating");
             return;
         }
 
@@ -59,18 +59,14 @@ export default function ReviewScreen() {
                 comment: comment.trim() || undefined,
             });
 
-            Alert.alert(
-                'Success',
-                'Thank you for your review!',
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => router.back(),
-                    },
-                ]
-            );
+            Alert.alert("Success", "Thank you for your review!", [
+                {
+                    text: "OK",
+                    onPress: () => router.back(),
+                },
+            ]);
         } catch (error) {
-            showErrorAlert(error, 'Failed to Submit Review');
+            showErrorAlert(error, "Failed to Submit Review");
         } finally {
             setIsSubmitting(false);
         }
@@ -105,7 +101,10 @@ export default function ReviewScreen() {
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-8">
                 <View className="items-center">
-                    {order.items && Array.isArray(order.items) && order.items.length > 0 && order.items[0].menu_item?.image_url ? (
+                    {order.items &&
+                    Array.isArray(order.items) &&
+                    order.items.length > 0 &&
+                    order.items[0].menu_item?.image_url ? (
                         <Image
                             source={{ uri: order.items[0].menu_item.image_url }}
                             className="w-40 h-32 rounded-2xl"
@@ -117,13 +116,14 @@ export default function ReviewScreen() {
                         </View>
                     )}
                     <Text className="mt-4 text-lg font-bold text-[#070707]">
-                        {order.restaurant_name || 'Restaurant'}
+                        {order.restaurant_name || "Restaurant"}
                     </Text>
                     <Text className="mt-1 text-sm text-[#6B7280]">
-                        {order.items && Array.isArray(order.items) ? order.items.length : 0} item{(order.items && Array.isArray(order.items) && order.items.length > 1) ? 's' : ''}
+                        {order.items && Array.isArray(order.items) ? order.items.length : 0} item
+                        {order.items && Array.isArray(order.items) && order.items.length > 1 ? "s" : ""}
                     </Text>
                     <Text className="mt-2 text-center text-[#6B7280] font-semibold">
-                        We'd love to know what you{`\n`}think of your order.
+                        We would love to know what you{`\n`}think of your order.
                     </Text>
 
                     <View className="flex-row mt-6">

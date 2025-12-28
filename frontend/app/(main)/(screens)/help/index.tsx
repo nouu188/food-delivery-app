@@ -221,231 +221,30 @@ export default function HelpScreen() {
                                         elevation: 2,
                                     }}
                                 >
-                                    <View className="w-14 h-14 rounded-2xl items-center justify-center bg-[#FFE3D6]">
-                                        {option.icon}
-                                    </View>
-                                    <View className="flex-1 ml-4">
-                                        <Text className="text-[#070707] font-bold text-base">{option.label}</Text>
-                                        <Text className="text-[#E95322] text-sm mt-0.5">{option.value}</Text>
-                                        <Text className="text-[#9CA3AF] text-xs mt-1">{option.description}</Text>
+                                    <View className="flex-row items-center justify-between">
+                                        <Text className="text-[#070707] font-semibold flex-1 pr-2">{faq.question}</Text>
+                                        <Feather
+                                            name={isExpanded ? "chevron-up" : "chevron-down"}
+                                            size={20}
+                                            color="#E95322"
+                                        />
                                     </View>
                                     <ChevronRight size={20} color="#9CA3AF" />
                                 </TouchableOpacity>
-                            ))}
-                        </View>
+                            );
+                        })}
+                    </View>
 
-                        <View className="mb-6">
-                            <Text className="text-[#070707] font-bold text-lg mb-4">Browse by Category</Text>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                className="mb-4 -mx-6 px-6"
-                            >
-                                {categories.map((category) => (
-                                    <TouchableOpacity
-                                        key={category.id}
-                                        onPress={() => setSelectedCategory(category.id)}
-                                        className={`mr-3 px-5 py-3 rounded-full flex-row items-center ${
-                                            selectedCategory === category.id ? 'bg-[#E95322]' : 'bg-[#F9FAFB]'
-                                        }`}
-                                        style={{
-                                            borderWidth: selectedCategory === category.id ? 0 : 1,
-                                            borderColor: '#E5E7EB'
-                                        }}
-                                        activeOpacity={0.7}
-                                    >
-                                        {selectedCategory === category.id ? (
-                                            <View className="mr-2">{React.cloneElement(category.icon as React.ReactElement)}</View>
-                                        ) : (
-                                            <View className="mr-2">{category.icon}</View>
-                                        )}
-                                        <Text className={`font-semibold ${
-                                            selectedCategory === category.id ? 'text-white' : 'text-[#070707]'
-                                        }`}>
-                                            {category.name}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                        </View>
-
-                        <View className="mb-6">
-                            <Text className="text-[#070707] font-bold text-lg mb-4">
-                                {selectedCategory === "all" ? "All Questions" : `${categories.find(c => c.id === selectedCategory)?.name} Questions`}
-                                {searchQuery && ` (${filteredFaqs.length} results)`}
-                            </Text>
-                            {filteredFaqs.length === 0 ? (
-                                <View className="py-12 items-center">
-                                    <HelpCircle size={48} color="#E5E7EB" />
-                                    <Text className="text-[#9CA3AF] mt-4 text-center">
-                                        No questions found. Try a different search or category.
-                                    </Text>
-                                </View>
-                            ) : (
-                                filteredFaqs.map((faq) => {
-                                    const isExpanded = expandedFaq === faq.id;
-                                    return (
-                                        <TouchableOpacity
-                                            key={faq.id}
-                                            activeOpacity={0.7}
-                                            onPress={() => toggleFaq(faq.id)}
-                                            className="bg-[#FFF5D6] rounded-2xl p-4 mb-3"
-                                        >
-                                            <View className="flex-row items-start justify-between">
-                                                <Text className="text-[#070707] font-bold text-base flex-1 pr-4 leading-6">
-                                                    {faq.question}
-                                                </Text>
-                                                {isExpanded ? (
-                                                    <ChevronUp size={20} color="#E95322" />
-                                                ) : (
-                                                    <ChevronDown size={20} color="#E95322" />
-                                                )}
-                                            </View>
-                                            {isExpanded && (
-                                                <Text className="text-[#6B7280] text-sm mt-3 leading-6">
-                                                    {faq.answer}
-                                                </Text>
-                                            )}
-                                        </TouchableOpacity>
-                                    );
-                                })
-                            )}
-                        </View>
-
-                        {!showContactForm ? (
-                            <View className="bg-gradient-to-br from-[#E95322] to-[#D94412] rounded-3xl p-6 mb-6"
-                                style={{
-                                    shadowColor: '#E95322',
-                                    shadowOpacity: 0.3,
-                                    shadowOffset: { width: 0, height: 8 },
-                                    shadowRadius: 16,
-                                    elevation: 8,
-                                }}
-                            >
-                                <Text className="text-white font-bold text-xl mb-2">Still need help?</Text>
-                                <Text className="text-white/90 text-sm mb-5 leading-5">
-                                    Can't find what you're looking for? Send us a message and we'll get back to you soon.
-                                </Text>
-                                <TouchableOpacity
-                                    className="bg-white rounded-full py-4 items-center flex-row justify-center"
-                                    activeOpacity={0.9}
-                                    onPress={() => setShowContactForm(true)}
-                                >
-                                    <Send size={20} color="#E95322" />
-                                    <Text className="text-[#E95322] font-bold text-base ml-2">Send Us a Message</Text>
-                                </TouchableOpacity>
-                            </View>
-                        ) : (
-                            <View className="bg-white rounded-3xl p-6 mb-6 border-2 border-[#E95322]">
-                                <Text className="text-[#070707] font-bold text-xl mb-5">Contact Us</Text>
-
-                                <View className="mb-4">
-                                    <Text className="text-[#070707] font-semibold mb-2">Name *</Text>
-                                    <TextInput
-                                        value={contactForm.name}
-                                        onChangeText={(text) => setContactForm({ ...contactForm, name: text })}
-                                        placeholder="Your full name"
-                                        placeholderTextColor="#9CA3AF"
-                                        className="bg-[#F9FAFB] rounded-xl px-4 py-3 text-[#070707] border border-[#E5E7EB]"
-                                    />
-                                </View>
-
-                                <View className="mb-4">
-                                    <Text className="text-[#070707] font-semibold mb-2">Email *</Text>
-                                    <TextInput
-                                        value={contactForm.email}
-                                        onChangeText={(text) => setContactForm({ ...contactForm, email: text })}
-                                        placeholder="your.email@example.com"
-                                        placeholderTextColor="#9CA3AF"
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                        className="bg-[#F9FAFB] rounded-xl px-4 py-3 text-[#070707] border border-[#E5E7EB]"
-                                    />
-                                </View>
-
-                                <View className="mb-4">
-                                    <Text className="text-[#070707] font-semibold mb-2">Subject (Optional)</Text>
-                                    <TextInput
-                                        value={contactForm.subject}
-                                        onChangeText={(text) => setContactForm({ ...contactForm, subject: text })}
-                                        placeholder="Brief subject"
-                                        placeholderTextColor="#9CA3AF"
-                                        className="bg-[#F9FAFB] rounded-xl px-4 py-3 text-[#070707] border border-[#E5E7EB]"
-                                    />
-                                </View>
-
-                                <View className="mb-5">
-                                    <Text className="text-[#070707] font-semibold mb-2">Message *</Text>
-                                    <TextInput
-                                        value={contactForm.message}
-                                        onChangeText={(text) => setContactForm({ ...contactForm, message: text })}
-                                        placeholder="Tell us how we can help you..."
-                                        placeholderTextColor="#9CA3AF"
-                                        multiline
-                                        numberOfLines={5}
-                                        textAlignVertical="top"
-                                        className="bg-[#F9FAFB] rounded-xl px-4 py-3 text-[#070707] border border-[#E5E7EB]"
-                                        style={{ minHeight: 120 }}
-                                    />
-                                </View>
-
-                                <View className="flex-row gap-3">
-                                    <TouchableOpacity
-                                        className="flex-1 bg-[#F9FAFB] rounded-full py-4 items-center border border-[#E5E7EB]"
-                                        activeOpacity={0.9}
-                                        onPress={() => {
-                                            setShowContactForm(false);
-                                            setContactForm({ name: "", email: "", subject: "", message: "" });
-                                        }}
-                                    >
-                                        <Text className="text-[#6B7280] font-bold text-base">Cancel</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        className="flex-1 bg-[#E95322] rounded-full py-4 items-center"
-                                        activeOpacity={0.9}
-                                        onPress={handleSubmitFeedback}
-                                    >
-                                        <Text className="text-white font-bold text-base">Submit</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        )}
-
-                        {/* Social Media Links */}
-                        <View className="mb-6">
-                            <Text className="text-[#070707] font-bold text-lg mb-4">Follow Us</Text>
-                            <View className="flex-row justify-between">
-                                {socialLinks.map((social, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        activeOpacity={0.7}
-                                        onPress={() => Linking.openURL(social.url)}
-                                        className="flex-1 bg-white rounded-2xl p-4 items-center justify-center border border-[#E5E7EB] mx-1"
-                                        style={{
-                                            shadowColor: '#000',
-                                            shadowOpacity: 0.05,
-                                            shadowOffset: { width: 0, height: 2 },
-                                            shadowRadius: 8,
-                                            elevation: 2,
-                                        }}
-                                    >
-                                        {social.icon}
-                                        <Text className="text-[#070707] font-semibold text-xs mt-2">{social.name}</Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        </View>
-
-                        {/* App Info */}
-                        <View className="bg-[#F9FAFB] rounded-2xl p-4 mb-6">
-                            <Text className="text-[#6B7280] text-xs text-center leading-5">
-                                Food Delivery App v1.0.0{'\n'}
-                                © 2025 All rights reserved{'\n'}
-                                Terms of Service • Privacy Policy
-                            </Text>
-                        </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
+                    <View className="bg-[#FFE3D6] rounded-2xl p-4">
+                        <Text className="text-[#070707] font-semibold mb-2">Still need help?</Text>
+                        <Text className="text-[#6B7280] text-sm mb-4">
+                            Send us a message and we will get back to you as soon as possible
+                        </Text>
+                        <TouchableOpacity className="bg-[#E95322] rounded-full py-3 items-center" activeOpacity={0.9}>
+                            <Text className="text-white font-semibold">Send Feedback</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
             </View>
         </SafeAreaView>
     );

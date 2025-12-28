@@ -430,69 +430,65 @@ Hệ thống được chia thành 9 nhóm chức năng chính:
 
 ### 4.1. Kết quả Backend
 
-Đã triển khai đầy đủ 9 microservices với tổng cộng **80+ API endpoints**. Chi tiết:
+Backend được xây dựng theo kiến trúc **microservices (NestJS)** trong **Nx monorepo**, gồm **API Gateway** làm entry-point HTTP và các service nghiệp vụ tách biệt theo từng domain. Toàn bộ API tại Gateway sử dụng prefix `/api` và cơ chế forward request sang các microservice thông qua **TCP transport + message patterns**.
 
-**Bảng 4.1: API Endpoints của các Services**
+**Bảng 4.1: Các nhóm API chính tại API Gateway (prefix `/api`)**
 
-| Service          | Endpoints chính                                                                                                                       | Methods                | Guards              |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ------------------- |
-| **Auth**         | `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/refresh`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/verify-otp` | POST                   | Public + JwtAuth    |
-| **User**         | `/users/profile`, `/users/addresses`, `/users/devices`, `/users/favorites`                                                            | GET, POST, PUT, DELETE | JwtAuth             |
-| **Restaurant**   | `/restaurants`, `/restaurants/:id`, `/restaurants/:id/menu`, `/restaurants/:id/operating-hours`                                       | GET, POST, PUT         | Public + RoleGuard  |
-| **Order**        | `/cart`, `/cart/items`, `/orders`, `/orders/:id/cancel`, `/orders/:id/reorder`                                                        | GET, POST, PUT, DELETE | JwtAuth             |
-| **Payment**      | `/wallets`, `/wallets/balance`, `/transactions`, `/payments`                                                                          | GET, POST              | JwtAuth             |
-| **Delivery**     | `/drivers`, `/drivers/location`, `/deliveries/:id`                                                                                    | GET, POST, PUT         | JwtAuth + RoleGuard |
-| **Review**       | `/reviews/restaurants/:id`, `/reviews`, `/reviews/:id/reply`                                                                          | GET, POST              | JwtAuth             |
-| **Notification** | `/notifications`, `/notifications/read`, `/notifications/:id`                                                                         | GET, PUT, DELETE       | JwtAuth             |
-| **Promotion**    | `/vouchers`, `/vouchers/validate`, `/vouchers/apply`                                                                                  | GET, POST              | JwtAuth             |
+| Service          | Endpoints tiêu biểu                                                                                                                                                                                                             | Methods                | Bảo mật                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------- |
+| **Auth**         | `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/refresh-token`, `/auth/forgot-password`, `/auth/reset-password`, `/auth/verify-otp`, `/auth/resend-otp`                                                                 | POST                   | Public + JwtAuth (logout)                                 |
+| **User**         | `/users/me`, `/users/addresses`, `/users/addresses/:id`, `/users/devices`, `/users/favorites`, `/users/favorites/:restaurantId`                                                                                                 | GET, POST, PUT, DELETE | JwtAuth                                                   |
+| **Restaurant**   | `/restaurants`, `/restaurants/categories/all`, `/restaurants/:id`, `/restaurants/:id/menu`, `/restaurants/:id/operating-hours`, `/restaurants/menu-categories`, `/restaurants/menu-items`, `/restaurants/menu-item-options/:id` | GET, POST, PUT, DELETE | Public + JwtAuth + RolesGuard (owner)                     |
+| **Order**        | `/cart`, `/cart/items`, `/cart/items/:id`, `/orders`, `/orders/:id`, `/orders/:id/cancel`, `/orders/:id/reorder`, `/restaurants/:id/orders`, `/orders/:id/status`                                                               | GET, POST, PUT, DELETE | JwtAuth (+ RolesGuard cho chủ quán ở route theo nhà hàng) |
+| **Payment**      | `/payments/process`, `/payments/:id`, `/payments/:id/refund`, `/payments/wallet/balance`, `/payments/wallet/top-up`, `/payments/wallet/transactions`                                                                            | GET, POST              | JwtAuth                                                   |
+| **Delivery**     | `/deliveries/drivers/register`, `/deliveries/drivers/me`, `/deliveries/drivers/status`, `/deliveries/drivers/location`, `/deliveries/available`, `/deliveries/:id/accept`, `/deliveries/:id/status`, `/deliveries/:id/track`    | GET, POST, PUT         | JwtAuth + RolesGuard (driver) cho nghiệp vụ tài xế        |
+| **Review**       | `/reviews`, `/reviews/restaurants/:id`, `/reviews/:id`, `/reviews/:id/reply`                                                                                                                                                    | GET, POST, PUT         | JwtAuth (+ RolesGuard cho chủ quán khi reply)             |
+| **Notification** | `/notifications`, `/notifications/:id/read`, `/notifications/read-all`, `/notifications/:id`                                                                                                                                    | GET, PUT, DELETE       | JwtAuth                                                   |
+| **Promotion**    | `/vouchers`, `/vouchers/:code`, `/vouchers/validate`, `/vouchers/:id`                                                                                                                                                           | GET, POST, PUT, DELETE | JwtAuth (+ RolesGuard cho tạo/cập nhật/vô hiệu)           |
 
-**Các tính năng Backend đã hoàn thành:**
+**Các kết quả/nhóm chức năng Backend đã triển khai:**
 
-✅ **Authentication Flow:**
+-   **Xác thực & phân quyền:** đăng ký/đăng nhập, cấp JWT access token và refresh token, refresh-token rotation, logout (thu hồi token), OTP cho xác minh/khôi phục mật khẩu; triển khai `JwtAuthGuard`, `RolesGuard` và decorator `Roles`.
 
--   Register với email verification
--   Login trả về access + refresh token
--   Refresh token rotation
--   OTP generation với expiry 10 phút
--   Password reset secure workflow
+    -   Tham khảo: [backend/apps/auth-service/src/app/auth.service.ts](backend/apps/auth-service/src/app/auth.service.ts)
+    -   Gateway routes: [backend/apps/api-gateway/src/app/controllers/auth.controller.ts](backend/apps/api-gateway/src/app/controllers/auth.controller.ts)
 
-Tham khảo: [backend/apps/auth-service/src/auth/auth.service.ts](backend/apps/auth-service/src/auth/auth.service.ts)
+-   **Quản lý người dùng:** lấy/cập nhật hồ sơ (`/users/me`), CRUD địa chỉ nhận hàng, đăng ký device token, và quản lý danh sách yêu thích (favorites) kèm quan hệ `restaurant`.
 
-✅ **Order Lifecycle:**
+    -   Tham khảo: [backend/apps/user-service/src/app/user.service.ts](backend/apps/user-service/src/app/user.service.ts)
+    -   Gateway routes: [backend/apps/api-gateway/src/app/controllers/user.controller.ts](backend/apps/api-gateway/src/app/controllers/user.controller.ts)
 
--   Validate cart (single restaurant constraint)
--   Create order với transaction
--   Auto-generate order number
--   Status progression tracking
--   Order history với filters
+-   **Nhà hàng & thực đơn:** danh sách nhà hàng có filter/sort/pagination, lấy chi tiết, danh mục nhà hàng, lấy menu theo nhà hàng; CRUD menu categories/menu items/options và cập nhật giờ hoạt động (phân quyền chủ quán).
 
-Tham khảo: [backend/apps/order-service/src/order/order.service.ts](backend/apps/order-service/src/order/order.service.ts)
+    -   Tham khảo: [backend/apps/restaurant-service/src/app/restaurant.service.ts](backend/apps/restaurant-service/src/app/restaurant.service.ts)
+    -   Gateway routes: [backend/apps/api-gateway/src/app/controllers/restaurant.controller.ts](backend/apps/api-gateway/src/app/controllers/restaurant.controller.ts)
 
-✅ **Payment Processing:**
+-   **Giỏ hàng & đơn hàng:** tạo/đọc giỏ hàng, ràng buộc giỏ hàng chỉ chứa món của 1 nhà hàng, tạo đơn, xem danh sách đơn theo user/nhà hàng, hủy đơn, reorder, và cập nhật trạng thái đơn.
 
--   Wallet creation và top-up
--   Payment với QueryRunner transaction
--   Auto refund khi order cancelled
--   Transaction history đầy đủ
+    -   Tham khảo: [backend/apps/order-service/src/app/order.service.ts](backend/apps/order-service/src/app/order.service.ts)
+    -   Gateway routes: [backend/apps/api-gateway/src/app/controllers/order.controller.ts](backend/apps/api-gateway/src/app/controllers/order.controller.ts)
 
-Tham khảo: [backend/apps/payment-service/src/payment/payment.service.ts](backend/apps/payment-service/src/payment/payment.service.ts)
+-   **Thanh toán & ví:** xử lý thanh toán (có transaction qua `QueryRunner`), quản lý ví (tạo ví khi chưa có), top-up, hoàn tiền và lịch sử giao dịch.
 
-✅ **Event-driven Notifications:**
+    -   Tham khảo: [backend/apps/payment-service/src/app/payment.service.ts](backend/apps/payment-service/src/app/payment.service.ts)
+    -   Gateway routes: [backend/apps/api-gateway/src/app/controllers/payment.controller.ts](backend/apps/api-gateway/src/app/controllers/payment.controller.ts)
 
--   Listen ORDER_EVENTS (created, status changed, cancelled)
--   Listen PAYMENT_EVENTS (completed)
--   Listen REVIEW_EVENTS (created)
--   Auto create notifications cho users
+-   **Giao hàng:** đăng ký tài xế, cập nhật trạng thái/định vị, nhận chuyến, cập nhật trạng thái giao hàng và theo dõi (tracking).
 
-Tham khảo: [backend/apps/notification-service/src/notification/notification.service.ts](backend/apps/notification-service/src/notification/notification.service.ts)
+    -   Tham khảo: [backend/apps/delivery-service/src/app/delivery.service.ts](backend/apps/delivery-service/src/app/delivery.service.ts)
+    -   Gateway routes: [backend/apps/api-gateway/src/app/controllers/delivery.controller.ts](backend/apps/api-gateway/src/app/controllers/delivery.controller.ts)
 
-✅ **Location Tracking:**
+-   **Đánh giá:** tạo review theo đơn, truy vấn review theo nhà hàng, reply từ chủ quán; đồng thời cập nhật thống kê rating/reviews của nhà hàng.
 
--   Real-time driver location updates
--   Haversine distance calculation
--   Auto-assign nearest driver
+    -   Tham khảo: [backend/apps/review-service/src/app/review.service.ts](backend/apps/review-service/src/app/review.service.ts)
+    -   Gateway routes: [backend/apps/api-gateway/src/app/controllers/review.controller.ts](backend/apps/api-gateway/src/app/controllers/review.controller.ts)
 
-Tham khảo: [backend/apps/delivery-service/src/delivery/delivery.service.ts](backend/apps/delivery-service/src/delivery/delivery.service.ts)
+-   **Thông báo & khuyến mãi:** CRUD thông báo theo user (read/read-all/delete) và hệ thống voucher (lấy danh sách, validate, tạo/cập nhật/vô hiệu).
+    -   Tham khảo: [backend/apps/notification-service/src/app/notification.service.ts](backend/apps/notification-service/src/app/notification.service.ts)
+    -   Tham khảo: [backend/apps/promotion-service/src/app/promotion.service.ts](backend/apps/promotion-service/src/app/promotion.service.ts)
+
+**Ghi chú kỹ thuật:** API Gateway cấu hình CORS, `ValidationPipe` (whitelist/transform/forbidNonWhitelisted), filter xử lý exception và interceptor logging.
+Tham khảo: [backend/apps/api-gateway/src/main.ts](backend/apps/api-gateway/src/main.ts)
 
 ### 4.2. Kết quả Frontend
 
