@@ -1,5 +1,5 @@
 import { BellIcon, CartIcon, UserIcon } from "@/assets/icons";
-import { SearchBar } from "@/components/common";
+import SearchBar from "./SearchBar";
 import { useCartStore } from "@/store/useCartStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import React, { useCallback } from "react";
