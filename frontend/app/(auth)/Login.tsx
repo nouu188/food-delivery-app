@@ -39,6 +39,14 @@ const Login = () => {
 
             await setTokens(response.access_token, response.refresh_token);
             await signIn();
+            
+            // Import useToastStore at the top if not already imported
+            const { useToastStore } = await import("@/store/useToastStore");
+            useToastStore.getState().show({
+                type: "success",
+                title: "Login Successful",
+                message: "Welcome back!"
+            });
         } catch (error: any) {
             showErrorAlert(error, "Login Failed");
         } finally {

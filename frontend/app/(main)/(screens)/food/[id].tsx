@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import restaurantService from "@/services/api/restaurant.service";
 import { useCartStore } from "@/store/useCartStore";
-import { MenuItem, MenuItemOption } from "@/types/api/restaurant";
+import { MenuItem, MenuItemOption, Restaurant } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
 import { formatPrice, parseNumeric } from "@/utils/format";
 import { useToastStore } from "@/store/useToastStore";
@@ -17,6 +17,7 @@ export default function FoodDetail() {
     const { addToCart, clearCart } = useCartStore();
 
     const [menuItem, setMenuItem] = useState<MenuItem | null>(null);
+    const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [qty, setQty] = useState(1);
@@ -36,7 +37,15 @@ export default function FoodDetail() {
 
         try {
             setIsLoading(true);
-            const menuCategories = await restaurantService.getMenu(restaurantId);
+            const [menuCategories, restaurantData] = await Promise.all([
+                restaurantService.getMenu(restaurantId),
+                restaurantService.getRestaurantById(restaurantId).catch(() => null)
+            ]);
+
+            // Set restaurant data
+            if (restaurantData) {
+                setRestaurant(restaurantData);
+            }
 
             let foundItem: MenuItem | null = null;
             if (menuCategories && Array.isArray(menuCategories)) {
@@ -99,6 +108,16 @@ export default function FoodDetail() {
 
     const handleAddToCart = async (forceReplace = false) => {
         if (!menuItem) return;
+
+        // Check if restaurant is closed
+        if (restaurant && !restaurant.is_open) {
+            showToast({
+                type: 'error',
+                title: 'Restaurant Closed',
+                message: 'This restaurant is currently closed. Please try again later.',
+            });
+            return;
+        }
 
         setIsAddingToCart(true);
         let isConflictError = false;

@@ -1,6 +1,16 @@
-import { Controller, Post, Body, Inject, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Inject,
+  UseGuards,
+  Request,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, catchError, throwError } from 'rxjs';
 import { JwtAuthGuard, AuthenticatedRequest } from '@backend/common';
 import { AUTH_PATTERNS } from '@backend/contracts';
 import {
@@ -11,21 +21,42 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
   VerifyOtpDto,
-  SendOtpDto
+  SendOtpDto,
 } from '@backend/shared';
 
 @Controller('auth')
 export class AuthController {
-  constructor(@Inject('AUTH_SERVICE') private readonly authService: ClientProxy) {}
+  constructor(
+    @Inject('AUTH_SERVICE') private readonly authService: ClientProxy
+  ) {}
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
-    return firstValueFrom(this.authService.send(AUTH_PATTERNS.REGISTER, registerDto));
+    return firstValueFrom(
+      this.authService.send(AUTH_PATTERNS.REGISTER, registerDto)
+    );
   }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    return firstValueFrom(this.authService.send(AUTH_PATTERNS.LOGIN, loginDto));
+    return firstValueFrom(
+      this.authService.send(AUTH_PATTERNS.LOGIN, loginDto).pipe(
+        catchError((error) => {
+          // Handle RPC errors from microservice
+          const statusCode =
+            error?.statusCode ||
+            error?.status ||
+            HttpStatus.INTERNAL_SERVER_ERROR;
+          const message = error?.message || 'Internal server error';
+
+          if (statusCode === 401 || statusCode === HttpStatus.UNAUTHORIZED) {
+            throw new UnauthorizedException(message);
+          }
+
+          throw new HttpException(message, statusCode);
+        })
+      )
+    );
   }
 
   @Post('logout')
@@ -42,13 +73,19 @@ export class AuthController {
   @Post('refresh-token')
   async refreshToken(@Body() body: RefreshTokenDto) {
     return firstValueFrom(
-      this.authService.send(AUTH_PATTERNS.REFRESH_TOKEN, { refreshToken: body.refresh_token })
+      this.authService.send(AUTH_PATTERNS.REFRESH_TOKEN, {
+        refreshToken: body.refresh_token,
+      })
     );
   }
 
   @Post('forgot-password')
   async forgotPassword(@Body() body: ForgotPasswordDto) {
-    return firstValueFrom(this.authService.send(AUTH_PATTERNS.FORGOT_PASSWORD, { email: body.email }));
+    return firstValueFrom(
+      this.authService.send(AUTH_PATTERNS.FORGOT_PASSWORD, {
+        email: body.email,
+      })
+    );
   }
 
   @Post('reset-password')

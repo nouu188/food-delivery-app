@@ -162,6 +162,16 @@ export default function RestaurantDetailsScreen() {
     };
 
     const handleMenuItemPress = (item: MenuItem) => {
+        // Check if restaurant is closed
+        if (restaurant && !restaurant.is_open) {
+            showToast({
+                type: 'error',
+                title: 'Restaurant Closed',
+                message: 'This restaurant is currently closed. Please try again later.',
+            });
+            return;
+        }
+
         // Check if item is available
         if (!item.is_available) {
             showToast({
@@ -181,6 +191,16 @@ export default function RestaurantDetailsScreen() {
     };
 
     const handleQuickAdd = async (item: MenuItem, forceReplace = false) => {
+        // Check if restaurant is closed
+        if (restaurant && !restaurant.is_open) {
+            showToast({
+                type: 'error',
+                title: 'Restaurant Closed',
+                message: 'This restaurant is currently closed. Please try again later.',
+            });
+            return;
+        }
+
         setAddingToCart(true);
         let isConflictError = false;
 
@@ -237,6 +257,16 @@ export default function RestaurantDetailsScreen() {
         specialInstructions?: string,
         forceReplace = false
     ) => {
+        // Check if restaurant is closed
+        if (restaurant && !restaurant.is_open) {
+            showToast({
+                type: 'error',
+                title: 'Restaurant Closed',
+                message: 'This restaurant is currently closed. Please try again later.',
+            });
+            return;
+        }
+
         setAddingToCart(true);
         let isConflictError = false;
 
