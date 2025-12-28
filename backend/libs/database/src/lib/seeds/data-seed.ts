@@ -763,6 +763,7 @@ export async function seedDatabase(dataSource: DataSource) {
     const userAddress = userAddresses.find(addr => addr.user_id === customer.id) || userAddresses[0];
     const subtotal = (Math.floor(Math.random() * 200) + 50) * 1000;
     const deliveryFee = Number(restaurant.delivery_fee);
+    const taxAmount = Number((subtotal * 0.10).toFixed(0)); // 10% tax
     const discountAmount = Math.random() > 0.7 ? Math.floor(Math.random() * 30) * 1000 : 0;
     const hasVoucher = Math.random() > 0.7;
     const hasSpecialInstructions = Math.random() > 0.7;
@@ -776,8 +777,9 @@ export async function seedDatabase(dataSource: DataSource) {
       status: orderStatuses[Math.floor(Math.random() * orderStatuses.length)],
       subtotal: Number(subtotal),
       delivery_fee: Number(deliveryFee),
+      tax_amount: Number(taxAmount),
       discount_amount: Number(discountAmount),
-      total_amount: Number((subtotal + deliveryFee - discountAmount)),
+      total_amount: Number((subtotal + deliveryFee + taxAmount - discountAmount)),
       ...(hasVoucher && { voucher_id: vouchers[Math.floor(Math.random() * vouchers.length)].id }),
       payment_method: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
       ...(hasSpecialInstructions && { special_instructions: 'Please ring the doorbell' }),

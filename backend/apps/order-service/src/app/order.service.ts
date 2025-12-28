@@ -2,8 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Cart, CartItem, Order, OrderItem, OrderStatusHistory, MenuItem, Restaurant } from '@backend/database';
-import { OrderStatus, CancelledBy } from '@backend/shared';
+import { Cart, CartItem, Order, OrderItem, OrderStatusHistory, MenuItem, Restaurant, Voucher, VoucherUsage } from '@backend/database';
+import { OrderStatus, CancelledBy, DiscountType } from '@backend/shared';
 
 @Injectable()
 export class OrderService {
@@ -22,6 +22,10 @@ export class OrderService {
     private readonly menuItemRepository: Repository<MenuItem>,
     @InjectRepository(Restaurant)
     private readonly restaurantRepository: Repository<Restaurant>,
+    @InjectRepository(Voucher)
+    private readonly voucherRepository: Repository<Voucher>,
+    @InjectRepository(VoucherUsage)
+    private readonly voucherUsageRepository: Repository<VoucherUsage>,
   ) { }
 
   private async getOrCreateCart(userId: string) {
@@ -328,7 +332,7 @@ export class OrderService {
   async createOrder(userId: string, data: any) {
     const cart = await this.cartRepository.findOne({
       where: { user_id: userId },
-      relations: ['items'],
+      relations: ['items', 'items.menu_item'],
     });
 
     if (!cart || !cart.items || cart.items.length === 0) {
@@ -337,18 +341,46 @@ export class OrderService {
 
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
+    const TAX_RATE = 0.10;
+    const subtotal = Number(cart.subtotal);
+    const deliveryFee = Number(data.delivery_fee || 0);
+    const taxAmount = Number((subtotal * TAX_RATE));
+
+    // Validate and apply voucher if provided
+    let voucher: Voucher | null = null;
+    let discountAmount = 0;
+
+    if (data.voucher_code) {
+      const voucherValidation = await this.validateAndApplyVoucher(
+        data.voucher_code,
+        userId,
+        cart.restaurant_id,
+        subtotal + deliveryFee + taxAmount
+      );
+
+      if (voucherValidation.isValid && voucherValidation.voucher) {
+        voucher = voucherValidation.voucher;
+        discountAmount = voucherValidation.discountAmount;
+      } else {
+        throw new BadRequestException(voucherValidation.message || 'Invalid voucher');
+      }
+    }
+
+    const totalAmount = subtotal + deliveryFee + taxAmount - discountAmount;
+
     const order = this.orderRepository.create({
       order_number: orderNumber,
       user_id: userId,
       restaurant_id: cart.restaurant_id,
       delivery_address_id: data.delivery_address_id,
       status: OrderStatus.PENDING,
-      subtotal: cart.subtotal,
-      delivery_fee: data.delivery_fee || 0,
-      discount_amount: data.discount_amount || 0,
-      total_amount: cart.subtotal + (data.delivery_fee || 0) - (data.discount_amount || 0),
+      subtotal: subtotal,
+      delivery_fee: deliveryFee,
+      tax_amount: taxAmount,
+      discount_amount: discountAmount,
+      total_amount: totalAmount,
       payment_method: data.payment_method,
-      voucher_id: data.voucher_id,
+      voucher_id: voucher?.id || null,
       special_instructions: data.special_instructions,
       estimated_delivery: new Date(Date.now() + 45 * 60 * 1000),
     });
@@ -356,10 +388,12 @@ export class OrderService {
     const savedOrder = await this.orderRepository.save(order);
 
     for (const cartItem of cart.items) {
+      const itemName = cartItem.menu_item?.name || 'Menu Item';
+
       const orderItem = this.orderItemRepository.create({
         order_id: savedOrder.id,
         menu_item_id: cartItem.menu_item_id,
-        item_name: 'Menu Item',
+        item_name: itemName,
         quantity: cartItem.quantity,
         unit_price: cartItem.unit_price,
         total_price: cartItem.unit_price * cartItem.quantity,
@@ -369,9 +403,14 @@ export class OrderService {
       await this.orderItemRepository.save(orderItem);
     }
 
+    // Track voucher usage if voucher was applied
+    if (voucher) {
+      await this.trackVoucherUsage(voucher.id, userId, savedOrder.id, discountAmount);
+    }
+
     await this.clearCart(userId);
 
-    return savedOrder;
+    return this.getOrder(savedOrder.id);
   }
 
   async getUserOrders(userId: string, query: any) {
@@ -381,6 +420,9 @@ export class OrderService {
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'item')
       .leftJoinAndSelect('item.menu_item', 'menuItem')
+      .leftJoinAndSelect('order.restaurant', 'restaurant')
+      .leftJoinAndSelect('order.delivery_address', 'delivery_address')
+      .leftJoinAndSelect('order.voucher', 'voucher')
       .where('order.user_id = :userId', { userId })
 
     if (status) {
@@ -394,7 +436,9 @@ export class OrderService {
       .skip((page - 1) * limit)
       .take(limit);
 
-    const data = await queryBuilder.getMany();
+    const orders = await queryBuilder.getMany();
+
+    const data = orders.map(order => this.transformOrderResponse(order));
 
     return {
       data,
@@ -412,14 +456,17 @@ export class OrderService {
         items: {
           menu_item: true,
         },
+        restaurant: true,
+        delivery_address: true,
+        voucher: true,
       },
     });
-    
+
     if (!order) {
       throw new NotFoundException('Order not found');
     }
 
-    return order;
+    return this.transformOrderResponse(order);
   }
 
   async cancelOrder(orderId: string, userId: string, data: any) {
@@ -547,6 +594,194 @@ export class OrderService {
     });
 
     return order;
+  }
+
+  private transformOrderResponse(order: any) {
+    const response: any = {
+      id: order.id,
+      order_number: order.order_number,
+      user_id: order.user_id,
+      restaurant_id: order.restaurant_id,
+      delivery_address_id: order.delivery_address_id,
+      status: order.status,
+      subtotal: Number(order.subtotal),
+      delivery_fee: Number(order.delivery_fee || 0),
+      tax_amount: Number(order.tax_amount || 0),
+      discount_amount: Number(order.discount_amount || 0),
+      total_amount: Number(order.total_amount),
+      payment_method: order.payment_method,
+      special_instructions: order.special_instructions,
+      estimated_delivery: order.estimated_delivery,
+      actual_delivery: order.actual_delivery,
+      cancelled_at: order.cancelled_at,
+      cancellation_reason: order.cancellation_reason,
+      cancelled_by: order.cancelled_by,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+    };
+
+    if (order.restaurant) {
+      response.restaurant_name = order.restaurant.name;
+      response.restaurant_phone = order.restaurant.phone;
+      response.restaurant_address = order.restaurant.address;
+    }
+
+    if (order.delivery_address) {
+      response.delivery_address = {
+        id: order.delivery_address.id,
+        label: order.delivery_address.label,
+        address_line: order.delivery_address.address_line,
+        ward: order.delivery_address.ward,
+        district: order.delivery_address.district,
+        city: order.delivery_address.city,
+        latitude: order.delivery_address.latitude,
+        longitude: order.delivery_address.longitude,
+        delivery_note: order.delivery_address.delivery_note,
+      };
+    }
+
+    if (order.voucher) {
+      response.voucher_id = order.voucher.id;
+      response.voucher_code = order.voucher.code;
+    }
+
+    if (order.items && Array.isArray(order.items)) {
+      response.items = order.items.map((item: any) => ({
+        id: item.id,
+        order_id: item.order_id,
+        menu_item_id: item.menu_item_id,
+        item_name: item.item_name,
+        quantity: item.quantity,
+        unit_price: Number(item.unit_price),
+        total_price: Number(item.total_price),
+        selected_options: item.selected_options,
+        special_instructions: item.special_instructions,
+        menu_item: item.menu_item ? {
+          id: item.menu_item.id,
+          name: item.menu_item.name,
+          image_url: item.menu_item.image_url,
+          price: Number(item.menu_item.price),
+        } : null,
+      }));
+    }
+
+    return response;
+  }
+
+  private async validateAndApplyVoucher(
+    code: string,
+    userId: string,
+    restaurantId: string,
+    orderAmount: number
+  ): Promise<{ isValid: boolean; voucher?: Voucher; discountAmount: number; message?: string }> {
+    // Find voucher by code
+    const voucher = await this.voucherRepository.findOne({
+      where: { code, is_active: true },
+      relations: ['restaurant'],
+    });
+
+    if (!voucher) {
+      return {
+        isValid: false,
+        discountAmount: 0,
+        message: 'Voucher not found or inactive',
+      };
+    }
+
+    // Check validity period
+    const now = new Date();
+    if (voucher.valid_from > now || voucher.valid_until < now) {
+      return {
+        isValid: false,
+        discountAmount: 0,
+        message: 'Voucher is expired or not yet valid',
+      };
+    }
+
+    // Check restaurant restriction
+    if (voucher.restaurant_id && voucher.restaurant_id !== restaurantId) {
+      return {
+        isValid: false,
+        discountAmount: 0,
+        message: 'Voucher is not valid for this restaurant',
+      };
+    }
+
+    // Check minimum order amount
+    if (Number(voucher.min_order_amount) > orderAmount) {
+      return {
+        isValid: false,
+        discountAmount: 0,
+        message: `Minimum order amount is $${voucher.min_order_amount}`,
+      };
+    }
+
+    // Check global usage limit
+    if (voucher.usage_limit && voucher.usage_count >= voucher.usage_limit) {
+      return {
+        isValid: false,
+        discountAmount: 0,
+        message: 'Voucher usage limit reached',
+      };
+    }
+
+    // Check per-user usage limit
+    const userUsageCount = await this.voucherUsageRepository.count({
+      where: { voucher_id: voucher.id, user_id: userId },
+    });
+
+    if (userUsageCount >= voucher.per_user_limit) {
+      return {
+        isValid: false,
+        discountAmount: 0,
+        message: 'You have reached the usage limit for this voucher',
+      };
+    }
+
+    // Calculate discount amount
+    let discountAmount = 0;
+
+    if (voucher.discount_type === DiscountType.PERCENTAGE) {
+      discountAmount = (orderAmount * Number(voucher.discount_value)) / 100;
+      if (voucher.max_discount) {
+        discountAmount = Math.min(discountAmount, Number(voucher.max_discount));
+      }
+    } else if (voucher.discount_type === DiscountType.FIXED_AMOUNT) {
+      discountAmount = Number(voucher.discount_value);
+    } else if (voucher.discount_type === DiscountType.FREE_DELIVERY) {
+      // For free delivery, discount should be handled separately
+      // For now, we'll set it to 0 and handle in delivery_fee logic if needed
+      discountAmount = 0;
+    }
+
+    // Round to 2 decimal places
+    discountAmount = Math.round(discountAmount * 100) / 100;
+
+    return {
+      isValid: true,
+      voucher,
+      discountAmount,
+    };
+  }
+
+  private async trackVoucherUsage(
+    voucherId: string,
+    userId: string,
+    orderId: string,
+    discountApplied: number
+  ): Promise<void> {
+    // Increment voucher usage count
+    await this.voucherRepository.increment({ id: voucherId }, 'usage_count', 1);
+
+    // Create usage record
+    const usage = this.voucherUsageRepository.create({
+      voucher_id: voucherId,
+      user_id: userId,
+      order_id: orderId,
+      discount_applied: discountApplied,
+    });
+
+    await this.voucherUsageRepository.save(usage);
   }
 
   private async updateCartTotal(cartId: string) {
