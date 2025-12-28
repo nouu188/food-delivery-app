@@ -142,6 +142,7 @@ export class UserService {
       id: f.id,
       restaurant_id: f.restaurant_id,
       created_at: f.created_at,
+      restaurant: f.restaurant,
     }));
   }
 

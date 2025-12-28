@@ -1,23 +1,116 @@
 import Header from "@/components/common/Header";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import orderService from "@/services/api/order.service";
+import { Order, CancelledBy } from "@/types/api/order";
+import { showErrorAlert } from "@/utils/error-handler";
 
 const REASONS = [
-    "Lorem ipsum dolor sit amet",
-    "Lorem ipsum dolor sit amet",
-    "Lorem ipsum dolor sit amet",
-    "Lorem ipsum dolor sit amet",
-    "Lorem ipsum dolor sit amet",
+    "Changed my mind",
+    "Ordered by mistake",
+    "Taking too long",
+    "Found a better option",
+    "Personal reasons",
 ];
 
 export default function CancelOrderScreen() {
     const router = useRouter();
     const { orderId } = useLocalSearchParams<{ orderId: string }>();
 
-    const [selectedIndex, setSelectedIndex] = React.useState<number>(0);
-    const [otherReason, setOtherReason] = React.useState("");
+    const [order, setOrder] = useState<Order | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isCancelling, setIsCancelling] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState<number>(0);
+    const [otherReason, setOtherReason] = useState("");
+
+    useEffect(() => {
+        fetchOrder();
+    }, [orderId]);
+
+    const fetchOrder = async () => {
+        if (!orderId) {
+            Alert.alert('Error', 'Order ID is required');
+            router.back();
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            const orderData = await orderService.getOrderById(orderId);
+            setOrder(orderData);
+        } catch (error) {
+            showErrorAlert(error, 'Failed to Load Order');
+            router.back();
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCancelOrder = async () => {
+        if (!order) return;
+
+        const cancellationReason = otherReason.trim() || REASONS[selectedIndex];
+
+        if (!cancellationReason) {
+            Alert.alert('Error', 'Please provide a cancellation reason');
+            return;
+        }
+
+        Alert.alert(
+            'Cancel Order',
+            'Are you sure you want to cancel this order?',
+            [
+                { text: 'No', style: 'cancel' },
+                {
+                    text: 'Yes, Cancel',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsCancelling(true);
+                        try {
+                            await orderService.cancelOrder(order.id, {
+                                cancellation_reason: cancellationReason,
+                                cancelled_by: CancelledBy.CUSTOMER,
+                            });
+
+                            router.replace({
+                                pathname: '/cancel-order/success',
+                                params: { orderId: order.id },
+                            });
+                        } catch (error) {
+                            showErrorAlert(error, 'Failed to Cancel Order');
+                        } finally {
+                            setIsCancelling(false);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    if (isLoading) {
+        return (
+            <SafeAreaView className="flex-1 bg-YellowBase">
+                <Header title="Cancel Order" />
+                <View className="flex-1 bg-white rounded-t-3xl items-center justify-center">
+                    <ActivityIndicator size="large" color="#E95322" />
+                    <Text className="text-gray-500 mt-4">Loading order details...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!order) {
+        return (
+            <SafeAreaView className="flex-1 bg-YellowBase">
+                <Header title="Cancel Order" />
+                <View className="flex-1 bg-white rounded-t-3xl items-center justify-center px-8">
+                    <Text className="text-xl font-medium text-gray-600 text-center">Order not found</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
@@ -25,9 +118,18 @@ export default function CancelOrderScreen() {
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-6">
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
-                    <Text className="text-[#6B7280] text-sm leading-5">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent pellentesque congue lorem, vel
-                        tincidunt tortor.
+                    <View className="bg-[#FFF5D6] rounded-2xl p-4 mb-6">
+                        <Text className="text-[#070707] font-bold text-base">Order #{order.order_number}</Text>
+                        <Text className="text-[#6B7280] text-sm mt-1">
+                            {order.restaurant_name || 'Restaurant'} • {order.items && Array.isArray(order.items) ? order.items.length : 0} item{order.items && Array.isArray(order.items) && order.items.length > 1 ? 's' : ''}
+                        </Text>
+                        <Text className="text-[#E95322] font-bold text-lg mt-2">
+                            ${order.total_amount}
+                        </Text>
+                    </View>
+
+                    <Text className="text-[#6B7280] text-sm leading-5 mb-4">
+                        Please let us know why you want to cancel this order. Your feedback helps us improve our service.
                     </Text>
 
                     <View className="mt-6">
@@ -76,11 +178,16 @@ export default function CancelOrderScreen() {
 
                     <TouchableOpacity
                         activeOpacity={0.9}
-                        onPress={() => router.push({ pathname: "/cancel-order/success", params: { orderId } })}
-                        className="self-center mt-10 px-12 py-3 rounded-full"
-                        style={{ backgroundColor: "#E95322" }}
+                        onPress={handleCancelOrder}
+                        disabled={isCancelling}
+                        className="self-center mt-10 px-12 py-3 rounded-full items-center justify-center"
+                        style={{ backgroundColor: isCancelling ? "#9CA3AF" : "#E95322", minWidth: 140 }}
                     >
-                        <Text className="text-white font-semibold">Submit</Text>
+                        {isCancelling ? (
+                            <ActivityIndicator color="#FFFFFF" />
+                        ) : (
+                            <Text className="text-white font-semibold">Submit</Text>
+                        )}
                     </TouchableOpacity>
                 </ScrollView>
             </View>

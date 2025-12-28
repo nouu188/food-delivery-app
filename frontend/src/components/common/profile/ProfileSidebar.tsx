@@ -2,9 +2,11 @@ import { useUserStore } from "@/store/useUserStore";
 import LogoutModal from "@/components/common/LogoutModal";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Animated, Dimensions, Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Dimensions, Image, Pressable, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "@/contexts/AuthContext";
+import { showErrorAlert } from "@/utils/error-handler";
 
 const { width } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.82;
@@ -16,8 +18,10 @@ interface ProfileSidebarProps {
 
 const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) => {
     const router = useRouter();
-    const { profile } = useUserStore();
-    const [logoutVisible, setLogoutVisible] = React.useState(false);
+    const { profile, fetchProfile, isLoading: storeLoading } = useUserStore();
+    const { signOut } = useAuth();
+    const [logoutVisible, setLogoutVisible] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -52,35 +56,85 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
         ]).start();
     }, [fadeAnim, slideAnim]);
 
-    useEffect(() => {
-        if (isVisible) openSidebar();
-        else closeSidebar();
-    }, [isVisible, openSidebar, closeSidebar]);
+    const refreshProfile = useCallback(async () => {
+        try {
+            setIsRefreshing(true);
+            await fetchProfile();
+        } catch (error) {
+            showErrorAlert(error, 'Failed to Load Profile');
+        } finally {
+            setIsRefreshing(false);
+        }
+    }, [fetchProfile]);
 
-    const menuItems = useMemo(
+    const handleLogout = useCallback(async () => {
+        try {
+            setLogoutVisible(false);
+            onClose();
+            await signOut();
+        } catch (error) {
+            showErrorAlert(error, 'Logout Failed');
+        }
+    }, [onClose, signOut]);
+
+    useEffect(() => {
+        if (isVisible) {
+            openSidebar();
+            refreshProfile();
+        } else {
+            closeSidebar();
+        }
+    }, [isVisible, openSidebar, closeSidebar, refreshProfile]);
+
+    const menuItems = useMemo<Array<{
+        key: string;
+        icon: React.ComponentProps<typeof Feather>['name'];
+        label: string;
+        onPress: () => void;
+    }>>(
         () => [
             {
                 key: "orders",
                 icon: "shopping-bag",
                 label: "My Orders",
-                onPress: () => router.push("/orders/index"),
+                onPress: () => router.push("/orders/history"),
             },
-            { key: "profile", icon: "user", label: "My Profile", onPress: () => router.push("/Profile") },
+            {
+                key: "profile",
+                icon: "user",
+                label: "My Profile",
+                onPress: () => router.push("/Profile"),
+            },
             {
                 key: "address",
                 icon: "map-pin",
                 label: "Delivery Address",
-                onPress: () => router.push("/delivery-address"),
+                onPress: () => router.push("/(main)/(screens)/delivery-address"),
             },
             {
                 key: "payment",
                 icon: "credit-card",
                 label: "Payment Methods",
-                onPress: () => router.push("/payment-methods"),
+                onPress: () => router.push("/(main)/(screens)/payment-methods"),
             },
-            { key: "contact", icon: "phone", label: "Contact Us", onPress: () => router.push("/Contact") },
-            { key: "help", icon: "message-circle", label: "Help & FAQs", onPress: () => router.push("/help") },
-            { key: "settings", icon: "settings", label: "Settings", onPress: () => router.push("/settings") },
+            {
+                key: "support",
+                icon: "headphones",
+                label: "Support",
+                onPress: () => router.push("/(main)/(screens)/support"),
+            },
+            {
+                key: "help",
+                icon: "help-circle",
+                label: "Help & FAQs",
+                onPress: () => router.push("/HelpFAQs"),
+            },
+            {
+                key: "settings",
+                icon: "settings",
+                label: "Settings",
+                onPress: () => router.push("/(main)/(screens)/settings"),
+            },
         ],
         [router]
     );
@@ -107,13 +161,26 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
                     </View>
 
                     <View style={styles.profileHeader}>
-                        <Image source={{ uri: profile.avatar }} style={styles.avatar} />
+                        {isRefreshing ? (
+                            <View style={[styles.avatar, { backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' }]}>
+                                <ActivityIndicator size="small" color="#E95322" />
+                            </View>
+                        ) : profile?.avatar_url ? (
+                            <Image
+                                source={{ uri: profile.avatar_url }}
+                                style={styles.avatar}
+                            />
+                        ) : (
+                            <View style={[styles.avatar, { backgroundColor: '#e0e0e0', justifyContent: 'center', alignItems: 'center' }]}>
+                                <Feather name="user" size={24} color="#999" />
+                            </View>
+                        )}
                         <View style={{ flex: 1 }}>
                             <Text style={styles.name} numberOfLines={1}>
-                                {profile.fullName}
+                                {profile?.full_name || 'User'}
                             </Text>
                             <Text style={styles.email} numberOfLines={1}>
-                                {profile.email}
+                                {profile?.email || ''}
                             </Text>
                         </View>
                     </View>
@@ -129,7 +196,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
                                 style={styles.menuRow}
                             >
                                 <View style={styles.menuIconBox}>
-                                    <Feather name={item.icon as any} size={22} color="#E5634D" />
+                                    <Feather name={item.icon} size={22} color="#E5634D" />
                                 </View>
                                 <Text style={styles.menuText}>{item.label}</Text>
                             </TouchableOpacity>
@@ -152,11 +219,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
                     <LogoutModal
                         visible={logoutVisible}
                         onCancel={() => setLogoutVisible(false)}
-                        onConfirm={() => {
-                            setLogoutVisible(false);
-                            onClose();
-                            requestAnimationFrame(() => router.replace("/(auth)/Login"));
-                        }}
+                        onConfirm={handleLogout}
                     />
                 </SafeAreaView>
             </Animated.View>

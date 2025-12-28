@@ -1,89 +1,117 @@
-// store/useOrderStore.ts
 import { create } from "zustand";
 import { produce } from "immer"; // giúp update state an toàn, clean code
-import { Order, OrderStatus } from "@/types/Order.type";
+import orderService from "@/services/api/order.service";
+import { Order, OrderStatus, CreateOrderRequest, CancelledBy } from "@/types/api/order";
 
-// Mock data có thể move sang file riêng (data/mockOrders.ts)
-const MOCK_ORDERS: Order[] = [
-    {
-        id: "1",
-        name: "Strawberry shake",
-        imageUri: "https://images.unsplash.com/photo-1572490122747-91a035221c27?q=80&w=1887&auto=format&fit=crop",
-        date: "29 Nov, 01:20 pm",
-        price: 20.0,
-        itemCount: 2,
-        status: "active",
-    },
-    {
-        id: "2",
-        name: "Classic Burger",
-        imageUri: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=1899&auto=format&fit=crop",
-        date: "28 Nov, 11:30 am",
-        price: 15.5,
-        itemCount: 1,
-        status: "completed",
-    },
-    {
-        id: "3",
-        name: "Pepperoni Pizza",
-        imageUri: "https://images.unsplash.com/photo-1594007654729-407eedc4be65?q=80&w=1928&auto=format&fit=crop",
-        date: "27 Nov, 08:00 pm",
-        price: 25.0,
-        itemCount: 1,
-        status: "cancelled",
-    },
-];
-
-// Kiểu dữ liệu cho state
 interface OrderState {
     orders: Order[];
-    addOrder: (order: Omit<Order, "id">) => void;
-    cancelOrder: (orderId: string) => void;
-    updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+    isLoading: boolean;
+    error: string | null;
+
+    fetchOrders: (status?: OrderStatus) => Promise<void>;
+    fetchOrderById: (id: string) => Promise<Order>;
+    createOrder: (data: CreateOrderRequest) => Promise<Order>;
+    cancelOrder: (orderId: string, reason: string) => Promise<void>;
+    reorder: (orderId: string) => Promise<Order>;
     clearOrders: () => void;
     setOrders: (orders: Order[]) => void;
     getOrdersByStatus: (status: OrderStatus) => Order[];
 }
 
-// Store Zustand
 export const useOrderStore = create<OrderState>((set, get) => ({
-    orders: MOCK_ORDERS,
+    orders: [],
+    isLoading: false,
+    error: null,
 
-    addOrder: (order) =>
-        set(
-            produce((state: OrderState) => {
-                state.orders.unshift({
-                    ...order,
-                    id: Date.now().toString(),
-                });
-            })
-        ),
+    fetchOrders: async (status?: OrderStatus) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await orderService.getOrders({ status });
+            const orderData = response?.data || [];
+            const orders = Array.isArray(orderData) ? orderData : [];
+            set({ orders, isLoading: false });
+        } catch (error: any) {
+            set({ error: error.message, isLoading: false, orders: [] });
+        }
+    },
 
-    cancelOrder: (orderId) =>
-        set(
-            produce((state: OrderState) => {
-                const order = state.orders.find((o) => o.id === orderId);
-                if (order) {
-                    order.status = "cancelled";
-                }
-            })
-        ),
+    fetchOrderById: async (id: string) => {
+        set({ isLoading: true, error: null });
+        try {
+            const order = await orderService.getOrderById(id);
+            set({ isLoading: false });
+            return order;
+        } catch (error: any) {
+            set({ error: error.message, isLoading: false });
+            throw error;
+        }
+    },
 
-    updateOrderStatus: (orderId, status) =>
-        set(
-            produce((state: OrderState) => {
-                const order = state.orders.find((o) => o.id === orderId);
-                if (order) {
-                    order.status = status;
-                }
-            })
-        ),
+    createOrder: async (data: CreateOrderRequest) => {
+        set({ isLoading: true, error: null });
+        try {
+            const order = await orderService.createOrder(data);
+            set(
+                produce((state: OrderState) => {
+                    state.orders.unshift(order); 
+                    state.isLoading = false;
+                })
+            );
+            return order;
+        } catch (error: any) {
+            set({ error: error.message, isLoading: false });
+            throw error;
+        }
+    },
+
+    cancelOrder: async (orderId: string, reason: string) => {
+        set({ isLoading: true, error: null });
+        try {
+            await orderService.cancelOrder(orderId, {
+                cancellation_reason: reason,
+                cancelled_by: CancelledBy.CUSTOMER,
+            });
+
+            set(
+                produce((state: OrderState) => {
+                    const order = state.orders.find((o) => o.id === orderId);
+                    if (order) {
+                        order.status = OrderStatus.CANCELLED;
+                        order.cancellation_reason = reason;
+                        order.cancelled_at = new Date().toISOString();
+                    }
+                    state.isLoading = false;
+                })
+            );
+        } catch (error: any) {
+            set({ error: error.message, isLoading: false });
+            throw error;
+        }
+    },
+
+    reorder: async (orderId: string) => {
+        set({ isLoading: true, error: null });
+        try {
+            const newOrder = await orderService.reorder(orderId);
+            set(
+                produce((state: OrderState) => {
+                    state.orders.unshift(newOrder);
+                    state.isLoading = false;
+                })
+            );
+            return newOrder;
+        } catch (error: any) {
+            set({ error: error.message, isLoading: false });
+            throw error;
+        }
+    },
 
     clearOrders: () => set({ orders: [] }),
 
     setOrders: (orders) => set({ orders }),
 
     getOrdersByStatus: (status) => {
-        return get().orders.filter((o) => o.status === status);
+        const orders = get().orders;
+        return Array.isArray(orders) ? orders.filter((o) => o.status === status) : [];
     },
 }));

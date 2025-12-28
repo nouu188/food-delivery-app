@@ -3,6 +3,14 @@ import { BaseEntity } from '../base.entity';
 import { User } from './user.entity';
 import { RestaurantStatus } from '@backend/shared';
 import { OperatingHours } from './operating-hours.entity';
+import { MenuCategory } from './menu-category.entity';
+import { MenuItem } from './menu-item.entity';
+import { Order } from './order.entity';
+import { Review } from './review.entity';
+import { Voucher } from './voucher.entity';
+import { RestaurantCategoryMapping } from './restaurant-category-mapping.entity';
+import { Cart } from './cart.entity';
+import { UserFavorite } from './user-favorite.entity';
 
 @Entity('restaurants')
 @Index(['owner_id'])
@@ -67,4 +75,28 @@ export class Restaurant extends BaseEntity {
     eager: false,
   })
   operating_hours!: OperatingHours[];
+
+  @OneToMany(() => MenuCategory, category => category.restaurant)
+  menuCategories!: MenuCategory[];
+
+  @OneToMany(() => MenuItem, item => item.restaurant)
+  menuItems!: MenuItem[];
+
+  @OneToMany(() => Order, order => order.restaurant)
+  orders!: Order[];
+
+  @OneToMany(() => Review, review => review.restaurant)
+  reviews!: Review[];
+
+  @OneToMany(() => Voucher, voucher => voucher.restaurant)
+  vouchers!: Voucher[];
+
+  @OneToMany(() => RestaurantCategoryMapping, mapping => mapping.restaurant)
+  categoryMappings!: RestaurantCategoryMapping[];
+
+  @OneToMany(() => Cart, cart => cart.restaurant)
+  carts!: Cart[];
+
+  @OneToMany(() => UserFavorite, favorite => favorite.restaurant)
+  userFavorites!: UserFavorite[];
 }

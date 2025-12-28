@@ -1,96 +1,78 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { OrderService } from './order.service';
-import { JwtAuthGuard, Roles, RolesGuard } from '@backend/common';
-import { UserRole } from '@backend/shared';
 import { ORDER_PATTERNS } from '@backend/contracts';
 
 @Controller()
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Get('cart')
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'order-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @MessagePattern(ORDER_PATTERNS.GET_CART)
-  @UseGuards(JwtAuthGuard)
-  async getCart(@Request() req: any) {
-    return this.orderService.getCart(req.user.id);
+  async getCart(data: { userId: string }) {
+    return this.orderService.getCart(data.userId);
   }
 
-  @Post('cart/items')
   @MessagePattern(ORDER_PATTERNS.ADD_TO_CART)
-  @UseGuards(JwtAuthGuard)
-  async addToCart(@Request() req: any, @Body() data: any) {
-    return this.orderService.addToCart(req.user.id, data);
+  async addToCart(data: any) {
+    return this.orderService.addToCart(data.userId, data);
   }
 
-  @Put('cart/items/:id')
   @MessagePattern(ORDER_PATTERNS.UPDATE_CART_ITEM)
-  @UseGuards(JwtAuthGuard)
-  async updateCartItem(@Request() req: any, @Param('id') id: string, @Body() data: any) {
-    return this.orderService.updateCartItem(req.user.id, id, data);
+  async updateCartItem(data: any) {
+    return this.orderService.updateCartItem(data.userId, data.itemId, data);
   }
 
-  @Delete('cart/items/:id')
   @MessagePattern(ORDER_PATTERNS.REMOVE_FROM_CART)
-  @UseGuards(JwtAuthGuard)
-  async removeCartItem(@Request() req: any, @Param('id') id: string) {
-    return this.orderService.removeCartItem(req.user.id, id);
+  async removeCartItem(data: { userId: string; itemId: string }) {
+    return this.orderService.removeCartItem(data.userId, data.itemId);
   }
 
-  @Delete('cart')
   @MessagePattern(ORDER_PATTERNS.CLEAR_CART)
-  @UseGuards(JwtAuthGuard)
-  async clearCart(@Request() req: any) {
-    return this.orderService.clearCart(req.user.id);
+  async clearCart(data: { userId: string }) {
+    return this.orderService.clearCart(data.userId);
   }
 
-  @Post('orders')
   @MessagePattern(ORDER_PATTERNS.CREATE_ORDER)
-  @UseGuards(JwtAuthGuard)
-  async createOrder(@Request() req: any, @Body() data: any) {
-    return this.orderService.createOrder(req.user.id, data);
+  async createOrder(data: any) {
+    return this.orderService.createOrder(data.userId, data);
   }
 
-  @Get('orders')
   @MessagePattern(ORDER_PATTERNS.GET_ORDERS)
-  @UseGuards(JwtAuthGuard)
-  async getUserOrders(@Request() req: any, @Query() query: any) {
-    return this.orderService.getUserOrders(req.user.id, query);
+  async getUserOrders(data: any) {
+    return this.orderService.getUserOrders(data.userId, data);
   }
 
-  @Get('orders/:id')
   @MessagePattern(ORDER_PATTERNS.GET_ORDER)
-  @UseGuards(JwtAuthGuard)
-  async getOrder(@Param('id') id: string) {
-    return this.orderService.getOrder(id);
+  async getOrder(data: { id: string }) {
+    return this.orderService.getOrder(data.id);
   }
 
-  @Put('orders/:id/cancel')
   @MessagePattern(ORDER_PATTERNS.CANCEL_ORDER)
-  @UseGuards(JwtAuthGuard)
-  async cancelOrder(@Request() req: any, @Param('id') id: string, @Body() data: any) {
-    return this.orderService.cancelOrder(id, req.user.id, data);
+  async cancelOrder(data: any) {
+    return this.orderService.cancelOrder(data.id, data.userId, data);
   }
 
-  @Post('orders/:id/reorder')
   @MessagePattern(ORDER_PATTERNS.REORDER)
-  @UseGuards(JwtAuthGuard)
-  async reorder(@Request() req: any, @Param('id') id: string) {
-    return this.orderService.reorder(req.user.id, id);
+  async reorder(data: { userId: string; id: string }) {
+    return this.orderService.reorder(data.userId, data.id);
   }
 
-  @Get('restaurants/:id/orders')
   @MessagePattern(ORDER_PATTERNS.GET_RESTAURANT_ORDERS)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async getRestaurantOrders(@Param('id') id: string, @Query() query: any) {
-    return this.orderService.getRestaurantOrders(id, query);
+  async getRestaurantOrders(data: any) {
+    return this.orderService.getRestaurantOrders(data.id, data);
   }
 
-  @Put('orders/:id/status')
   @MessagePattern(ORDER_PATTERNS.UPDATE_ORDER_STATUS)
-  @UseGuards(JwtAuthGuard)
-  async updateOrderStatus(@Param('id') id: string, @Body() data: any) {
-    return this.orderService.updateOrderStatus(id, data);
+  async updateOrderStatus(data: any) {
+    return this.orderService.updateOrderStatus(data.id, data);
   }
 }

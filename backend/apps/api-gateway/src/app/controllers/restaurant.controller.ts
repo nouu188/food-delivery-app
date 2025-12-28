@@ -25,7 +25,7 @@ import {
   UpdateMenuItemDto,
   CreateMenuItemOptionDto,
   UpdateMenuItemOptionDto,
-  OperatingHoursDto,
+  UpdateRestaurantOperatingHoursDto,
 } from '@backend/shared';
 import { RESTAURANT_PATTERNS } from '@backend/contracts';
 
@@ -183,9 +183,9 @@ export class RestaurantController {
   @Put(':id/operating-hours')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.RESTAURANT_OWNER)
-  async updateOperatingHours(@Param('id') id: string, @Body('hours') hours: OperatingHoursDto[]) {
+  async updateOperatingHours(@Param('id') id: string, @Body() body: UpdateRestaurantOperatingHoursDto) {
     return firstValueFrom(
-      this.restaurantService.send(RESTAURANT_PATTERNS.UPDATE_OPERATING_HOURS, { id, hours })
+      this.restaurantService.send(RESTAURANT_PATTERNS.UPDATE_OPERATING_HOURS, { id, hours: body.hours })
     );
   }
 }

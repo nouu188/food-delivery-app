@@ -1,21 +1,37 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Feather } from "@expo/vector-icons"; // Hoặc một bộ icon khác bạn thích
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
-// Định nghĩa props cho component
 interface NotificationItemProps {
-    iconName: React.ComponentProps<typeof Feather>["name"]; // Lấy kiểu tên icon từ Feather
+    iconName: React.ComponentProps<typeof Feather>["name"];
     text: string;
+    title?: string;
+    isRead?: boolean;
+    onPress?: () => void;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ iconName, text }) => {
+const NotificationItem: React.FC<NotificationItemProps> = ({
+    iconName,
+    text,
+    title,
+    isRead = false,
+    onPress,
+}) => {
     return (
-        <View style={styles.container}>
+        <TouchableOpacity
+            style={[styles.container, !isRead && styles.unreadContainer]}
+            activeOpacity={0.7}
+            onPress={onPress}
+        >
             <View style={styles.iconContainer}>
                 <Feather name={iconName} size={24} color="#E5634D" />
             </View>
-            <Text style={styles.text}>{text}</Text>
-        </View>
+            <View style={styles.textContainer}>
+                {title && <Text style={styles.title}>{title}</Text>}
+                <Text style={styles.text} numberOfLines={2}>{text}</Text>
+            </View>
+            {!isRead && <View style={styles.unreadDot} />}
+        </TouchableOpacity>
     );
 };
 
@@ -27,6 +43,9 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: "rgba(255, 255, 255, 0.2)",
     },
+    unreadContainer: {
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+    },
     iconContainer: {
         width: 50,
         height: 50,
@@ -34,13 +53,28 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFF",
         justifyContent: "center",
         alignItems: "center",
-        marginRight: 20,
+        marginRight: 15,
     },
-    text: {
-        flex: 1, // Để text tự động xuống dòng nếu dài
+    textContainer: {
+        flex: 1,
+        paddingRight: 10,
+    },
+    title: {
         fontSize: 16,
         color: "#FFFFFF",
+        fontWeight: "700",
+        marginBottom: 4,
+    },
+    text: {
+        fontSize: 14,
+        color: "rgba(255, 255, 255, 0.9)",
         fontWeight: "500",
+    },
+    unreadDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: "#FFD34E",
     },
 });
 

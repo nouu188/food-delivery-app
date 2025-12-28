@@ -9,6 +9,8 @@ import { OrderItem } from './order-item.entity';
 import { Delivery } from './delivery.entity';
 import { Payment } from './payment.entity';
 import { Review } from './review.entity';
+import { OrderStatusHistory } from './order-status-history.entity';
+import { VoucherUsage } from './voucher-usage.entity';
 
 @Entity('orders')
 @Index(['order_number'], { unique: true })
@@ -48,6 +50,9 @@ export class Order extends BaseEntity {
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   delivery_fee!: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  tax_amount!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   discount_amount!: number;
@@ -105,4 +110,10 @@ export class Order extends BaseEntity {
     eager: false,
   })
   review!: Review;
+
+  @OneToMany(() => OrderStatusHistory, history => history.order)
+  statusHistory!: OrderStatusHistory[];
+
+  @OneToMany(() => VoucherUsage, usage => usage.order)
+  voucherUsages!: VoucherUsage[];
 }

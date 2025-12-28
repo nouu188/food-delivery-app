@@ -28,7 +28,7 @@ import {
         transport: Transport.TCP,
         options: {
           host: process.env.AUTH_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.AUTH_SERVICE_PORT) || 3001,
+          port: parseInt(process.env.AUTH_SERVICE_PORT) || 4001,
         },
       },
       {
@@ -36,7 +36,7 @@ import {
         transport: Transport.TCP,
         options: {
           host: process.env.USER_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.USER_SERVICE_PORT) || 3002,
+          port: parseInt(process.env.USER_SERVICE_PORT) || 4002,
         },
       },
       {
@@ -44,7 +44,7 @@ import {
         transport: Transport.TCP,
         options: {
           host: process.env.RESTAURANT_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.RESTAURANT_SERVICE_PORT) || 3003,
+          port: parseInt(process.env.RESTAURANT_SERVICE_PORT) || 4003,
         },
       },
       {
@@ -52,7 +52,7 @@ import {
         transport: Transport.TCP,
         options: {
           host: process.env.ORDER_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.ORDER_SERVICE_PORT) || 3004,
+          port: parseInt(process.env.ORDER_SERVICE_PORT) || 4004,
         },
       },
       {
@@ -60,7 +60,7 @@ import {
         transport: Transport.TCP,
         options: {
           host: process.env.PAYMENT_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.PAYMENT_SERVICE_PORT) || 3005,
+          port: parseInt(process.env.PAYMENT_SERVICE_PORT) || 4005,
         },
       },
       {
@@ -68,7 +68,7 @@ import {
         transport: Transport.TCP,
         options: {
           host: process.env.DELIVERY_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.DELIVERY_SERVICE_PORT) || 3006,
+          port: parseInt(process.env.DELIVERY_SERVICE_PORT) || 4006,
         },
       },
       {
@@ -76,7 +76,7 @@ import {
         transport: Transport.TCP,
         options: {
           host: process.env.REVIEW_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.REVIEW_SERVICE_PORT) || 3007,
+          port: parseInt(process.env.REVIEW_SERVICE_PORT) || 4007,
         },
       },
       {
@@ -84,7 +84,7 @@ import {
         transport: Transport.TCP,
         options: {
           host: process.env.NOTIFICATION_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.NOTIFICATION_SERVICE_PORT) || 3008,
+          port: parseInt(process.env.NOTIFICATION_SERVICE_PORT) || 4008,
         },
       },
       {
@@ -92,7 +92,7 @@ import {
         transport: Transport.TCP,
         options: {
           host: process.env.PROMOTION_SERVICE_HOST || 'localhost',
-          port: parseInt(process.env.PROMOTION_SERVICE_PORT) || 3009,
+          port: parseInt(process.env.PROMOTION_SERVICE_PORT) || 4009,
         },
       },
     ]),

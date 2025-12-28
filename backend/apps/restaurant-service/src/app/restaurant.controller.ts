@@ -1,138 +1,102 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { RestaurantService } from './restaurant.service';
-import { JwtAuthGuard, Roles, RolesGuard } from '@backend/common';
-import { UserRole, CreateRestaurantDto, UpdateRestaurantDto, CreateMenuCategoryDto, UpdateMenuCategoryDto, CreateMenuItemDto, UpdateMenuItemDto, CreateMenuItemOptionDto, UpdateMenuItemOptionDto } from '@backend/shared';
 import { RESTAURANT_PATTERNS } from '@backend/contracts';
 @Controller('restaurants')
 export class RestaurantController {
   constructor(private readonly restaurantService: RestaurantService) {}
 
-  @Get()
+  @Get('health')
+  getHealth() {
+    return {
+      status: 'ok',
+      service: 'restaurant-service',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @MessagePattern(RESTAURANT_PATTERNS.FIND_ALL_RESTAURANTS)
-  async findAll(@Query() query: any) {
+  async findAll(query: any) {
     return this.restaurantService.findAll(query);
   }
 
-  @Get(':id')
   @MessagePattern(RESTAURANT_PATTERNS.FIND_ONE_RESTAURANT)
-  async findOne(@Param('id') id: string) {
-    return this.restaurantService.findOne(id);
+  async findOne(data: { id: string }) {
+    return this.restaurantService.findOne(data.id);
   }
 
-  @Post()
   @MessagePattern(RESTAURANT_PATTERNS.CREATE_RESTAURANT)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async create(@Request() req: any, @Body() data: CreateRestaurantDto) {
-    return this.restaurantService.create(req.user.id, data);
+  async create(data: any) {
+    return this.restaurantService.create(data.userId, data);
   }
 
-  @Put(':id')
   @MessagePattern(RESTAURANT_PATTERNS.UPDATE_RESTAURANT)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async update(@Request() req: any, @Param('id') id: string, @Body() data: UpdateRestaurantDto) {
-    return this.restaurantService.update(id, req.user.id, data);
+  async update(data: any) {
+    return this.restaurantService.update(data.id, data.userId, data);
   }
 
-  @Put(':id/status')
   @MessagePattern(RESTAURANT_PATTERNS.TOGGLE_STATUS)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async toggleStatus(@Request() req: any, @Param('id') id: string) {
-    return this.restaurantService.toggleStatus(id, req.user.id);
+  async toggleStatus(data: { id: string; userId: string }) {
+    return this.restaurantService.toggleStatus(data.id, data.userId);
   }
 
-  @Get(':id/menu')
   @MessagePattern(RESTAURANT_PATTERNS.GET_MENU)
-  async getMenu(@Param('id') id: string) {
-    return this.restaurantService.getMenu(id);
+  async getMenu(data: { id: string }) {
+    return this.restaurantService.getMenu(data.id);
   }
 
-  @Post('menu-categories')
   @MessagePattern(RESTAURANT_PATTERNS.CREATE_MENU_CATEGORY)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async createMenuCategory(@Body() data: CreateMenuCategoryDto) {
+  async createMenuCategory(data: any) {
     return this.restaurantService.createMenuCategory(data);
   }
 
-  @Put('menu-categories/:id')
   @MessagePattern(RESTAURANT_PATTERNS.UPDATE_MENU_CATEGORY)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async updateMenuCategory(@Param('id') id: string, @Body() data: UpdateMenuCategoryDto) {
-    return this.restaurantService.updateMenuCategory(id, data);
+  async updateMenuCategory(data: any) {
+    return this.restaurantService.updateMenuCategory(data.id, data);
   }
 
-  @Delete('menu-categories/:id')
   @MessagePattern(RESTAURANT_PATTERNS.DELETE_MENU_CATEGORY)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async deleteMenuCategory(@Param('id') id: string) {
-    return this.restaurantService.deleteMenuCategory(id);
+  async deleteMenuCategory(data: { id: string }) {
+    return this.restaurantService.deleteMenuCategory(data.id);
   }
 
-  @Post('menu-items')
   @MessagePattern(RESTAURANT_PATTERNS.CREATE_MENU_ITEM)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async createMenuItem(@Body() data: CreateMenuItemDto) {
+  async createMenuItem(data: any) {
     return this.restaurantService.createMenuItem(data);
   }
 
-  @Put('menu-items/:id')
   @MessagePattern(RESTAURANT_PATTERNS.UPDATE_MENU_ITEM)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async updateMenuItem(@Param('id') id: string, @Body() data: UpdateMenuItemDto) {
-    return this.restaurantService.updateMenuItem(id, data);
+  async updateMenuItem(data: any) {
+    return this.restaurantService.updateMenuItem(data.id, data);
   }
 
-  @Delete('menu-items/:id')
   @MessagePattern(RESTAURANT_PATTERNS.DELETE_MENU_ITEM)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async deleteMenuItem(@Param('id') id: string) {
-    return this.restaurantService.deleteMenuItem(id);
+  async deleteMenuItem(data: { id: string }) {
+    return this.restaurantService.deleteMenuItem(data.id);
   }
 
-  @Post('menu-items/:id/options')
   @MessagePattern(RESTAURANT_PATTERNS.CREATE_MENU_ITEM_OPTION)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async createMenuItemOption(@Param('id') itemId: string, @Body() data: CreateMenuItemOptionDto) {
-    return this.restaurantService.createMenuItemOption({ ...data, menu_item_id: itemId });
+  async createMenuItemOption(data: any) {
+    return this.restaurantService.createMenuItemOption(data);
   }
 
-  @Put('menu-item-options/:id')
   @MessagePattern(RESTAURANT_PATTERNS.UPDATE_MENU_ITEM_OPTION)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async updateMenuItemOption(@Param('id') id: string, @Body() data: UpdateMenuItemOptionDto) {
-    return this.restaurantService.updateMenuItemOption(id, data);
+  async updateMenuItemOption(data: any) {
+    return this.restaurantService.updateMenuItemOption(data.id, data);
   }
 
-  @Delete('menu-item-options/:id')
   @MessagePattern(RESTAURANT_PATTERNS.DELETE_MENU_ITEM_OPTION)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async deleteMenuItemOption(@Param('id') id: string) {
-    return this.restaurantService.deleteMenuItemOption(id);
+  async deleteMenuItemOption(data: { id: string }) {
+    return this.restaurantService.deleteMenuItemOption(data.id);
   }
 
-  @Get('categories/all')
   @MessagePattern(RESTAURANT_PATTERNS.GET_CATEGORIES)
   async getCategories() {
     return this.restaurantService.getCategories();
   }
 
-  @Put(':id/operating-hours')
   @MessagePattern(RESTAURANT_PATTERNS.UPDATE_OPERATING_HOURS)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.RESTAURANT_OWNER)
-  async updateOperatingHours(@Param('id') id: string, @Body('hours') hours: any[]) {
-    return this.restaurantService.updateOperatingHours(id, hours);
+  async updateOperatingHours(data: { id: string; hours: any[] }) {
+    return this.restaurantService.updateOperatingHours(data.id, data.hours);
   }
 }

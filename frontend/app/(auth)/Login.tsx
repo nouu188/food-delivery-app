@@ -1,78 +1,132 @@
-/* eslint-disable react/no-unescaped-entities */
 import SocialLoginButtons from "@/components/common/auth/SocialLoginButtons";
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "tamagui";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, LoginFormData } from "@/utils/validation/auth.schema";
+import authService from "@/services/api/auth.service";
+import { setTokens } from "@/services/api/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { showErrorAlert, isErrorStatus } from "@/utils/error-handler";
 
 const Login = () => {
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const { signIn } = useAuth();
+
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: "",
+            password: "",
+        },
+    });
+
+    const onSubmit = async (data: LoginFormData) => {
+        setIsLoading(true);
+        try {
+            const response = await authService.login(data);
+
+            await setTokens(response.access_token, response.refresh_token);
+            await signIn();
+        } catch (error: any) {
+            if (isErrorStatus(error, 401)) {
+                Alert.alert("Login Failed", "Invalid email or password");
+            } else {
+                showErrorAlert(error, "Login Failed");
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleForgotPassword = () => router.push("./ForgotPassword");
     const handleSignUp = () => router.push("./SignUp");
 
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
-            {/* Header */}
             <Header title="Log In" onBack={() => router.replace("/launch/welcome")} />
 
-            {/* Content */}
             <View className="flex-1 bg-white rounded-t-3xl px-6 py-4 justify-between">
-                {/* Top Section */}
                 <View>
-                    {/* Welcome */}
                     <Text className="text-2xl font-bold mb-2">Welcome</Text>
                     <Text className="text-base font-light mb-6">
                         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
                         labore et dolore magna aliqua.
                     </Text>
 
-                    {/* Email Input */}
                     <View className="mb-3">
-                        <Text className="text-lg font-medium mb-1">Email or Mobile Number</Text>
-                        <View className="h-[45px] bg-Yellow_2 rounded-xl justify-center px-3">
-                            <TextInput
-                                placeholder="example@example.com"
-                                className="text-base font-semibold text-Font"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                placeholderTextColor="#6B7280"
-                            />
-                        </View>
+                        <Text className="text-lg font-medium mb-1">Email</Text>
+                        <Controller
+                            control={control}
+                            name="email"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <View className="h-[45px] bg-Yellow_2 rounded-xl justify-center px-3">
+                                    <TextInput
+                                        placeholder="example@example.com"
+                                        className="text-base font-semibold text-Font"
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                        placeholderTextColor="#6B7280"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        editable={!isLoading}
+                                    />
+                                </View>
+                            )}
+                        />
+                        {errors.email && <Text className="text-red-500 text-sm mt-1">{errors.email.message}</Text>}
                     </View>
 
-                    {/* Password Input */}
                     <View className="mb-3">
                         <Text className="text-lg font-medium mb-1">Password</Text>
-                        <View className="h-[45px] bg-Yellow_2 rounded-xl flex-row items-center justify-between px-3">
-                            <TextInput
-                                className="flex-1 text-base font-semibold text-Font"
-                                secureTextEntry={!showPassword}
-                                placeholder="Enter your password"
-                                placeholderTextColor="#6B7280"
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                            />
-                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                                {showPassword ? (
-                                    <Eye size={20} color="#E95322" />
-                                ) : (
-                                    <EyeOff size={20} color="#E95322" />
-                                )}
-                            </TouchableOpacity>
-                        </View>
+                        <Controller
+                            control={control}
+                            name="password"
+                            render={({ field: { onChange, onBlur, value } }) => (
+                                <View className="h-[45px] bg-Yellow_2 rounded-xl flex-row items-center justify-between px-3">
+                                    <TextInput
+                                        className="flex-1 text-base font-semibold text-Font"
+                                        secureTextEntry={!showPassword}
+                                        placeholder="Enter your password"
+                                        placeholderTextColor="#6B7280"
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        editable={!isLoading}
+                                    />
+                                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                        {showPassword ? (
+                                            <Eye size={20} color="#E95322" />
+                                        ) : (
+                                            <EyeOff size={20} color="#E95322" />
+                                        )}
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        />
+                        {errors.password && (
+                            <Text className="text-red-500 text-sm mt-1">{errors.password.message}</Text>
+                        )}
                     </View>
 
-                    {/* Forgot Password */}
                     <TouchableOpacity onPress={handleForgotPassword} className="self-end mb-4">
                         <Text className="text-orange-500 font-medium text-sm">Forgot Password</Text>
                     </TouchableOpacity>
 
-                    {/* Login Button */}
                     <View className="items-center mb-4">
                         <Button
                             width="50%"
@@ -82,22 +136,22 @@ const Login = () => {
                             fontSize={16}
                             fontWeight="800"
                             style={{ borderRadius: 30 }}
-                            onPress={() => router.replace("/(main)/(tabs)/Home")}
+                            onPress={handleSubmit(onSubmit)}
+                            disabled={isLoading}
+                            opacity={isLoading ? 0.7 : 1}
                         >
-                            Log In
+                            {isLoading ? <ActivityIndicator color="white" /> : "Log In"}
                         </Button>
                     </View>
 
-                    {/* Social Login */}
                     <View className="items-center mb-4">
                         <Text className="text-sm mb-2">or sign up with</Text>
                         <SocialLoginButtons />
                     </View>
                 </View>
 
-                {/* Sign Up Link */}
                 <View className="flex-row justify-center items-center mb-2">
-                    <Text className="text-gray-600 text-sm">Don't have an account?</Text>
+                    <Text className="text-gray-600 text-sm">Do not have an account?</Text>
                     <TouchableOpacity onPress={handleSignUp} className="ml-1">
                         <Text className="text-orange-500 font-medium text-sm">Sign Up</Text>
                     </TouchableOpacity>

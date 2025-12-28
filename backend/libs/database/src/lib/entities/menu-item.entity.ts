@@ -1,7 +1,10 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '../base.entity';
 import { Restaurant } from './restaurant.entity';
 import { MenuCategory } from './menu-category.entity';
+import { MenuItemOption } from './menu-item-option.entity';
+import { CartItem } from './cart-item.entity';
+import { OrderItem } from './order-item.entity';
 
 @Entity('menu_items')
 @Index(['restaurant_id'])
@@ -47,4 +50,13 @@ export class MenuItem extends BaseEntity {
 
   @Column({ type: 'int', default: 0 })
   display_order!: number;
+
+  @OneToMany(() => MenuItemOption, option => option.menu_item)
+  options!: MenuItemOption[];
+
+  @OneToMany(() => CartItem, cartItem => cartItem.menu_item)
+  cartItems!: CartItem[];
+
+  @OneToMany(() => OrderItem, orderItem => orderItem.menu_item)
+  orderItems!: OrderItem[];
 }

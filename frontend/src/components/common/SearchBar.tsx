@@ -28,7 +28,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         return (
             <View className="bg-white rounded-full h-12 flex-row items-center px-4">
                 <TouchableOpacity
-                    onPress={() => router.push("/(main)/(tabs)/Search")}
+                    onPress={() => router.push("/(main)/(screens)/Search")}
                     activeOpacity={0.7}
                     className="flex-1 flex-row items-center"
                 >
@@ -49,7 +49,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => router.push("/(main)/(tabs)/Filter")}
+                    onPress={() => router.push("/(main)/(screens)/Filter")}
                     activeOpacity={0.8}
                     className="w-8 h-8 rounded-full items-center justify-center"
                     style={{ backgroundColor: "#E95322" }}
@@ -83,7 +83,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     <XCircle size={20} color="#9CA3AF" />
                 </TouchableOpacity>
             )}
-            <TouchableOpacity onPress={() => router.push("/(main)/(tabs)/Filter")} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => router.push("/(main)/(screens)/Filter")} activeOpacity={0.7}>
                 <SlidersHorizontal size={20} color="#E95322" />
             </TouchableOpacity>
         </View>

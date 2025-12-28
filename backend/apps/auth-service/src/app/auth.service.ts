@@ -1,11 +1,13 @@
-import { Injectable, UnauthorizedException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, ConflictException, Logger, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { User, RefreshToken, OtpVerification } from '@backend/database';
 import { RegisterDto, LoginDto, RegisterResponseDto } from '@backend/shared';
 import { OtpType, UserStatus } from '@backend/shared';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
@@ -17,39 +19,59 @@ export class AuthService {
     @InjectRepository(OtpVerification)
     private readonly otpRepository: Repository<OtpVerification>,
     private readonly jwtService: JwtService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) { }
+
+  private readonly logger = new Logger('AuthService');
 
   async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {
-    const existingUser = await this.userRepository.findOne({
-      where: [
-        { email: registerDto.email },
-        { phone: registerDto.phone },
-      ],
-    });
+    try {
+      const existingUser = await this.userRepository.findOne({
+        where: [
+          { email: registerDto.email },
+          { phone: registerDto.phone },
+        ],
+      });
 
-    if (existingUser) {
-      throw new ConflictException('User with this email or phone already exists');
+      if (existingUser) {
+        throw new RpcException(new ConflictException('User with this email or phone already exists'));
+      }
+
+      if (!registerDto.password) {
+        throw new RpcException(new InternalServerErrorException('Password is required'));
+      }
+      const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+
+      const user = this.userRepository.create({
+        email: registerDto.email,
+        phone: registerDto.phone,
+        password_hash: hashedPassword,
+        full_name: registerDto.full_name,
+        role: registerDto.role || undefined,
+      });
+
+      const savedUser = await this.userRepository.save(user);
+
+      return {
+        id: savedUser.id,
+        email: savedUser.email,
+        full_name: savedUser.full_name,
+        role: savedUser.role,
+        status: savedUser.status,
+      };
+
+    } catch (error) {
+      this.logger.error(`Registration failed: ${error.message}`, error.stack);
+
+      if (error instanceof RpcException) {
+        throw error;
+      }
+
+      throw new RpcException({
+        statusCode: error.status || 500,
+        message: error.message || 'Internal Server Error during registration',
+      });
     }
-
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-
-    const user = this.userRepository.create({
-      email: registerDto.email,
-      phone: registerDto.phone,
-      password_hash: hashedPassword,
-      full_name: registerDto.full_name,
-      role: registerDto.role || undefined,
-    });
-
-    const savedUser = await this.userRepository.save(user);
-
-    return {
-      id: savedUser.id,
-      email: savedUser.email,
-      full_name: savedUser.full_name,
-      role: savedUser.role,
-      status: savedUser.status,
-    };
   }
 
   async login(loginDto: LoginDto) {
@@ -100,19 +122,31 @@ export class AuthService {
 
   async refreshToken(refreshToken: string) {
     const decoded = this.jwtService.verify(refreshToken, {
-      secret: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret',
+      secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'your-refresh-secret',
     });
 
-    const tokenHash = await bcrypt.hash(refreshToken, 10);
-    const storedToken = await this.refreshTokenRepository.findOne({
+    const storedTokens = await this.refreshTokenRepository.find({
       where: { user_id: decoded.sub, is_revoked: false },
     });
 
-    if (!storedToken) {
+    if (!storedTokens || storedTokens.length === 0) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    if (storedToken.expires_at < new Date()) {
+    let validToken = null;
+    for (const token of storedTokens) {
+      const isValid = await bcrypt.compare(refreshToken, token.token_hash);
+      if (isValid) {
+        validToken = token;
+        break;
+      }
+    }
+
+    if (!validToken) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (validToken.expires_at < new Date()) {
       throw new UnauthorizedException('Refresh token expired');
     }
 
@@ -127,7 +161,7 @@ export class AuthService {
     const tokens = await this.generateTokens(user);
 
     await this.refreshTokenRepository.update(
-      { id: storedToken.id },
+      { id: validToken.id },
       { is_revoked: true },
     );
 
@@ -279,12 +313,12 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      expiresIn: '15m',
+      secret: this.configService.get<string>('JWT_SECRET') || 'your-secret-key',
+      expiresIn: '2d',
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET || 'your-refresh-secret',
+      secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'your-refresh-secret',
       expiresIn: '7d',
     });
 

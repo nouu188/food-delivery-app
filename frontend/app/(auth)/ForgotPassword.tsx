@@ -4,33 +4,43 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { forgotPasswordSchema, ForgotPasswordFormData } from "@/utils/validation/auth.schema";
+import authService from "@/services/api/auth.service";
+import { showErrorAlert } from "@/utils/error-handler";
 
 const ForgotPassword = () => {
     const router = useRouter();
-    const [email, setEmail] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSendOTP = async () => {
-        if (!email.trim()) {
-            Alert.alert("Lỗi", "Vui lòng nhập email hoặc số điện thoại");
-            return;
-        }
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<ForgotPasswordFormData>({
+        resolver: zodResolver(forgotPasswordSchema),
+        defaultValues: {
+            email: '',
+        },
+    });
 
-        setLoading(true);
+    const onSubmit = async (data: ForgotPasswordFormData) => {
+        setIsLoading(true);
+        try {
+            await authService.forgotPassword({ email: data.email });
 
-        // BACKEND CALL (khi có backend)
-        // POST /api/auth/forgot-password
-        // Body: { emailOrPhone: email }
-        // → Backend sẽ gửi OTP về email/SMS
+            Alert.alert('Success', 'OTP has been sent to your email. Please check your inbox.');
 
-        // Giả lập thành công sau 1.5s (để test UI)
-        setTimeout(() => {
-            setLoading(false);
-            router.replace({
-                pathname: "/",
-                params: { emailOrPhone: email },
+            router.push({
+                pathname: '/(auth)/VerifyOTP',
+                params: { email: data.email, type: 'PASSWORD_RESET' },
             });
-        }, 1500);
+        } catch (error: any) {
+            showErrorAlert(error, 'Failed to Send OTP');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -39,31 +49,42 @@ const ForgotPassword = () => {
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-8">
                 <Text className="text-base font-light text-gray-600 text-center mb-10 leading-6">
-                    Nhập email hoặc số điện thoại của bạn để nhận mã OTP và đặt lại mật khẩu
+                    Enter your email to receive an OTP code to reset your password
                 </Text>
 
                 <View className="mb-6">
-                    <Text className="text-lg font-medium mb-2">Email hoặc Số điện thoại</Text>
-                    <View className="h-[50px] bg-Yellow_2 rounded-xl px-4 justify-center">
-                        <TextInput
-                            value={email}
-                            onChangeText={setEmail}
-                            placeholder="example@example.com"
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            className="text-base font-semibold text-Font"
-                            placeholderTextColor="#9CA3AF"
-                        />
-                    </View>
+                    <Text className="text-lg font-medium mb-2">Email</Text>
+                    <Controller
+                        control={control}
+                        name="email"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <View className="h-[50px] bg-Yellow_2 rounded-xl px-4 justify-center">
+                                <TextInput
+                                    value={value}
+                                    onChangeText={onChange}
+                                    onBlur={onBlur}
+                                    placeholder="example@example.com"
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    className="text-base font-semibold text-Font"
+                                    placeholderTextColor="#9CA3AF"
+                                    editable={!isLoading}
+                                />
+                            </View>
+                        )}
+                    />
+                    {errors.email && (
+                        <Text className="text-red-500 text-sm mt-1">{errors.email.message}</Text>
+                    )}
                 </View>
 
                 <Button
-                    title="Gửi mã OTP"
+                    title="Send OTP"
                     background="OrangeBase"
                     color="white"
-                    onPress={handleSendOTP}
-                    loading={loading}
-                    disabled={loading}
+                    onPress={handleSubmit(onSubmit)}
+                    loading={isLoading}
+                    disabled={isLoading}
                 />
             </View>
         </SafeAreaView>

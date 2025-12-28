@@ -62,37 +62,3 @@ export class RestaurantDto {
   is_featured!: boolean;
   status!: string;
 }
-
-export class CreateMenuItemDto {
-  @IsString()
-  restaurant_id!: string;
-
-  @IsString()
-  category_id!: string;
-
-  @IsString()
-  name!: string;
-
-  @IsString()
-  @IsOptional()
-  description?: string;
-
-  @IsNumber()
-  price!: number;
-
-  @IsNumber()
-  @IsOptional()
-  original_price?: number;
-
-  @IsUrl()
-  @IsOptional()
-  image_url?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  is_available?: boolean;
-
-  @IsNumber()
-  @IsOptional()
-  preparation_time?: number;
-}

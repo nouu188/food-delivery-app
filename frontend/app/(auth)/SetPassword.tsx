@@ -1,43 +1,67 @@
 import { Button } from "@/components/common";
 import Header from "@/components/common/Header";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
 import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import authService from "@/services/api/auth.service";
+import { showErrorAlert } from "@/utils/error-handler";
 
 const SetPassword = () => {
     const router = useRouter();
+    const params = useLocalSearchParams<{ email: string; otp: string }>();
 
     const [password, setPassword] = useState("");
-    const [confirm, setConfirm] = useState("");
-    const [show1, setShow1] = useState(false);
-    const [show2, setShow2] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = () => {
-        if (password !== confirm) {
-            Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
-            return;
-        }
-        if (password.length < 6) {
-            Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự");
+    const handleSubmit = async () => {
+        if (!password || !confirmPassword) {
+            Alert.alert("Error", "Please fill in all fields");
             return;
         }
 
-        setLoading(true);
+        if (password !== confirmPassword) {
+            Alert.alert("Error", "Passwords do not match");
+            return;
+        }
 
-        // BACKEND CALL (khi có backend)
-        // POST /api/auth/reset-password
-        // Body: { emailOrPhone, newPassword: password }
-        // → Backend cập nhật mật khẩu mới
+        if (password.length < 8) {
+            Alert.alert("Error", "Password must be at least 8 characters");
+            return;
+        }
 
-        setTimeout(() => {
-            setLoading(false);
-            Alert.alert("Thành công", "Đặt lại mật khẩu thành công!", [
-                { text: "OK", onPress: () => router.replace("/(auth)/Login") },
-            ]);
-        }, 1500);
+        if (!params.email || !params.otp) {
+            Alert.alert("Error", "Missing required parameters");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await authService.resetPassword({
+                email: params.email,
+                otp: params.otp,
+                new_password: password,
+            });
+
+            Alert.alert(
+                "Success",
+                "Password has been reset successfully! You can now login with your new password.",
+                [
+                    {
+                        text: "OK",
+                        onPress: () => router.replace("/(auth)/Login"),
+                    },
+                ]
+            );
+        } catch (error: any) {
+            showErrorAlert(error, 'Failed to Reset Password');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -46,22 +70,23 @@ const SetPassword = () => {
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-8 pb-10">
                 <Text className="text-base font-light text-gray-600 text-center mb-8 leading-6">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua.
+                    Create a new password for your account. Password must be at least 8 characters long.
                 </Text>
 
                 <View className="mb-5">
-                    <Text className="text-lg font-medium mb-2">Password</Text>
+                    <Text className="text-lg font-medium mb-2">New Password</Text>
                     <View className="h-[50px] bg-Yellow_2 rounded-xl flex-row items-center justify-between px-4">
                         <TextInput
                             value={password}
                             onChangeText={setPassword}
-                            secureTextEntry={!show1}
-                            placeholder="••••••••"
+                            secureTextEntry={!showPassword}
+                            placeholder="Enter new password"
                             className="flex-1 text-base font-semibold text-Font"
+                            autoCapitalize="none"
+                            editable={!isLoading}
                         />
-                        <TouchableOpacity onPress={() => setShow1(!show1)}>
-                            {show1 ? <Eye size={22} color="#E95322" /> : <EyeOff size={22} color="#E95322" />}
+                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                            {showPassword ? <Eye size={22} color="#E95322" /> : <EyeOff size={22} color="#E95322" />}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -70,14 +95,16 @@ const SetPassword = () => {
                     <Text className="text-lg font-medium mb-2">Confirm Password</Text>
                     <View className="h-[50px] bg-Yellow_2 rounded-xl flex-row items-center justify-between px-4">
                         <TextInput
-                            value={confirm}
-                            onChangeText={setConfirm}
-                            secureTextEntry={!show2}
-                            placeholder="••••••••"
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            secureTextEntry={!showConfirm}
+                            placeholder="Re-enter password"
                             className="flex-1 text-base font-semibold text-Font"
+                            autoCapitalize="none"
+                            editable={!isLoading}
                         />
-                        <TouchableOpacity onPress={() => setShow2(!show2)}>
-                            {show2 ? <Eye size={22} color="#E95322" /> : <EyeOff size={22} color="#E95322" />}
+                        <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)}>
+                            {showConfirm ? <Eye size={22} color="#E95322" /> : <EyeOff size={22} color="#E95322" />}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -87,8 +114,8 @@ const SetPassword = () => {
                     background="OrangeBase"
                     color="white"
                     onPress={handleSubmit}
-                    loading={loading}
-                    disabled={loading || !password || password !== confirm}
+                    loading={isLoading}
+                    disabled={isLoading || !password || password !== confirmPassword}
                 />
             </View>
         </SafeAreaView>

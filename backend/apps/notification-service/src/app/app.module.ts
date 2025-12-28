@@ -1,10 +1,11 @@
+import { DatabaseModule } from '@backend/database';
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { Notification } from '@backend/database';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
+import { FirebaseModule } from './firebase/firebase.module';
+import { FcmListener } from './listeners/fcm.listener';
 
 @Module({
   imports: [
@@ -12,19 +13,10 @@ import { NotificationService } from './notification.service';
       isGlobal: true,
     }),
     EventEmitterModule.forRoot(),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_DATABASE || 'food_delivery',
-      entities: [Notification],
-      synchronize: process.env.NODE_ENV !== 'production',
-    }),
-    TypeOrmModule.forFeature([Notification]),
+    DatabaseModule,
+    FirebaseModule,
   ],
   controllers: [NotificationController],
-  providers: [NotificationService],
+  providers: [NotificationService, FcmListener],
 })
 export class AppModule {}

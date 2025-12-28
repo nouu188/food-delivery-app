@@ -6,35 +6,49 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/common/Header";
+import { showErrorAlert } from "@/utils/error-handler";
 
 export default function MyProfileScreen() {
-    const { profile, isHydrated, setProfile } = useUserStore();
+    const { profile, isLoading, fetchProfile, updateProfile } = useUserStore();
 
-    const [fullName, setFullName] = useState(profile.fullName);
-    const [dateOfBirth, setDateOfBirth] = useState(profile.dateOfBirth);
-    const [email, setEmail] = useState(profile.email);
-    const [phoneNumber, setPhoneNumber] = useState(profile.phoneNumber);
-    const [avatar, setAvatar] = useState(profile.avatar);
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
+    const [avatar, setAvatar] = useState("");
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
-        if (isHydrated) {
-            setFullName(profile.fullName);
-            setDateOfBirth(profile.dateOfBirth);
-            setEmail(profile.email);
-            setPhoneNumber(profile.phoneNumber);
-            setAvatar(profile.avatar);
-        }
-    }, [isHydrated, profile]);
+        fetchProfile();
+    }, []);
 
-    const handleUpdateProfile = () => {
-        setProfile({
-            fullName,
-            dateOfBirth,
-            email,
-            phoneNumber,
-            avatar,
-        });
-        Alert.alert("Success", "Profile updated successfully!");
+    useEffect(() => {
+        if (profile) {
+            setFullName(profile.full_name || "");
+            setEmail(profile.email || "");
+            setPhone(profile.phone || "");
+            setAvatar(profile.avatar_url || "");
+        }
+    }, [profile]);
+
+    const handleUpdateProfile = async () => {
+        if (!fullName.trim()) {
+            Alert.alert("Error", "Full name is required");
+            return;
+        }
+
+        setIsUpdating(true);
+        try {
+            await updateProfile({
+                full_name: fullName.trim(),
+                phone: phone.trim() || undefined,
+                // Note: avatar upload would require separate endpoint
+            });
+            Alert.alert("Success", "Profile updated successfully!");
+        } catch (error) {
+            showErrorAlert(error, 'Failed to Update Profile');
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
     const pickImage = async () => {
@@ -47,14 +61,20 @@ export default function MyProfileScreen() {
 
         if (!result.canceled) {
             setAvatar(result.assets[0].uri);
+            // TODO: Implement avatar upload to server
+            Alert.alert("Note", "Avatar upload will be implemented with backend endpoint");
         }
     };
 
-    if (!isHydrated) {
+    if (isLoading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#FF6347" />
-            </View>
+            <SafeAreaView style={styles.safeArea}>
+                <Header title="My Profile" />
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#FF6347" />
+                    <Text style={styles.loadingText}>Loading profile...</Text>
+                </View>
+            </SafeAreaView>
         );
     }
 
@@ -77,14 +97,7 @@ export default function MyProfileScreen() {
                         value={fullName}
                         onChangeText={setFullName}
                         placeholder="John Smith"
-                    />
-
-                    <Text style={styles.label}>Date of Birth</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={dateOfBirth}
-                        onChangeText={setDateOfBirth}
-                        placeholder="DD / MM / YYYY"
+                        editable={!isUpdating}
                     />
 
                     <Text style={styles.label}>Email</Text>
@@ -95,20 +108,42 @@ export default function MyProfileScreen() {
                         keyboardType="email-address"
                         autoCapitalize="none"
                         placeholder="johnsmith@example.com"
+                        editable={false}
                     />
+                    <Text style={styles.note}>Email cannot be changed</Text>
 
                     <Text style={styles.label}>Phone Number</Text>
                     <TextInput
                         style={styles.input}
-                        value={phoneNumber}
-                        onChangeText={setPhoneNumber}
+                        value={phone}
+                        onChangeText={setPhone}
                         keyboardType="phone-pad"
                         placeholder="+123 567 89000"
+                        editable={!isUpdating}
                     />
+
+                    {profile?.role && (
+                        <>
+                            <Text style={styles.label}>Account Type</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={profile.role}
+                                editable={false}
+                            />
+                        </>
+                    )}
                 </View>
 
-                <TouchableOpacity style={styles.updateButton} onPress={handleUpdateProfile}>
-                    <Text style={styles.updateButtonText}>Update Profile</Text>
+                <TouchableOpacity
+                    style={[styles.updateButton, isUpdating && styles.updateButtonDisabled]}
+                    onPress={handleUpdateProfile}
+                    disabled={isUpdating}
+                >
+                    {isUpdating ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                        <Text style={styles.updateButtonText}>Update Profile</Text>
+                    )}
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
@@ -147,6 +182,11 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "#FFFFFF",
+    },
+    loadingText: {
+        marginTop: 12,
+        color: "#6B7280",
+        fontSize: 14,
     },
     profilePicContainer: {
         position: "relative",
@@ -195,9 +235,18 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginTop: 20,
     },
+    updateButtonDisabled: {
+        opacity: 0.6,
+    },
     updateButtonText: {
         color: "#FFFFFF",
         fontSize: 18,
         fontWeight: "bold",
+    },
+    note: {
+        fontSize: 12,
+        color: "#9CA3AF",
+        marginTop: -12,
+        marginBottom: 12,
     },
 });

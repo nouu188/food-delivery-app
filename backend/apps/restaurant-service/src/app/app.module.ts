@@ -8,7 +8,9 @@ import {
   MenuCategory,
   MenuItem,
   MenuItemOption,
-  OperatingHours
+  OperatingHours,
+  User,
+  DatabaseModule
 } from '@backend/database';
 import { RestaurantController } from './restaurant.controller';
 import { RestaurantService } from './restaurant.service';
@@ -18,17 +20,7 @@ import { RestaurantService } from './restaurant.service';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_DATABASE || 'food_delivery',
-      entities: [Restaurant, RestaurantCategory, RestaurantCategoryMapping, MenuCategory, MenuItem, MenuItemOption, OperatingHours],
-      synchronize: process.env.NODE_ENV !== 'production',
-    }),
-    TypeOrmModule.forFeature([Restaurant, RestaurantCategory, RestaurantCategoryMapping, MenuCategory, MenuItem, MenuItemOption, OperatingHours]),
+    DatabaseModule
   ],
   controllers: [RestaurantController],
   providers: [RestaurantService],

@@ -10,9 +10,11 @@ import {
   UseGuards,
   Request,
   Inject,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, catchError } from 'rxjs';
 import { JwtAuthGuard, Roles, RolesGuard, AuthenticatedRequest } from '@backend/common';
 import {
   UserRole,
@@ -32,18 +34,54 @@ export class OrderController {
   @Get('cart')
   @UseGuards(JwtAuthGuard)
   async getCart(@Request() req: AuthenticatedRequest) {
-    return firstValueFrom(this.orderService.send(ORDER_PATTERNS.GET_CART, { userId: req.user.id }));
+    try {
+      return await firstValueFrom(this.orderService.send(ORDER_PATTERNS.GET_CART, { userId: req.user.id }));
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 404) {
+        throw new HttpException('Cart not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(errorData.message || 'Failed to get cart', errorData.statusCode);
+      }
+
+      throw error;
+    }
   }
 
   @Post('cart/items')
   @UseGuards(JwtAuthGuard)
   async addToCart(@Request() req: AuthenticatedRequest, @Body() data: AddToCartDto) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.ADD_TO_CART, {
-        userId: req.user.id,
-        ...data,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.ADD_TO_CART, {
+          userId: req.user.id,
+          ...data,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 409) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.CONFLICT,
+            message: errorData.message || 'Cart already contains items from another restaurant',
+            currentRestaurant: errorData.currentRestaurant,
+            newRestaurant: errorData.newRestaurant,
+          },
+          HttpStatus.CONFLICT
+        );
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(errorData, errorData.statusCode);
+      }
+
+      throw error;
+    }
   }
 
   @Put('cart/items/:id')
@@ -53,24 +91,44 @@ export class OrderController {
     @Param('id') id: string,
     @Body() data: UpdateCartItemDto
   ) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.UPDATE_CART_ITEM, {
-        userId: req.user.id,
-        itemId: id,
-        ...data,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.UPDATE_CART_ITEM, {
+          userId: req.user.id,
+          itemId: id,
+          ...data,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode) {
+        throw new HttpException(errorData.message || 'Failed to update cart item', errorData.statusCode);
+      }
+
+      throw error;
+    }
   }
 
   @Delete('cart/items/:id')
   @UseGuards(JwtAuthGuard)
   async removeCartItem(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.REMOVE_FROM_CART, {
-        userId: req.user.id,
-        itemId: id,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.REMOVE_FROM_CART, {
+          userId: req.user.id,
+          itemId: id,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode) {
+        throw new HttpException(errorData.message || 'Failed to remove cart item', errorData.statusCode);
+      }
+
+      throw error;
+    }
   }
 
   @Delete('cart')

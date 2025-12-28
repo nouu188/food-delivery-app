@@ -1,5 +1,6 @@
-import { Entity, Column, Index } from 'typeorm';
+import { Entity, Column, Index, OneToMany } from 'typeorm';
 import { BaseEntity } from '../base.entity';
+import { RestaurantCategoryMapping } from './restaurant-category-mapping.entity';
 
 @Entity('restaurant_categories')
 @Index(['name'], { unique: true })
@@ -16,4 +17,7 @@ export class RestaurantCategory extends BaseEntity {
 
   @Column({ type: 'int', default: 0 })
   display_order!: number;
+
+  @OneToMany(() => RestaurantCategoryMapping, mapping => mapping.category)
+  restaurantMappings!: RestaurantCategoryMapping[];
 }

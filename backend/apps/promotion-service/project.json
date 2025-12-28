@@ -17,33 +17,6 @@
         }
       }
     },
-    "prune-lockfile": {
-      "dependsOn": ["build"],
-      "cache": true,
-      "executor": "@nx/js:prune-lockfile",
-      "outputs": [
-        "{workspaceRoot}/dist/apps/promotion-service/package.json",
-        "{workspaceRoot}/dist/apps/promotion-service/yarn.lock"
-      ],
-      "options": {
-        "buildTarget": "build"
-      }
-    },
-    "copy-workspace-modules": {
-      "dependsOn": ["build"],
-      "cache": true,
-      "outputs": [
-        "{workspaceRoot}/dist/apps/promotion-service/workspace_modules"
-      ],
-      "executor": "@nx/js:copy-workspace-modules",
-      "options": {
-        "buildTarget": "build"
-      }
-    },
-    "prune": {
-      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
-      "executor": "nx:noop"
-    },
     "serve": {
       "continuous": true,
       "executor": "@nx/js:node",
@@ -60,6 +33,18 @@
         "production": {
           "buildTarget": "promotion-service:build:production"
         }
+      }
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -f apps/promotion-service/Dockerfile -t food-delivery/promotion-service:latest ."
+      }
+    },
+    "docker-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker run -p 3009:3009 --env-file .env.local food-delivery/promotion-service:latest"
       }
     }
   },

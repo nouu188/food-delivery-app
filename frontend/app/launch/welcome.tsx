@@ -1,5 +1,6 @@
 import { Yellow_Logo } from "@/assets/icons";
 import { useOnboarding } from "@/features/onboarding/hooks/useOnboarding";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { Animated, Text, TouchableOpacity, View } from "react-native";
@@ -8,6 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function WelcomeScreen() {
     const router = useRouter();
     const { checkOnboardingStatus } = useOnboarding();
+    const { continueAsGuest } = useAuth();
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -72,7 +74,13 @@ export default function WelcomeScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity onPress={() => router.replace("/(main)/(tabs)/Home")} className="mt-6">
+                    <TouchableOpacity
+                        onPress={async () => {
+                            await continueAsGuest();
+                            router.replace("/(main)/(tabs)/Home");
+                        }}
+                        className="mt-6"
+                    >
                         <Text className="text-[#F8F8F8] text-sm">Continue as Guest</Text>
                     </TouchableOpacity>
                 </View>

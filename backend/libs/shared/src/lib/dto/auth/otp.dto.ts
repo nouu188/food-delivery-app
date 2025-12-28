@@ -1,5 +1,10 @@
-import { IsString, IsEnum } from 'class-validator';
+import { IsString, IsEnum, IsEmail } from 'class-validator';
 import { OtpType } from '../../enums';
+
+export class ForgotPasswordDto {
+  @IsEmail()
+  email!: string;
+}
 
 export class SendOtpDto {
   @IsString()
@@ -21,8 +26,8 @@ export class VerifyOtpDto {
 }
 
 export class ResetPasswordDto {
-  @IsString()
-  identifier!: string;
+  @IsEmail()
+  email!: string;
 
   @IsString()
   otp!: string;

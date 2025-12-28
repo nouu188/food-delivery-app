@@ -1,74 +1,109 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-export interface Notification {
-    id: string;
-    icon: string;
-    message: string;
-    createdAt: number;
-    read: boolean;
-}
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import notificationService from '@/services/api/notification.service';
+import { Notification } from '@/types/api/notification';
 
 interface NotificationState {
-    notifications: Notification[];
-    addNotification: (notification: Omit<Notification, "id" | "createdAt">) => void;
-    markAsRead: (id: string) => void;
-    clearAll: () => void;
+  notifications: Notification[];
+  isLoading: boolean;
+  error: string | null;
+
+  fetchNotifications: (isRead?: boolean) => Promise<void>;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
+
+  get unreadCount(): number;
 }
 
-// Mock data ví dụ
-const mockNotifications: Notification[] = [
-    {
-        id: "1",
-        icon: "bell",
-        message: "Welcome! Đây là thông báo đầu tiên của bạn 🎉",
-        createdAt: Date.now() - 1000 * 60 * 60, // 1 giờ trước
-        read: false,
-    },
-    {
-        id: "2",
-        icon: "mail",
-        message: "Bạn có 3 tin nhắn mới 📩",
-        createdAt: Date.now() - 1000 * 60 * 30, // 30 phút trước
-        read: false,
-    },
-    {
-        id: "3",
-        icon: "calendar",
-        message: "Lịch hẹn của bạn sẽ diễn ra vào ngày mai 📅",
-        createdAt: Date.now() - 1000 * 60 * 5, // 5 phút trước
-        read: false,
-    },
-];
-
 export const useNotificationStore = create<NotificationState>()(
-    persist(
-        (set) => ({
-            // Khi chưa có data trong AsyncStorage → khởi tạo bằng mock data
-            notifications: mockNotifications,
+  persist(
+    (set, get) => ({
+      notifications: [],
+      isLoading: false,
+      error: null,
 
-            addNotification: (notification) => {
-                const newNotification: Notification = {
-                    id: Date.now().toString(),
-                    createdAt: Date.now(),
-                    ...notification,
-                };
-                set((state) => ({
-                    notifications: [newNotification, ...state.notifications],
-                }));
-            },
-
-            markAsRead: (id) =>
-                set((state) => ({
-                    notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
-                })),
-
-            clearAll: () => set({ notifications: [] }),
-        }),
-        {
-            name: "notifications",
-            storage: createJSONStorage(() => AsyncStorage),
+      fetchNotifications: async (isRead?: boolean) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await notificationService.getNotifications({
+            is_read: isRead,
+            page: 1,
+            limit: 50,
+          });
+          set({
+            notifications: Array.isArray(response?.items) ? response.items : [],
+            isLoading: false
+          });
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false, notifications: [] });
         }
-    )
+      },
+
+      markAsRead: async (id) => {
+        try {
+          await notificationService.markAsRead(id);
+          set((state) => ({
+            notifications: Array.isArray(state.notifications)
+              ? state.notifications.map((n) =>
+                  n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
+                )
+              : [],
+          }));
+        } catch (error: any) {
+          console.error('Mark as read error:', error);
+        }
+      },
+
+      markAllAsRead: async () => {
+        try {
+          await notificationService.markAllAsRead();
+          set((state) => ({
+            notifications: Array.isArray(state.notifications)
+              ? state.notifications.map((n) => ({
+                  ...n,
+                  is_read: true,
+                  read_at: new Date().toISOString(),
+                }))
+              : [],
+          }));
+        } catch (error: any) {
+          console.error('Mark all as read error:', error);
+        }
+      },
+
+      deleteNotification: async (id) => {
+        try {
+          await notificationService.deleteNotification(id);
+          set((state) => ({
+            notifications: Array.isArray(state.notifications)
+              ? state.notifications.filter((n) => n.id !== id)
+              : [],
+          }));
+        } catch (error: any) {
+          console.error('Delete notification error:', error);
+        }
+      },
+
+      get unreadCount() {
+        const notifications = get().notifications;
+        return Array.isArray(notifications)
+          ? notifications.filter((n) => !n.is_read).length
+          : 0;
+      },
+    }),
+    {
+      name: 'notification-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        notifications: Array.isArray(state.notifications) ? state.notifications : [],
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state && !Array.isArray(state.notifications)) {
+          state.notifications = [];
+        }
+      },
+    }
+  )
 );
