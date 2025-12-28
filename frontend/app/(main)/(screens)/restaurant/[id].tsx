@@ -162,6 +162,16 @@ export default function RestaurantDetailsScreen() {
     };
 
     const handleMenuItemPress = (item: MenuItem) => {
+        // Check if item is available
+        if (!item.is_available) {
+            showToast({
+                type: 'error',
+                title: 'Cannot Add to Cart',
+                message: 'This menu item is currently unavailable. Please try another item.',
+            });
+            return;
+        }
+
         if (item.options && item.options.length > 0) {
             setSelectedMenuItem(item);
             setShowItemModal(true);
@@ -375,7 +385,7 @@ export default function RestaurantDetailsScreen() {
 
                     <View className="px-5 pt-6">
                         <View className="flex-row items-center gap-3 mb-4">
-                            <View className="flex-1 flex-row items-center bg-white rounded-full px-4 py-3 border border-[#F5CB58]">
+                            <View className="flex-1 flex-row items-center bg-white rounded-full px-4 border border-[#F5CB58]">
                                 <Search size={20} color="#E95322" />
                                 <TextInput
                                     className="flex-1 ml-2 text-base text-[#070707]"

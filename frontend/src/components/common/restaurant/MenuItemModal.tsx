@@ -64,9 +64,18 @@ export default function MenuItemModal({ visible, item, onClose, onAddToCart, isA
 
             const defaults: { [groupName: string]: Set<string> } = {};
             Object.entries(groupedOptions).forEach(([groupName, options]) => {
+                const maxSelections = options[0]?.max_selections || 1;
                 const defaultOptions = options.filter((opt) => opt.is_default);
+                
                 if (defaultOptions.length > 0) {
-                    defaults[groupName] = new Set(defaultOptions.map((opt) => opt.name));
+                    if (maxSelections === 1) {
+                        // For single selection, only pick the first default option
+                        defaults[groupName] = new Set([defaultOptions[0].name]);
+                    } else {
+                        // For multiple selections, respect max_selections limit
+                        const selectedDefaults = defaultOptions.slice(0, maxSelections);
+                        defaults[groupName] = new Set(selectedDefaults.map((opt) => opt.name));
+                    }
                 } else {
                     defaults[groupName] = new Set();
                 }
@@ -83,21 +92,32 @@ export default function MenuItemModal({ visible, item, onClose, onAddToCart, isA
 
         setSelectedOptions((prev) => {
             const newSelections = { ...prev };
-            if (!newSelections[groupName]) {
-                newSelections[groupName] = new Set();
-            }
-
+            
             if (maxSelections === 1) {
-                if (newSelections[groupName].has(optionName)) {
+                // For single selection (radio), always replace with new selection
+                if (newSelections[groupName]?.has(optionName)) {
+                    // If clicking the same option, deselect it
                     newSelections[groupName] = new Set();
                 } else {
+                    // Replace with new selection
                     newSelections[groupName] = new Set([optionName]);
                 }
             } else {
+                // For multiple selections (checkbox)
+                if (!newSelections[groupName]) {
+                    newSelections[groupName] = new Set();
+                }
+                
                 if (newSelections[groupName].has(optionName)) {
-                    newSelections[groupName].delete(optionName);
+                    // Create new Set without the option
+                    const updated = new Set(newSelections[groupName]);
+                    updated.delete(optionName);
+                    newSelections[groupName] = updated;
                 } else if (newSelections[groupName].size < maxSelections) {
-                    newSelections[groupName].add(optionName);
+                    // Create new Set with the option added
+                    const updated = new Set(newSelections[groupName]);
+                    updated.add(optionName);
+                    newSelections[groupName] = updated;
                 }
             }
 
