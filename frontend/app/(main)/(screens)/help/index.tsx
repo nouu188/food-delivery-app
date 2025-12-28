@@ -106,9 +106,7 @@ export default function HelpScreen() {
                                     className="bg-[#FFF5D6] rounded-2xl p-4 mb-3"
                                 >
                                     <View className="flex-row items-center justify-between">
-                                        <Text className="text-[#070707] font-semibold flex-1 pr-2">
-                                            {faq.question}
-                                        </Text>
+                                        <Text className="text-[#070707] font-semibold flex-1 pr-2">{faq.question}</Text>
                                         <Feather
                                             name={isExpanded ? "chevron-up" : "chevron-down"}
                                             size={20}
@@ -126,12 +124,9 @@ export default function HelpScreen() {
                     <View className="bg-[#FFE3D6] rounded-2xl p-4">
                         <Text className="text-[#070707] font-semibold mb-2">Still need help?</Text>
                         <Text className="text-[#6B7280] text-sm mb-4">
-                            Send us a message and we'll get back to you as soon as possible
+                            Send us a message and we will get back to you as soon as possible
                         </Text>
-                        <TouchableOpacity
-                            className="bg-[#E95322] rounded-full py-3 items-center"
-                            activeOpacity={0.9}
-                        >
+                        <TouchableOpacity className="bg-[#E95322] rounded-full py-3 items-center" activeOpacity={0.9}>
                             <Text className="text-white font-semibold">Send Feedback</Text>
                         </TouchableOpacity>
                     </View>

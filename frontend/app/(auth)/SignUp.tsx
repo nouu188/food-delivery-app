@@ -1,3 +1,4 @@
+import { OtpType } from "@/types/api/auth";
 import Header from "@/components/common/Header";
 import SocialLoginButtons from "@/components/common/auth/SocialLoginButtons";
 import { useRouter } from "expo-router";
@@ -24,10 +25,10 @@ export default function SignUp() {
     } = useForm<RegisterFormData>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
-            full_name: '',
-            email: '',
-            password: '',
-            phone: '',
+            full_name: "",
+            email: "",
+            password: "",
+            phone: "",
         },
     });
 
@@ -55,21 +56,27 @@ export default function SignUp() {
 
             await authService.register(registerData);
 
-            Alert.alert(
-                "Success",
-                "Account created successfully! Please check your email to verify your account.",
-                [
-                    {
-                        text: "OK",
-                        onPress: () => router.replace("/(auth)/Login"),
-                    },
-                ]
-            );
+            // Backend register currently returns user info (no tokens). Trigger OTP send explicitly.
+            await authService.resendOtp({
+                identifier: data.email,
+                type: OtpType.EMAIL_VERIFY,
+            });
+
+            Alert.alert("Success", "Account created. We sent you an OTP to verify your email.", [
+                {
+                    text: "Verify now",
+                    onPress: () =>
+                        router.replace({
+                            pathname: "/(auth)/VerifyOTP",
+                            params: { email: data.email, type: OtpType.EMAIL_VERIFY },
+                        }),
+                },
+            ]);
         } catch (error: any) {
             if (isErrorStatus(error, 409)) {
-                Alert.alert('Sign Up Failed', 'This email or phone number is already registered');
+                Alert.alert("Sign Up Failed", "This email or phone number is already registered");
             } else {
-                showErrorAlert(error, 'Sign Up Failed');
+                showErrorAlert(error, "Sign Up Failed");
             }
         } finally {
             setIsLoading(false);
@@ -137,9 +144,7 @@ export default function SignUp() {
                                 </View>
                             )}
                         />
-                        {errors.email && (
-                            <Text className="text-red-500 text-sm mt-1">{errors.email.message}</Text>
-                        )}
+                        {errors.email && <Text className="text-red-500 text-sm mt-1">{errors.email.message}</Text>}
                     </View>
 
                     <View className="mb-3">
@@ -196,9 +201,7 @@ export default function SignUp() {
                                 </View>
                             )}
                         />
-                        {errors.phone && (
-                            <Text className="text-red-500 text-sm mt-1">{errors.phone.message}</Text>
-                        )}
+                        {errors.phone && <Text className="text-red-500 text-sm mt-1">{errors.phone.message}</Text>}
                     </View>
 
                     <Text className="text-gray-500 text-center text-sm mb-6">

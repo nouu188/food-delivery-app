@@ -25,34 +25,46 @@ export default function VerifyOTP() {
     } = useForm<VerifyOtpFormData>({
         resolver: zodResolver(verifyOtpSchema),
         defaultValues: {
-            otp: '',
+            otp: "",
         },
     });
 
-    const otpValue = watch('otp');
+    const otpValue = watch("otp");
 
     const onSubmit = async (data: VerifyOtpFormData) => {
         if (!params.email || !params.type) {
-            Alert.alert('Error', 'Missing required parameters');
+            Alert.alert("Error", "Missing required parameters");
             return;
         }
 
+        const otpType = params.type as OtpType;
+
         setIsLoading(true);
         try {
+            if (otpType === OtpType.PASSWORD_RESET) {
+                // IMPORTANT: Do not call /auth/verify-otp for PASSWORD_RESET.
+                // Backend validates OTP during /auth/reset-password, and verify-otp would mark it as used.
+                router.push({
+                    pathname: "/(auth)/SetPassword",
+                    params: { email: params.email, otp: data.otp },
+                });
+                return;
+            }
+
             await authService.verifyOtp({
                 identifier: params.email,
                 otp: data.otp,
-                type: params.type as OtpType,
+                type: otpType,
             });
 
-            Alert.alert('Success', 'OTP verified successfully!');
-
-            router.push({
-                pathname: '/(auth)/SetPassword',
-                params: { email: params.email, otp: data.otp },
-            });
+            Alert.alert("Success", "OTP verified successfully!", [
+                {
+                    text: "OK",
+                    onPress: () => router.replace("/(auth)/Login"),
+                },
+            ]);
         } catch (error: any) {
-            showErrorAlert(error, 'Verification Failed');
+            showErrorAlert(error, "Verification Failed");
         } finally {
             setIsLoading(false);
         }
@@ -60,7 +72,7 @@ export default function VerifyOTP() {
 
     const handleResendOTP = async () => {
         if (!params.email || !params.type) {
-            Alert.alert('Error', 'Missing required parameters');
+            Alert.alert("Error", "Missing required parameters");
             return;
         }
 
@@ -71,9 +83,9 @@ export default function VerifyOTP() {
                 type: params.type as OtpType,
             });
 
-            Alert.alert('Success', 'New OTP has been sent to your email');
+            Alert.alert("Success", "New OTP has been sent to your email");
         } catch (error: any) {
-            showErrorAlert(error, 'Failed to Resend OTP');
+            showErrorAlert(error, "Failed to Resend OTP");
         } finally {
             setResendLoading(false);
         }
@@ -110,9 +122,7 @@ export default function VerifyOTP() {
                             </View>
                         )}
                     />
-                    {errors.otp && (
-                        <Text className="text-red-500 text-sm mt-1 text-center">{errors.otp.message}</Text>
-                    )}
+                    {errors.otp && <Text className="text-red-500 text-sm mt-1 text-center">{errors.otp.message}</Text>}
                 </View>
 
                 <Button
@@ -125,10 +135,10 @@ export default function VerifyOTP() {
                 />
 
                 <View className="flex-row justify-center items-center mt-6">
-                    <Text className="text-gray-600 text-sm">Didn't receive the code? </Text>
+                    <Text className="text-gray-600 text-sm">Did not receive the code? </Text>
                     <TouchableOpacity onPress={handleResendOTP} disabled={resendLoading}>
                         <Text className="text-orange-500 font-medium text-sm">
-                            {resendLoading ? 'Sending...' : 'Resend OTP'}
+                            {resendLoading ? "Sending..." : "Resend OTP"}
                         </Text>
                     </TouchableOpacity>
                 </View>
