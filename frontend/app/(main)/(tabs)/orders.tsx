@@ -1,21 +1,59 @@
 import Header from "@/components/common/Header";
+import EmptyState from "@/components/common/orders/EmptyState";
 import OrderItem from "@/components/common/orders/OrderItem";
 import OrderTabHeader from "@/components/common/orders/OrderTabHeader";
-import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import orderService from "@/services/api/order.service";
+import restaurantService from "@/services/api/restaurant.service";
 import { Order, OrderStatus } from "@/types/api/order";
 import { showErrorAlert } from "@/utils/error-handler";
-import restaurantService from "@/services/api/restaurant.service";
+import { router } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MyOrders() {
     const [activeTab, setActiveTab] = useState<"Active" | "Completed" | "Cancelled">("Active");
     const [orders, setOrders] = useState<Order[]>([]);
+    const [allOrders, setAllOrders] = useState<Order[]>([]);
     const [restaurantImages, setRestaurantImages] = useState<Record<string, string | null>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const orderCounts = useMemo(() => {
+        const activeStatuses = [
+            OrderStatus.PENDING,
+            OrderStatus.CONFIRMED,
+            OrderStatus.PREPARING,
+            OrderStatus.READY_FOR_PICKUP,
+            OrderStatus.PICKED_UP,
+            OrderStatus.ON_THE_WAY,
+        ];
+        const completedStatuses = [OrderStatus.DELIVERED, OrderStatus.COMPLETED];
+        const cancelledStatuses = [OrderStatus.CANCELLED, OrderStatus.REFUNDED, OrderStatus.FAILED];
+
+        return {
+            active: allOrders.filter(o => activeStatuses.includes(o.status)).length,
+            completed: allOrders.filter(o => completedStatuses.includes(o.status)).length,
+            cancelled: allOrders.filter(o => cancelledStatuses.includes(o.status)).length,
+        };
+    }, [allOrders]);
+
+    const statistics = useMemo(() => {
+        const completedOrders = allOrders.filter(o =>
+            [OrderStatus.DELIVERED, OrderStatus.COMPLETED].includes(o.status)
+        );
+
+        const totalSpent = completedOrders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0);
+        const totalOrders = allOrders.length;
+        const averageOrder = totalOrders > 0 ? totalSpent / completedOrders.length : 0;
+
+        return {
+            totalSpent: totalSpent.toFixed(2),
+            totalOrders,
+            averageOrder: averageOrder.toFixed(2),
+            activeOrders: orderCounts.active,
+        };
+    }, [allOrders, orderCounts]);
 
     const hydrateRestaurantImages = useCallback(
         async (ordersToHydrate: Order[]) => {
@@ -80,13 +118,13 @@ export default function MyOrders() {
                 });
 
                 const orderData = response?.data || [];
+                setAllOrders(Array.isArray(orderData) ? orderData : []);
+
                 const filteredOrders = Array.isArray(orderData)
                     ? orderData.filter((order) => statuses.includes(order.status))
                     : [];
 
                 setOrders(filteredOrders);
-
-                // Order list responses may not populate menu_item.image_url; fall back to restaurant image.
                 await hydrateRestaurantImages(filteredOrders);
             } catch (error) {
                 showErrorAlert(error, "Failed to Load Orders");
@@ -114,24 +152,20 @@ export default function MyOrders() {
         <SafeAreaView className="flex-1 bg-YellowBase">
             <Header
                 title="My Orders"
-                rightComponent={
-                    <TouchableOpacity
-                        onPress={() => router.push("/orders/history")}
-                        className="px-4 py-2"
-                        activeOpacity={0.7}
-                    >
-                        <Text className="text-orange-600 font-semibold text-base">View History →</Text>
-                    </TouchableOpacity>
-                }
+                showBackButton={false}
             />
 
             <View className="flex-1 bg-white rounded-t-3xl px-5 pt-6">
-                <OrderTabHeader activeTab={activeTab} onTabChange={setActiveTab} />
+                <OrderTabHeader
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    counts={orderCounts}
+                />
 
                 {isLoading ? (
                     <View className="flex-1 items-center justify-center pt-20">
                         <ActivityIndicator size="large" color="#E95322" />
-                        <Text className="text-gray-500 mt-4">Loading orders...</Text>
+                        <Text className="text-[#6B7280] mt-4">Loading orders...</Text>
                     </View>
                 ) : (
                     <ScrollView
@@ -146,16 +180,22 @@ export default function MyOrders() {
                     >
                         <View className="pb-32">
                             {orders.length === 0 ? (
-                                <View className="items-center pt-20">
-                                    <Text className="text-center text-gray-500 text-base">
-                                        No {activeTab.toLowerCase()} orders yet
-                                    </Text>
+                                <View className="items-center pt-12">
+                                    <EmptyState
+                                        message={activeTab === "Active"
+                                            ? "You don't have any\nactive orders at this time"
+                                            : activeTab === "Completed"
+                                            ? "You don't have any\ncompleted orders yet"
+                                            : "You don't have any\ncancelled orders"
+                                        }
+                                    />
                                     {activeTab === "Active" && (
                                         <TouchableOpacity
                                             onPress={() => router.push("/(main)/(tabs)/Home")}
-                                            className="mt-6 px-8 py-3 rounded-full bg-[#E95322]"
+                                            className="mt-8 px-8 py-4 rounded-full bg-[#E95322]"
+                                            activeOpacity={0.9}
                                         >
-                                            <Text className="text-white font-semibold">Start Ordering</Text>
+                                            <Text className="text-white font-semibold text-base">Start Ordering</Text>
                                         </TouchableOpacity>
                                     )}
                                 </View>
@@ -183,6 +223,7 @@ export default function MyOrders() {
                                             status={activeTab}
                                             restaurantId={order.restaurant_id}
                                             hasReview={false}
+                                            orderStatus={order.status}
                                         />
                                     );
                                 })

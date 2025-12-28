@@ -52,6 +52,9 @@ export class Order extends BaseEntity {
   delivery_fee!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  tax_amount!: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   discount_amount!: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })

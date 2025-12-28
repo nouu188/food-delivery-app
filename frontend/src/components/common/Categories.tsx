@@ -97,9 +97,6 @@ const Categories: React.FC<CategoriesProps> = ({ selectedCategory, onSelectCateg
 
     return (
         <View className="py-4">
-            <View className="px-5 mb-2">
-                <Text className="text-[#391713] font-bold text-lg">Categories</Text>
-            </View>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

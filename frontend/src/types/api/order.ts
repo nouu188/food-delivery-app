@@ -88,14 +88,28 @@ export interface CreateOrderRequest {
   special_instructions?: string;
 }
 
+export interface DeliveryAddress {
+  id: string;
+  label: string | null;
+  address_line: string;
+  ward: string;
+  district: string;
+  city: string;
+  latitude: number | null;
+  longitude: number | null;
+  delivery_note: string | null;
+}
+
 export interface Order {
   id: string;
   order_number: string;
   user_id: string;
   restaurant_id: string;
   restaurant_name?: string;
+  restaurant_phone?: string;
+  restaurant_address?: string;
   delivery_address_id: string;
-  delivery_address?: any;
+  delivery_address?: DeliveryAddress | string;
   status: OrderStatus;
   subtotal: number;
   delivery_fee: number;
