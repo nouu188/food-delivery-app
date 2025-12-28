@@ -4,19 +4,21 @@ import SocialLoginButtons from "@/components/common/auth/SocialLoginButtons";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
-import { Alert, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "tamagui";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, RegisterFormData } from "@/utils/validation/auth.schema";
 import authService from "@/services/api/auth.service";
-import { showErrorAlert, isErrorStatus } from "@/utils/error-handler";
+import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
 
 export default function SignUp() {
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const showToast = useToastStore((s) => s.show);
 
     const {
         control,
@@ -62,22 +64,18 @@ export default function SignUp() {
                 type: OtpType.EMAIL_VERIFY,
             });
 
-            Alert.alert("Success", "Account created. We sent you an OTP to verify your email.", [
-                {
-                    text: "Verify now",
-                    onPress: () =>
-                        router.replace({
-                            pathname: "/(auth)/VerifyOTP",
-                            params: { email: data.email, type: OtpType.EMAIL_VERIFY },
-                        }),
-                },
-            ]);
+            showToast({
+                type: "success",
+                title: "Success",
+                message: "Account created. We sent you an OTP to verify your email.",
+            });
+
+            router.replace({
+                pathname: "/(auth)/VerifyOTP",
+                params: { email: data.email, type: OtpType.EMAIL_VERIFY },
+            });
         } catch (error: any) {
-            if (isErrorStatus(error, 409)) {
-                Alert.alert("Sign Up Failed", "This email or phone number is already registered");
-            } else {
-                showErrorAlert(error, "Sign Up Failed");
-            }
+            showErrorAlert(error, "Sign Up Failed");
         } finally {
             setIsLoading(false);
         }
@@ -85,12 +83,12 @@ export default function SignUp() {
 
     const handleTermsPress = () => {
         // NOTE: Navigate to Terms of Use page
-        Alert.alert("Terms of Use", "Terms of Use content will be displayed here");
+        showToast({ type: "info", title: "Terms of Use", message: "Terms of Use content will be displayed here." });
     };
 
     const handlePrivacyPress = () => {
         // NOTE: Navigate to Privacy Policy page
-        Alert.alert("Privacy Policy", "Privacy Policy content will be displayed here");
+        showToast({ type: "info", title: "Privacy Policy", message: "Privacy Policy content will be displayed here." });
     };
 
     return (

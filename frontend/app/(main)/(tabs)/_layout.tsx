@@ -4,6 +4,8 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { View } from "react-native";
 import { SvgProps } from "react-native-svg";
+import { useCartStore } from "@/store/useCartStore";
+import { useOverlayStore } from "@/store/useOverlayStore";
 
 interface TabIconProps {
     focused: boolean;
@@ -29,6 +31,11 @@ const TabIcon = ({ focused, Icon }: TabIconProps) => {
 };
 
 const TabsLayout = () => {
+    const isCartOpen = useCartStore((s) => s.isDrawerOpen);
+    const isNotificationOpen = useOverlayStore((s) => s.isNotificationSidebarOpen);
+    const isProfileOpen = useOverlayStore((s) => s.isProfileSidebarOpen);
+    const isTabBarHidden = isCartOpen || isNotificationOpen || isProfileOpen;
+
     return (
         <>
             <Tabs
@@ -42,6 +49,7 @@ const TabsLayout = () => {
                         alignItems: "center",
                     },
                     tabBarStyle: {
+                        ...(isTabBarHidden ? { display: "none" as const } : null),
                         height: 52,
                         borderRadius: 50,
                         borderTopWidth: 0,

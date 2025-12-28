@@ -1,14 +1,16 @@
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useAddressStore } from "@/store/useAddressStore";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
 
 export default function AddNewAddressScreen() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const { addAddress } = useAddressStore();
 
     const [label, setLabel] = useState("");
@@ -22,23 +24,23 @@ export default function AddNewAddressScreen() {
     const handleSubmit = async () => {
         // Validation
         if (!label.trim()) {
-            Alert.alert('Validation Error', 'Please enter a label for this address');
+            showToast({ type: "error", title: "Validation Error", message: "Please enter a label for this address" });
             return;
         }
         if (!addressLine.trim()) {
-            Alert.alert('Validation Error', 'Please enter the address line');
+            showToast({ type: "error", title: "Validation Error", message: "Please enter the address line" });
             return;
         }
         if (!ward.trim()) {
-            Alert.alert('Validation Error', 'Please enter the ward');
+            showToast({ type: "error", title: "Validation Error", message: "Please enter the ward" });
             return;
         }
         if (!district.trim()) {
-            Alert.alert('Validation Error', 'Please enter the district');
+            showToast({ type: "error", title: "Validation Error", message: "Please enter the district" });
             return;
         }
         if (!city.trim()) {
-            Alert.alert('Validation Error', 'Please enter the city');
+            showToast({ type: "error", title: "Validation Error", message: "Please enter the city" });
             return;
         }
 
@@ -47,17 +49,17 @@ export default function AddNewAddressScreen() {
             await addAddress({
                 label: label.trim(),
                 address_line: addressLine.trim(),
-                ward: ward.trim(), 
+                ward: ward.trim(),
                 district: district.trim(),
                 city: city.trim(),
                 latitude: 0, // TODO: Get from map picker
                 longitude: 0, // TODO: Get from map picker
                 is_default: isDefault,
             });
-            Alert.alert('Success', 'Address added successfully');
+            showToast({ type: "success", title: "Success", message: "Address added successfully" });
             router.back();
         } catch (error) {
-            showErrorAlert(error, 'Failed to Add Address');
+            showErrorAlert(error, "Failed to Add Address");
         } finally {
             setIsSaving(false);
         }
@@ -135,8 +137,8 @@ export default function AddNewAddressScreen() {
                             <Switch
                                 value={isDefault}
                                 onValueChange={setIsDefault}
-                                trackColor={{ false: '#D1D5DB', true: '#FFD8C7' }}
-                                thumbColor={isDefault ? '#E95322' : '#F3F4F6'}
+                                trackColor={{ false: "#D1D5DB", true: "#FFD8C7" }}
+                                thumbColor={isDefault ? "#E95322" : "#F3F4F6"}
                             />
                         </View>
 

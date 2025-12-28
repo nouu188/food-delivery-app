@@ -1,12 +1,13 @@
 import Header from "@/components/common/Header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import orderService from "@/services/api/order.service";
 import { Order, OrderStatus } from "@/types/api/order";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
 
 const STATUS_STEPS = [
     { status: OrderStatus.PENDING, label: "Order Placed", icon: "check-circle" },
@@ -20,6 +21,7 @@ const STATUS_STEPS = [
 
 export default function LiveTrackingScreen() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const { orderId } = useLocalSearchParams<{ orderId: string }>();
 
     const [order, setOrder] = useState<Order | null>(null);
@@ -32,7 +34,7 @@ export default function LiveTrackingScreen() {
 
     const fetchOrder = async (showRefreshIndicator = false) => {
         if (!orderId) {
-            Alert.alert('Error', 'Order ID is required');
+            showToast({ type: "error", title: "Error", message: "Order ID is required" });
             router.back();
             return;
         }
@@ -47,7 +49,7 @@ export default function LiveTrackingScreen() {
             const orderData = await orderService.getOrderById(orderId);
             setOrder(orderData);
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Order');
+            showErrorAlert(error, "Failed to Load Order");
             if (!showRefreshIndicator) {
                 router.back();
             }
@@ -58,7 +60,7 @@ export default function LiveTrackingScreen() {
     };
 
     const getCurrentStepIndex = (status: OrderStatus): number => {
-        const index = STATUS_STEPS.findIndex(step => step.status === status);
+        const index = STATUS_STEPS.findIndex((step) => step.status === status);
         return index !== -1 ? index : 0;
     };
 
@@ -110,11 +112,11 @@ export default function LiveTrackingScreen() {
                     <View className="bg-[#FFF5D6] rounded-2xl p-4 mb-6">
                         <Text className="text-[#070707] font-bold text-base">Order #{order.order_number}</Text>
                         <Text className="text-[#6B7280] text-sm mt-1">
-                            {order.restaurant_name || 'Restaurant'} • {order.items && Array.isArray(order.items) ? order.items.length : 0} item{order.items && Array.isArray(order.items) && order.items.length > 1 ? 's' : ''}
+                            {order.restaurant_name || "Restaurant"} •{" "}
+                            {order.items && Array.isArray(order.items) ? order.items.length : 0} item
+                            {order.items && Array.isArray(order.items) && order.items.length > 1 ? "s" : ""}
                         </Text>
-                        <Text className="text-[#E95322] font-bold text-lg mt-2">
-                            ${order.total_amount}
-                        </Text>
+                        <Text className="text-[#E95322] font-bold text-lg mt-2">${order.total_amount}</Text>
                     </View>
 
                     <Text className="text-[#070707] font-bold text-lg mb-4">Order Status</Text>
@@ -151,7 +153,11 @@ export default function LiveTrackingScreen() {
                                     <View className="flex-1 pt-2">
                                         <Text
                                             className={`font-semibold ${
-                                                isActive ? "text-[#E95322]" : isCompleted ? "text-[#070707]" : "text-[#9CA3AF]"
+                                                isActive
+                                                    ? "text-[#E95322]"
+                                                    : isCompleted
+                                                    ? "text-[#070707]"
+                                                    : "text-[#9CA3AF]"
                                             }`}
                                         >
                                             {step.label}
@@ -169,9 +175,9 @@ export default function LiveTrackingScreen() {
                         <View className="mt-6 bg-[#FFE3D6] rounded-2xl p-4">
                             <Text className="text-[#070707] font-semibold">Estimated Delivery</Text>
                             <Text className="text-[#E95322] font-bold text-lg mt-1">
-                                {new Date(order.estimated_delivery).toLocaleTimeString('en-US', {
-                                    hour: 'numeric',
-                                    minute: '2-digit',
+                                {new Date(order.estimated_delivery).toLocaleTimeString("en-US", {
+                                    hour: "numeric",
+                                    minute: "2-digit",
                                     hour12: true,
                                 })}
                             </Text>
@@ -182,7 +188,7 @@ export default function LiveTrackingScreen() {
                         <View className="mt-4 bg-[#FFF5D6] rounded-2xl p-4">
                             <Text className="text-[#070707] font-semibold">Delivery Address</Text>
                             <Text className="text-[#6B7280] text-sm mt-2">
-                                {typeof order.delivery_address === 'object'
+                                {typeof order.delivery_address === "object"
                                     ? `${order.delivery_address.address_line}, ${order.delivery_address.ward}, ${order.delivery_address.district}, ${order.delivery_address.city}`
                                     : order.delivery_address}
                             </Text>

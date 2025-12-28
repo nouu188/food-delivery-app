@@ -1,6 +1,7 @@
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { useToastStore } from "@/store/useToastStore";
 import {
     Linking,
     ScrollView,
@@ -8,7 +9,6 @@ import {
     TextInput,
     TouchableOpacity,
     View,
-    Alert,
     KeyboardAvoidingView,
     Platform,
 } from "react-native";
@@ -48,6 +48,7 @@ interface Category {
 
 export default function HelpScreen() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState("");
@@ -175,24 +176,18 @@ export default function HelpScreen() {
 
     const handleSubmitFeedback = () => {
         if (!contactForm.name || !contactForm.email || !contactForm.message) {
-            Alert.alert("Required Fields", "Please fill in all required fields");
+            showToast({ type: "error", title: "Required Fields", message: "Please fill in all required fields" });
             return;
         }
 
         // TODO: Integrate with backend API
-        Alert.alert(
-            "Thank You!",
-            "Your message has been received. Our support team will get back to you within 24 hours.",
-            [
-                {
-                    text: "OK",
-                    onPress: () => {
-                        setShowContactForm(false);
-                        setContactForm({ name: "", email: "", subject: "", message: "" });
-                    },
-                },
-            ]
-        );
+        showToast({
+            type: "success",
+            title: "Thank You!",
+            message: "Your message has been received. Our support team will get back to you within 24 hours.",
+        });
+        setShowContactForm(false);
+        setContactForm({ name: "", email: "", subject: "", message: "" });
     };
 
     return (

@@ -1,11 +1,13 @@
 import Header from "@/components/common/Header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import orderService from "@/services/api/order.service";
 import { Order, CancelledBy } from "@/types/api/order";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
+import { confirm } from "@/utils/confirm";
 
 const REASONS = [
     "Changed my mind",
@@ -18,6 +20,7 @@ const REASONS = [
 export default function CancelOrderScreen() {
     const router = useRouter();
     const { orderId } = useLocalSearchParams<{ orderId: string }>();
+    const showToast = useToastStore((s) => s.show);
 
     const [order, setOrder] = useState<Order | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +34,7 @@ export default function CancelOrderScreen() {
 
     const fetchOrder = async () => {
         if (!orderId) {
-            Alert.alert('Error', 'Order ID is required');
+            showToast({ type: "error", title: "Error", message: "Order ID is required." });
             router.back();
             return;
         }
@@ -41,7 +44,7 @@ export default function CancelOrderScreen() {
             const orderData = await orderService.getOrderById(orderId);
             setOrder(orderData);
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Order');
+            showErrorAlert(error, "Failed to Load Order");
             router.back();
         } finally {
             setIsLoading(false);
@@ -54,39 +57,36 @@ export default function CancelOrderScreen() {
         const cancellationReason = otherReason.trim() || REASONS[selectedIndex];
 
         if (!cancellationReason) {
-            Alert.alert('Error', 'Please provide a cancellation reason');
+            showToast({ type: "error", title: "Error", message: "Please provide a cancellation reason." });
             return;
         }
 
-        Alert.alert(
-            'Cancel Order',
-            'Are you sure you want to cancel this order?',
-            [
-                { text: 'No', style: 'cancel' },
-                {
-                    text: 'Yes, Cancel',
-                    style: 'destructive',
-                    onPress: async () => {
-                        setIsCancelling(true);
-                        try {
-                            await orderService.cancelOrder(order.id, {
-                                cancellation_reason: cancellationReason,
-                                cancelled_by: CancelledBy.CUSTOMER,
-                            });
+        const ok = await confirm({
+            title: "Cancel Order",
+            message: "Are you sure you want to cancel this order?",
+            confirmText: "Yes, Cancel",
+            cancelText: "No",
+            destructive: true,
+        });
 
-                            router.replace({
-                                pathname: '/cancel-order/success',
-                                params: { orderId: order.id },
-                            });
-                        } catch (error) {
-                            showErrorAlert(error, 'Failed to Cancel Order');
-                        } finally {
-                            setIsCancelling(false);
-                        }
-                    },
-                },
-            ]
-        );
+        if (!ok) return;
+
+        setIsCancelling(true);
+        try {
+            await orderService.cancelOrder(order.id, {
+                cancellation_reason: cancellationReason,
+                cancelled_by: CancelledBy.CUSTOMER,
+            });
+
+            router.replace({
+                pathname: "/cancel-order/success",
+                params: { orderId: order.id },
+            });
+        } catch (error) {
+            showErrorAlert(error, "Failed to Cancel Order");
+        } finally {
+            setIsCancelling(false);
+        }
     };
 
     if (isLoading) {
@@ -121,15 +121,16 @@ export default function CancelOrderScreen() {
                     <View className="bg-[#FFF5D6] rounded-2xl p-4 mb-6">
                         <Text className="text-[#070707] font-bold text-base">Order #{order.order_number}</Text>
                         <Text className="text-[#6B7280] text-sm mt-1">
-                            {order.restaurant_name || 'Restaurant'} • {order.items && Array.isArray(order.items) ? order.items.length : 0} item{order.items && Array.isArray(order.items) && order.items.length > 1 ? 's' : ''}
+                            {order.restaurant_name || "Restaurant"} •{" "}
+                            {order.items && Array.isArray(order.items) ? order.items.length : 0} item
+                            {order.items && Array.isArray(order.items) && order.items.length > 1 ? "s" : ""}
                         </Text>
-                        <Text className="text-[#E95322] font-bold text-lg mt-2">
-                            ${order.total_amount}
-                        </Text>
+                        <Text className="text-[#E95322] font-bold text-lg mt-2">${order.total_amount}</Text>
                     </View>
 
                     <Text className="text-[#6B7280] text-sm leading-5 mb-4">
-                        Please let us know why you want to cancel this order. Your feedback helps us improve our service.
+                        Please let us know why you want to cancel this order. Your feedback helps us improve our
+                        service.
                     </Text>
 
                     <View className="mt-6">

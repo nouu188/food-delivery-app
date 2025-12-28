@@ -31,7 +31,7 @@ export default function CancelOrderSuccess() {
                     activeOpacity={0.9}
                     className="mt-10 px-10 py-3 rounded-full"
                     style={{ backgroundColor: "#E95322" }}
-                    onPress={() => router.replace("/orders/index")}
+                    onPress={() => router.replace("/(main)/(tabs)/Orders")}
                 >
                     <Text className="text-white font-semibold">Back to Orders</Text>
                 </TouchableOpacity>

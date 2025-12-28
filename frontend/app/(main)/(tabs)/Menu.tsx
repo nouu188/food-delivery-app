@@ -4,15 +4,26 @@ import ProfileSidebar from "@/components/common/profile/ProfileSidebar";
 import { ChevronDown, Star, SlidersHorizontal, Search, List, MapPin, Clock, X, Grid3x3 } from "@tamagui/lucide-icons";
 import { Link } from "expo-router";
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Pressable,
+    RefreshControl,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import restaurantService from "@/services/api/restaurant.service";
 import userService from "@/services/api/user.service";
 import { Restaurant } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
 import { formatRating } from "@/utils/format";
 import FilterModal, { FilterOptions } from "../../../src/components/common/menu/FilterModal";
+import { useOverlayStore } from "@/store/useOverlayStore";
 
-type ViewMode = 'list' | 'grid';
+type ViewMode = "list" | "grid";
 
 export default function MenuScreen() {
     const [sortBy, setSortBy] = useState<"popular" | "rating" | "name">("popular");
@@ -23,12 +34,16 @@ export default function MenuScreen() {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
-    const [isNotificationVisible, setIsNotificationVisible] = useState(false);
-    const [isProfileVisible, setIsProfileVisible] = useState(false);
+    const isNotificationVisible = useOverlayStore((s) => s.isNotificationSidebarOpen);
+    const isProfileVisible = useOverlayStore((s) => s.isProfileSidebarOpen);
+    const openNotificationSidebar = useOverlayStore((s) => s.openNotificationSidebar);
+    const closeNotificationSidebar = useOverlayStore((s) => s.closeNotificationSidebar);
+    const openProfileSidebar = useOverlayStore((s) => s.openProfileSidebar);
+    const closeProfileSidebar = useOverlayStore((s) => s.closeProfileSidebar);
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState("");
     const [showSearch, setShowSearch] = useState(false);
-    const [viewMode, setViewMode] = useState<ViewMode>('list');
+    const [viewMode, setViewMode] = useState<ViewMode>("list");
     const [filters, setFilters] = useState<FilterOptions>({});
     const [activeQuickFilters, setActiveQuickFilters] = useState({
         openNow: false,
@@ -48,49 +63,50 @@ export default function MenuScreen() {
 
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(r =>
-                r.name.toLowerCase().includes(query) ||
-                r.address?.toLowerCase().includes(query) ||
-                r.description?.toLowerCase().includes(query)
+            filtered = filtered.filter(
+                (r) =>
+                    r.name.toLowerCase().includes(query) ||
+                    r.address?.toLowerCase().includes(query) ||
+                    r.description?.toLowerCase().includes(query)
             );
         }
 
         if (filters.minRating) {
-            filtered = filtered.filter(r => Number(r.average_rating) >= filters.minRating!);
+            filtered = filtered.filter((r) => Number(r.average_rating) >= filters.minRating!);
         }
 
         if (filters.priceRange) {
-            filtered = filtered.filter(r => {
+            filtered = filtered.filter((r) => {
                 const minOrder = Number(r.min_order_amount);
                 return minOrder >= filters.priceRange!.min && minOrder <= filters.priceRange!.max;
             });
         }
 
         if (filters.deliveryFee) {
-            filtered = filtered.filter(r => {
+            filtered = filtered.filter((r) => {
                 const fee = Number(r.delivery_fee);
                 return fee >= filters.deliveryFee!.min && fee <= filters.deliveryFee!.max;
             });
         }
 
         if (filters.isOpenOnly) {
-            filtered = filtered.filter(r => r.is_open);
+            filtered = filtered.filter((r) => r.is_open);
         }
 
         if (filters.isFeaturedOnly) {
-            filtered = filtered.filter(r => r.is_featured);
+            filtered = filtered.filter((r) => r.is_featured);
         }
 
         if (activeQuickFilters.openNow) {
-            filtered = filtered.filter(r => r.is_open);
+            filtered = filtered.filter((r) => r.is_open);
         }
 
         if (activeQuickFilters.featured) {
-            filtered = filtered.filter(r => r.is_featured);
+            filtered = filtered.filter((r) => r.is_featured);
         }
 
         if (activeQuickFilters.topRated) {
-            filtered = filtered.filter(r => Number(r.average_rating) >= 4.5);
+            filtered = filtered.filter((r) => Number(r.average_rating) >= 4.5);
         }
 
         setFilteredRestaurants(filtered);
@@ -105,11 +121,13 @@ export default function MenuScreen() {
             }
 
             const [restaurantsData, favoritesData] = await Promise.all([
-                restaurantService.getRestaurants({
-                    page: pageNum,
-                    limit: 20,
-                    sort_by: sortBy,
-                }).catch(() => null),
+                restaurantService
+                    .getRestaurants({
+                        page: pageNum,
+                        limit: 20,
+                        sort_by: sortBy,
+                    })
+                    .catch(() => null),
                 userService.getFavorites().catch(() => null),
             ]);
 
@@ -118,7 +136,7 @@ export default function MenuScreen() {
                     setRestaurants(restaurantsData.data);
                     setFilteredRestaurants(restaurantsData.data);
                 } else {
-                    setRestaurants(prev => [...prev, ...restaurantsData.data]);
+                    setRestaurants((prev) => [...prev, ...restaurantsData.data]);
                 }
                 setHasMore(restaurantsData.page < restaurantsData.total_pages);
             } else {
@@ -130,12 +148,12 @@ export default function MenuScreen() {
             }
 
             if (favoritesData && Array.isArray(favoritesData)) {
-                setFavorites(new Set(favoritesData.map(f => f.restaurant_id)));
+                setFavorites(new Set(favoritesData.map((f) => f.restaurant_id)));
             } else {
                 setFavorites(new Set());
             }
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Restaurants');
+            showErrorAlert(error, "Failed to Load Restaurants");
             if (pageNum === 1) {
                 setRestaurants([]);
                 setFilteredRestaurants([]);
@@ -163,7 +181,7 @@ export default function MenuScreen() {
 
     const toggleFavorite = async (restaurantId: string) => {
         const wasFavorite = favorites.has(restaurantId);
-        setFavorites(prev => {
+        setFavorites((prev) => {
             const newSet = new Set(prev);
             if (wasFavorite) {
                 newSet.delete(restaurantId);
@@ -180,7 +198,7 @@ export default function MenuScreen() {
                 await userService.addFavorite(restaurantId);
             }
         } catch (error) {
-            setFavorites(prev => {
+            setFavorites((prev) => {
                 const newSet = new Set(prev);
                 if (wasFavorite) {
                     newSet.add(restaurantId);
@@ -189,12 +207,12 @@ export default function MenuScreen() {
                 }
                 return newSet;
             });
-            showErrorAlert(error, 'Failed to Update Favorite');
+            showErrorAlert(error, "Failed to Update Favorite");
         }
     };
 
     const toggleQuickFilter = (filter: keyof typeof activeQuickFilters) => {
-        setActiveQuickFilters(prev => ({
+        setActiveQuickFilters((prev) => ({
             ...prev,
             [filter]: !prev[filter],
         }));
@@ -243,10 +261,13 @@ export default function MenuScreen() {
                             )}
 
                             {item.is_open !== undefined && (
-                                <View className={`absolute left-3 top-3 px-3 py-1 rounded-full ${item.is_open ? 'bg-green-500' : 'bg-red-500'
-                                    }`}>
+                                <View
+                                    className={`absolute left-3 top-3 px-3 py-1 rounded-full ${
+                                        item.is_open ? "bg-green-500" : "bg-red-500"
+                                    }`}
+                                >
                                     <Text className="text-white text-xs font-semibold">
-                                        {item.is_open ? 'OPEN' : 'CLOSED'}
+                                        {item.is_open ? "OPEN" : "CLOSED"}
                                     </Text>
                                 </View>
                             )}
@@ -273,9 +294,7 @@ export default function MenuScreen() {
                             <View className="flex-row items-center justify-between mt-2">
                                 <View className="flex-row items-center">
                                     <Clock size={12} color="#6B7280" />
-                                    <Text className="text-[#6B7280] text-xs ml-1">
-                                        {item.estimated_prep_time} mins
-                                    </Text>
+                                    <Text className="text-[#6B7280] text-xs ml-1">{item.estimated_prep_time} mins</Text>
                                 </View>
                                 <Text className="text-[#E95322] text-sm font-semibold">
                                     ${Number(item.delivery_fee) / 1000}k delivery
@@ -312,10 +331,13 @@ export default function MenuScreen() {
                             )}
 
                             {item.is_open !== undefined && (
-                                <View className={`absolute left-2 top-2 px-2 py-0.5 rounded-full ${item.is_open ? 'bg-green-500' : 'bg-red-500'
-                                    }`}>
+                                <View
+                                    className={`absolute left-2 top-2 px-2 py-0.5 rounded-full ${
+                                        item.is_open ? "bg-green-500" : "bg-red-500"
+                                    }`}
+                                >
                                     <Text className="text-white text-[10px] font-semibold">
-                                        {item.is_open ? 'OPEN' : 'CLOSED'}
+                                        {item.is_open ? "OPEN" : "CLOSED"}
                                     </Text>
                                 </View>
                             )}
@@ -348,10 +370,7 @@ export default function MenuScreen() {
         <View className="flex-1 bg-[#F9CF63]">
             <View className="bg-[#F9CF63] pt-14 pb-2">
                 <View className="px-5">
-                    <SearchNav
-                        onNotificationPress={() => setIsNotificationVisible(true)}
-                        onProfilePress={() => setIsProfileVisible(true)}
-                    />
+                    <SearchNav onNotificationPress={openNotificationSidebar} onProfilePress={openProfileSidebar} />
                 </View>
 
                 <View
@@ -395,7 +414,9 @@ export default function MenuScreen() {
                                     activeOpacity={0.7}
                                     className="flex-row items-center bg-gray-100 px-3 py-2 rounded-full mr-2"
                                     onPress={() =>
-                                        setSortBy(sortBy === "popular" ? "rating" : sortBy === "rating" ? "name" : "popular")
+                                        setSortBy(
+                                            sortBy === "popular" ? "rating" : sortBy === "rating" ? "name" : "popular"
+                                        )
                                     }
                                 >
                                     <Text className="text-[#070707] font-semibold text-sm mr-1">
@@ -418,11 +439,11 @@ export default function MenuScreen() {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                                    onPress={() => setViewMode(viewMode === "list" ? "grid" : "list")}
                                     className="bg-gray-100 p-2.5 rounded-full"
                                     activeOpacity={0.7}
                                 >
-                                    {viewMode === 'list' ? (
+                                    {viewMode === "list" ? (
                                         <Grid3x3 size={20} color="#070707" />
                                     ) : (
                                         <List size={20} color="#070707" />
@@ -431,7 +452,6 @@ export default function MenuScreen() {
                             </>
                         ) : (
                             <View className="flex flex-row">
-
                                 <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-2 pl-3 mr-2">
                                     <Search size={20} color="#6B7280" />
                                     <TextInput
@@ -443,14 +463,14 @@ export default function MenuScreen() {
                                         placeholderTextColor="#9CA3AF"
                                     />
                                     {searchQuery.length > 0 && (
-                                        <TouchableOpacity onPress={() => setSearchQuery('')} className="p-1 mr-2">
+                                        <TouchableOpacity onPress={() => setSearchQuery("")} className="p-1 mr-2">
                                             <X size={18} color="#6B7280" />
                                         </TouchableOpacity>
                                     )}
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowSearch(false);
-                                            setSearchQuery('');
+                                            setSearchQuery("");
                                         }}
                                         className="bg-[#E95322] p-2 rounded-full"
                                         activeOpacity={0.7}
@@ -473,62 +493,88 @@ export default function MenuScreen() {
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                                    onPress={() => setViewMode(viewMode === "list" ? "grid" : "list")}
                                     className="bg-gray-100 p-2.5 rounded-full"
                                     activeOpacity={0.7}
                                 >
-                                    {viewMode === 'list' ? (
+                                    {viewMode === "list" ? (
                                         <Grid3x3 size={20} color="#070707" />
                                     ) : (
                                         <List size={20} color="#070707" />
                                     )}
                                 </TouchableOpacity>
-
                             </View>
                         )}
                     </View>
 
                     <View className="flex-row mt-3">
                         <TouchableOpacity
-                            onPress={() => toggleQuickFilter('openNow')}
-                            className={`flex-row items-center px-3 py-2 rounded-full mr-2 ${activeQuickFilters.openNow ? 'bg-green-500' : 'bg-gray-100'
-                                }`}
+                            onPress={() => toggleQuickFilter("openNow")}
+                            className={`flex-row items-center px-3 py-2 rounded-full mr-2 ${
+                                activeQuickFilters.openNow ? "bg-green-500" : "bg-gray-100"
+                            }`}
                             activeOpacity={0.7}
                         >
-                            <View className={`w-2 h-2 rounded-full ${activeQuickFilters.openNow ? 'bg-white' : 'bg-green-500'}`} />
-                            <Text className={`ml-1.5 text-xs font-semibold ${activeQuickFilters.openNow ? 'text-white' : 'text-[#070707]'}`}>
+                            <View
+                                className={`w-2 h-2 rounded-full ${
+                                    activeQuickFilters.openNow ? "bg-white" : "bg-green-500"
+                                }`}
+                            />
+                            <Text
+                                className={`ml-1.5 text-xs font-semibold ${
+                                    activeQuickFilters.openNow ? "text-white" : "text-[#070707]"
+                                }`}
+                            >
                                 Open Now
                             </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            onPress={() => toggleQuickFilter('featured')}
-                            className={`flex-row items-center px-3 py-2 rounded-full mr-2 ${activeQuickFilters.featured ? 'bg-[#F4BA1B]' : 'bg-gray-100'
-                                }`}
+                            onPress={() => toggleQuickFilter("featured")}
+                            className={`flex-row items-center px-3 py-2 rounded-full mr-2 ${
+                                activeQuickFilters.featured ? "bg-[#F4BA1B]" : "bg-gray-100"
+                            }`}
                             activeOpacity={0.7}
                         >
-                            <Star size={12} color={activeQuickFilters.featured ? '#FFFFFF' : '#F4BA1B'} fill={activeQuickFilters.featured ? '#FFFFFF' : '#F4BA1B'} />
-                            <Text className={`ml-1 text-xs font-semibold ${activeQuickFilters.featured ? 'text-white' : 'text-[#070707]'}`}>
+                            <Star
+                                size={12}
+                                color={activeQuickFilters.featured ? "#FFFFFF" : "#F4BA1B"}
+                                fill={activeQuickFilters.featured ? "#FFFFFF" : "#F4BA1B"}
+                            />
+                            <Text
+                                className={`ml-1 text-xs font-semibold ${
+                                    activeQuickFilters.featured ? "text-white" : "text-[#070707]"
+                                }`}
+                            >
                                 Featured
                             </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            onPress={() => toggleQuickFilter('topRated')}
-                            className={`flex-row items-center px-3 py-2 rounded-full ${activeQuickFilters.topRated ? 'bg-[#E95322]' : 'bg-gray-100'
-                                }`}
+                            onPress={() => toggleQuickFilter("topRated")}
+                            className={`flex-row items-center px-3 py-2 rounded-full ${
+                                activeQuickFilters.topRated ? "bg-[#E95322]" : "bg-gray-100"
+                            }`}
                             activeOpacity={0.7}
                         >
-                            <Star size={12} color={activeQuickFilters.topRated ? '#FFFFFF' : '#E95322'} fill={activeQuickFilters.topRated ? '#FFFFFF' : '#E95322'} />
-                            <Text className={`ml-1 text-xs font-semibold ${activeQuickFilters.topRated ? 'text-white' : 'text-[#070707]'}`}>
+                            <Star
+                                size={12}
+                                color={activeQuickFilters.topRated ? "#FFFFFF" : "#E95322"}
+                                fill={activeQuickFilters.topRated ? "#FFFFFF" : "#E95322"}
+                            />
+                            <Text
+                                className={`ml-1 text-xs font-semibold ${
+                                    activeQuickFilters.topRated ? "text-white" : "text-[#070707]"
+                                }`}
+                            >
                                 Top Rated
                             </Text>
                         </TouchableOpacity>
                     </View>
 
-                    {searchQuery || activeFiltersCount > 0 || Object.values(activeQuickFilters).some(v => v) ? (
+                    {searchQuery || activeFiltersCount > 0 || Object.values(activeQuickFilters).some((v) => v) ? (
                         <Text className="text-[#6B7280] text-sm mt-3">
-                            {filteredRestaurants.length} restaurant{filteredRestaurants.length !== 1 ? 's' : ''} found
+                            {filteredRestaurants.length} restaurant{filteredRestaurants.length !== 1 ? "s" : ""} found
                         </Text>
                     ) : null}
                 </View>
@@ -549,10 +595,10 @@ export default function MenuScreen() {
                     <FlatList
                         data={filteredRestaurants}
                         keyExtractor={(item) => item.id}
-                        renderItem={viewMode === 'list' ? renderListItem : renderGridItem}
-                        numColumns={viewMode === 'grid' ? 2 : 1}
+                        renderItem={viewMode === "list" ? renderListItem : renderGridItem}
+                        numColumns={viewMode === "grid" ? 2 : 1}
                         key={viewMode}
-                        columnWrapperStyle={viewMode === 'grid' ? { justifyContent: 'space-between' } : undefined}
+                        columnWrapperStyle={viewMode === "grid" ? { justifyContent: "space-between" } : undefined}
                         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
                         showsVerticalScrollIndicator={false}
                         onEndReached={loadMore}
@@ -582,8 +628,8 @@ export default function MenuScreen() {
                 currentFilters={filters}
             />
 
-            <NotificationSidebar isVisible={isNotificationVisible} onClose={() => setIsNotificationVisible(false)} />
-            <ProfileSidebar isVisible={isProfileVisible} onClose={() => setIsProfileVisible(false)} />
+            <NotificationSidebar isVisible={isNotificationVisible} onClose={closeNotificationSidebar} />
+            <ProfileSidebar isVisible={isProfileVisible} onClose={closeProfileSidebar} />
         </View>
     );
 }

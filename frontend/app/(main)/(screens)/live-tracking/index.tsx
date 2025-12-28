@@ -1,15 +1,18 @@
 import Header from "@/components/common/Header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Linking, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Linking, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import orderService from "@/services/api/order.service";
 import { Order, OrderStatus } from "@/types/api/order";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
+import { confirm } from "@/utils/confirm";
 
 export default function LiveTrackingScreen() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const { orderId } = useLocalSearchParams<{ orderId?: string }>();
 
     const [order, setOrder] = useState<Order | null>(null);
@@ -18,9 +21,8 @@ export default function LiveTrackingScreen() {
 
     useEffect(() => {
         if (!orderId) {
-            Alert.alert('Error', 'Order ID is required', [
-                { text: 'OK', onPress: () => router.back() }
-            ]);
+            showToast({ type: "error", title: "Error", message: "Order ID is required" });
+            router.back();
             return;
         }
         fetchOrder();
@@ -39,7 +41,7 @@ export default function LiveTrackingScreen() {
             const orderData = await orderService.getOrderById(orderId);
             setOrder(orderData);
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Order');
+            showErrorAlert(error, "Failed to Load Order");
             if (!showRefreshIndicator) {
                 router.back();
             }
@@ -49,26 +51,23 @@ export default function LiveTrackingScreen() {
         }
     };
 
-    const handleCallDriver = () => {
-        Alert.alert(
-            'Call Driver',
-            'Contact driver for delivery updates?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Call',
-                    onPress: () => {
-                        Linking.openURL('tel:+1234567890').catch(() => {
-                            Alert.alert('Error', 'Unable to make phone call');
-                        });
-                    }
-                }
-            ]
-        );
+    const handleCallDriver = async () => {
+        const ok = await confirm({
+            title: "Call Driver",
+            message: "Contact driver for delivery updates?",
+            confirmText: "Call",
+            cancelText: "Cancel",
+        });
+
+        if (!ok) return;
+
+        Linking.openURL("tel:+1234567890").catch(() => {
+            showToast({ type: "error", title: "Error", message: "Unable to make phone call" });
+        });
     };
 
     const handleMessageDriver = () => {
-        Alert.alert('Message Driver', 'Messaging feature coming soon!');
+        showToast({ type: "info", title: "Message Driver", message: "Messaging feature coming soon!" });
     };
 
     const handleMarkDelivered = () => {
@@ -76,7 +75,7 @@ export default function LiveTrackingScreen() {
 
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (!uuidRegex.test(orderId)) {
-            Alert.alert('Error', 'Invalid order format');
+            showToast({ type: "error", title: "Error", message: "Invalid order format" });
             return;
         }
 
@@ -85,12 +84,12 @@ export default function LiveTrackingScreen() {
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: '2-digit' });
+        return date.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "2-digit" });
     };
 
     const formatTime = (dateString: string) => {
         const date = new Date(dateString);
-        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
     };
 
     const getProgressPercentage = (status: OrderStatus): number => {
@@ -112,19 +111,19 @@ export default function LiveTrackingScreen() {
 
     const getStatusMessage = (status: OrderStatus): string => {
         const messages: Record<OrderStatus, string> = {
-            [OrderStatus.PENDING]: 'Order placed, waiting confirmation',
-            [OrderStatus.CONFIRMED]: 'Order confirmed by restaurant',
-            [OrderStatus.PREPARING]: 'Your food is being prepared',
-            [OrderStatus.READY_FOR_PICKUP]: 'Order ready for pickup',
-            [OrderStatus.PICKED_UP]: 'Driver has picked up your order',
-            [OrderStatus.ON_THE_WAY]: 'Driver is on the way',
-            [OrderStatus.DELIVERED]: 'Order has been delivered',
-            [OrderStatus.COMPLETED]: 'Order completed',
-            [OrderStatus.CANCELLED]: 'Order cancelled',
-            [OrderStatus.REFUNDED]: 'Order refunded',
-            [OrderStatus.FAILED]: 'Order failed',
+            [OrderStatus.PENDING]: "Order placed, waiting confirmation",
+            [OrderStatus.CONFIRMED]: "Order confirmed by restaurant",
+            [OrderStatus.PREPARING]: "Your food is being prepared",
+            [OrderStatus.READY_FOR_PICKUP]: "Order ready for pickup",
+            [OrderStatus.PICKED_UP]: "Driver has picked up your order",
+            [OrderStatus.ON_THE_WAY]: "Driver is on the way",
+            [OrderStatus.DELIVERED]: "Order has been delivered",
+            [OrderStatus.COMPLETED]: "Order completed",
+            [OrderStatus.CANCELLED]: "Order cancelled",
+            [OrderStatus.REFUNDED]: "Order refunded",
+            [OrderStatus.FAILED]: "Order failed",
         };
-        return messages[status] || 'Processing your order';
+        return messages[status] || "Processing your order";
     };
 
     if (isLoading) {
@@ -202,19 +201,25 @@ export default function LiveTrackingScreen() {
                     </View>
 
                     <View className="px-6 pb-6 mt-8">
-                        <View className="rounded-3xl px-6 py-5" style={{ backgroundColor: "#FFFFFF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 5 }}>
+                        <View
+                            className="rounded-3xl px-6 py-5"
+                            style={{
+                                backgroundColor: "#FFFFFF",
+                                shadowColor: "#000",
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 8,
+                                elevation: 5,
+                            }}
+                        >
                             <View className="flex-row items-center justify-between mb-4">
                                 <View className="flex-1">
                                     <Text className="font-bold text-[#070707] text-lg">
-                                        {order.restaurant_name || 'Your Order'}
+                                        {order.restaurant_name || "Your Order"}
                                     </Text>
-                                    <Text className="text-[#6B7280] text-xs mt-1">
-                                        Order #{order.order_number}
-                                    </Text>
+                                    <Text className="text-[#6B7280] text-xs mt-1">Order #{order.order_number}</Text>
                                 </View>
-                                <Text className="text-[#6B7280] text-xs">
-                                    {formatDate(order.created_at)}
-                                </Text>
+                                <Text className="text-[#6B7280] text-xs">{formatDate(order.created_at)}</Text>
                             </View>
 
                             <View className="bg-[#FFF5D6] rounded-xl px-4 py-3 mb-4">
@@ -232,7 +237,7 @@ export default function LiveTrackingScreen() {
                                         width: `${progress}%`,
                                         height: 12,
                                         backgroundColor: "#E95322",
-                                        borderRadius: 999
+                                        borderRadius: 999,
                                     }}
                                 />
                             </View>
@@ -240,9 +245,7 @@ export default function LiveTrackingScreen() {
                             <View className="flex-row items-center justify-between mt-4">
                                 <View className="items-start flex-1">
                                     <Text className="text-[#E95322] font-bold text-xs">Order Placed</Text>
-                                    <Text className="text-[#6B7280] text-xs mt-1">
-                                        {formatTime(order.created_at)}
-                                    </Text>
+                                    <Text className="text-[#6B7280] text-xs mt-1">{formatTime(order.created_at)}</Text>
                                 </View>
                                 {order.estimated_delivery && (
                                     <View className="items-end flex-1">

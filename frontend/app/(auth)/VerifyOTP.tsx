@@ -2,7 +2,7 @@ import Header from "@/components/common/Header";
 import { Button } from "@/components/common";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Text, TextInput, View, TouchableOpacity } from "react-native";
+import { Text, TextInput, View, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,12 +10,14 @@ import { verifyOtpSchema, VerifyOtpFormData } from "@/utils/validation/auth.sche
 import authService from "@/services/api/auth.service";
 import { showErrorAlert } from "@/utils/error-handler";
 import { OtpType } from "@/types/api/auth";
+import { useToastStore } from "@/store/useToastStore";
 
 export default function VerifyOTP() {
     const router = useRouter();
     const params = useLocalSearchParams<{ email: string; type: string }>();
     const [isLoading, setIsLoading] = useState(false);
     const [resendLoading, setResendLoading] = useState(false);
+    const showToast = useToastStore((s) => s.show);
 
     const {
         control,
@@ -33,7 +35,7 @@ export default function VerifyOTP() {
 
     const onSubmit = async (data: VerifyOtpFormData) => {
         if (!params.email || !params.type) {
-            Alert.alert("Error", "Missing required parameters");
+            showToast({ type: "error", title: "Error", message: "Missing required parameters." });
             return;
         }
 
@@ -57,12 +59,8 @@ export default function VerifyOTP() {
                 type: otpType,
             });
 
-            Alert.alert("Success", "OTP verified successfully!", [
-                {
-                    text: "OK",
-                    onPress: () => router.replace("/(auth)/Login"),
-                },
-            ]);
+            showToast({ type: "success", title: "Success", message: "OTP verified successfully!" });
+            router.replace("/(auth)/Login");
         } catch (error: any) {
             showErrorAlert(error, "Verification Failed");
         } finally {
@@ -72,7 +70,7 @@ export default function VerifyOTP() {
 
     const handleResendOTP = async () => {
         if (!params.email || !params.type) {
-            Alert.alert("Error", "Missing required parameters");
+            showToast({ type: "error", title: "Error", message: "Missing required parameters." });
             return;
         }
 
@@ -83,7 +81,7 @@ export default function VerifyOTP() {
                 type: params.type as OtpType,
             });
 
-            Alert.alert("Success", "New OTP has been sent to your email");
+            showToast({ type: "success", title: "Success", message: "New OTP has been sent to your email." });
         } catch (error: any) {
             showErrorAlert(error, "Failed to Resend OTP");
         } finally {

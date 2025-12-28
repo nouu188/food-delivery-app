@@ -1,12 +1,14 @@
 import Header from "@/components/common/Header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Star } from "@tamagui/lucide-icons";
+import { useToastStore } from "@/store/useToastStore";
 
 export default function OrderDeliveredScreen() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const { orderId } = useLocalSearchParams<{ orderId?: string }>();
     const [rating, setRating] = React.useState(5);
 
@@ -53,14 +55,14 @@ export default function OrderDeliveredScreen() {
                     activeOpacity={0.9}
                     onPress={() => {
                         if (!orderId) {
-                            Alert.alert('Error', 'Order ID not found');
+                            showToast({ type: "error", title: "Error", message: "Order ID not found" });
                             router.back();
                             return;
                         }
 
                         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                         if (!uuidRegex.test(orderId)) {
-                            Alert.alert('Error', 'Invalid order format');
+                            showToast({ type: "error", title: "Error", message: "Invalid order format" });
                             router.back();
                             return;
                         }
@@ -75,7 +77,7 @@ export default function OrderDeliveredScreen() {
 
                 <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={() => router.push('/(main)/(tabs)/Orders')}
+                    onPress={() => router.push("/(main)/(tabs)/Orders")}
                     className="mt-4 px-12 py-3 rounded-full"
                     style={{ backgroundColor: "#FFE3D6" }}
                 >
