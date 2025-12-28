@@ -1,9 +1,36 @@
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Linking, ScrollView, Text, TextInput, TouchableOpacity, View, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import {
+    Linking,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Phone, Mail, MessageCircle, Search, ChevronRight, ChevronDown, ChevronUp, Facebook, Twitter, Instagram, Send, HelpCircle, ShieldCheck, CreditCard, MapPin, Clock } from "lucide-react-native";
+import {
+    Phone,
+    Mail,
+    MessageCircle,
+    Search,
+    ChevronRight,
+    ChevronDown,
+    ChevronUp,
+    Facebook,
+    Twitter,
+    Instagram,
+    Send,
+    HelpCircle,
+    ShieldCheck,
+    CreditCard,
+    MapPin,
+    Clock,
+} from "lucide-react-native";
 
 interface FAQ {
     id: string;
@@ -135,7 +162,8 @@ export default function HelpScreen() {
 
     const filteredFaqs = faqs.filter((faq) => {
         const matchesCategory = selectedCategory === "all" || faq.category === selectedCategory;
-        const matchesSearch = searchQuery === "" ||
+        const matchesSearch =
+            searchQuery === "" ||
             faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
             faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
@@ -155,10 +183,15 @@ export default function HelpScreen() {
         Alert.alert(
             "Thank You!",
             "Your message has been received. Our support team will get back to you within 24 hours.",
-            [{ text: "OK", onPress: () => {
-                setShowContactForm(false);
-                setContactForm({ name: "", email: "", subject: "", message: "" });
-            }}]
+            [
+                {
+                    text: "OK",
+                    onPress: () => {
+                        setShowContactForm(false);
+                        setContactForm({ name: "", email: "", subject: "", message: "" });
+                    },
+                },
+            ]
         );
     };
 
@@ -167,18 +200,16 @@ export default function HelpScreen() {
             <Header title="Help & Support" />
 
             <View className="flex-1 bg-white rounded-t-3xl">
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    className="flex-1"
-                >
+                <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
                     <ScrollView
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: 100 }}
                         className="px-6 pt-6"
                     >
-                        <View className="bg-gradient-to-br from-[#FFE3D6] to-[#FFF5D6] rounded-3xl p-6 mb-6"
+                        <View
+                            className="bg-gradient-to-br from-[#FFE3D6] to-[#FFF5D6] rounded-3xl p-6 mb-6"
                             style={{
-                                shadowColor: '#000',
+                                shadowColor: "#000",
                                 shadowOpacity: 0.1,
                                 shadowOffset: { width: 0, height: 4 },
                                 shadowRadius: 12,
@@ -214,37 +245,128 @@ export default function HelpScreen() {
                                     onPress={option.onPress}
                                     className="bg-white rounded-2xl p-4 mb-3 flex-row items-center border border-[#FFE3D6]"
                                     style={{
-                                        shadowColor: '#000',
+                                        shadowColor: "#000",
                                         shadowOpacity: 0.05,
                                         shadowOffset: { width: 0, height: 2 },
                                         shadowRadius: 8,
                                         elevation: 2,
                                     }}
                                 >
-                                    <View className="flex-row items-center justify-between">
-                                        <Text className="text-[#070707] font-semibold flex-1 pr-2">{faq.question}</Text>
-                                        <Feather
-                                            name={isExpanded ? "chevron-up" : "chevron-down"}
-                                            size={20}
-                                            color="#E95322"
-                                        />
+                                    <View className="bg-[#FFE3D6] rounded-full p-3 mr-4">{option.icon}</View>
+                                    <View className="flex-1">
+                                        <Text className="text-[#070707] font-semibold text-base">{option.label}</Text>
+                                        <Text className="text-[#E95322] text-sm mt-1">{option.value}</Text>
+                                        <Text className="text-[#9CA3AF] text-xs mt-1">{option.description}</Text>
                                     </View>
                                     <ChevronRight size={20} color="#9CA3AF" />
                                 </TouchableOpacity>
-                            );
-                        })}
-                    </View>
+                            ))}
+                        </View>
 
-                    <View className="bg-[#FFE3D6] rounded-2xl p-4">
-                        <Text className="text-[#070707] font-semibold mb-2">Still need help?</Text>
-                        <Text className="text-[#6B7280] text-sm mb-4">
-                            Send us a message and we will get back to you as soon as possible
-                        </Text>
-                        <TouchableOpacity className="bg-[#E95322] rounded-full py-3 items-center" activeOpacity={0.9}>
-                            <Text className="text-white font-semibold">Send Feedback</Text>
-                        </TouchableOpacity>
-                    </View>
-                </ScrollView>
+                        <View className="mb-6">
+                            <Text className="text-[#070707] font-bold text-lg mb-4">Categories</Text>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
+                                {categories.map((category) => (
+                                    <TouchableOpacity
+                                        key={category.id}
+                                        onPress={() => setSelectedCategory(category.id)}
+                                        className={`rounded-full px-5 py-3 mr-3 flex-row items-center ${
+                                            selectedCategory === category.id ? "bg-[#E95322]" : "bg-[#F9FAFB]"
+                                        }`}
+                                        style={{
+                                            borderWidth: 1,
+                                            borderColor: selectedCategory === category.id ? "#E95322" : "#E5E7EB",
+                                        }}
+                                    >
+                                        {category.icon}
+                                        <Text
+                                            className={`ml-2 font-semibold ${
+                                                selectedCategory === category.id ? "text-white" : "text-[#070707]"
+                                            }`}
+                                        >
+                                            {category.name}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </View>
+
+                        <View className="mb-6">
+                            <Text className="text-[#070707] font-bold text-lg mb-4">
+                                Frequently Asked Questions ({filteredFaqs.length})
+                            </Text>
+                            {filteredFaqs.map((faq) => {
+                                const isExpanded = expandedFaq === faq.id;
+                                return (
+                                    <TouchableOpacity
+                                        key={faq.id}
+                                        onPress={() => toggleFaq(faq.id)}
+                                        className="bg-white rounded-2xl p-4 mb-3 border border-[#E5E7EB]"
+                                        style={{
+                                            shadowColor: "#000",
+                                            shadowOpacity: 0.05,
+                                            shadowOffset: { width: 0, height: 2 },
+                                            shadowRadius: 8,
+                                            elevation: 2,
+                                        }}
+                                    >
+                                        <View className="flex-row items-center justify-between">
+                                            <Text className="text-[#070707] font-semibold flex-1 pr-2">
+                                                {faq.question}
+                                            </Text>
+                                            {isExpanded ? (
+                                                <ChevronUp size={20} color="#E95322" />
+                                            ) : (
+                                                <ChevronDown size={20} color="#E95322" />
+                                            )}
+                                        </View>
+                                        {isExpanded && (
+                                            <Text className="text-[#6B7280] text-sm mt-3 leading-5">{faq.answer}</Text>
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+
+                        <View className="bg-[#FFE3D6] rounded-2xl p-4 mb-6">
+                            <Text className="text-[#070707] font-semibold mb-2">Still need help?</Text>
+                            <Text className="text-[#6B7280] text-sm mb-4">
+                                Send us a message and we will get back to you as soon as possible
+                            </Text>
+                            <TouchableOpacity
+                                className="bg-[#E95322] rounded-full py-3 items-center"
+                                activeOpacity={0.9}
+                                onPress={() => setShowContactForm(true)}
+                            >
+                                <Text className="text-white font-semibold">Send Feedback</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View className="mb-6">
+                            <Text className="text-[#070707] font-bold text-lg mb-4">Follow Us</Text>
+                            <View className="flex-row justify-around">
+                                {socialLinks.map((social, index) => (
+                                    <TouchableOpacity
+                                        key={index}
+                                        onPress={() => Linking.openURL(social.url)}
+                                        className="bg-white rounded-full p-4 items-center justify-center border border-[#E5E7EB]"
+                                        style={{
+                                            shadowColor: "#000",
+                                            shadowOpacity: 0.05,
+                                            shadowOffset: { width: 0, height: 2 },
+                                            shadowRadius: 8,
+                                            elevation: 2,
+                                            width: 60,
+                                            height: 60,
+                                        }}
+                                    >
+                                        {social.icon}
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </View>
         </SafeAreaView>
     );
