@@ -1,19 +1,19 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ENV } from "@/config/env";
-import { handleApiError } from "@/utils/error-handler";
-import { useToastStore } from "@/store/useToastStore";
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ENV } from '@/config/env';
+import { handleApiError } from '@/utils/error-handler';
+import { useToastStore } from '@/store/useToastStore';
 
 const API_BASE_URL = ENV.API_URL;
 const API_TIMEOUT = ENV.API_TIMEOUT;
-const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
+const ACCESS_TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 
 const apiClient: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,
     timeout: API_TIMEOUT,
     headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
     },
 });
 
@@ -32,7 +32,7 @@ apiClient.interceptors.request.use(
     },
     (error) => {
         return Promise.reject(error);
-    }
+    },
 );
 
 let isRefreshing = false;
@@ -60,14 +60,14 @@ apiClient.interceptors.response.use(
 
         // Auto-toast backend success messages (when provided)
         try {
-            const method = (response.config.method || "get").toLowerCase();
-            const shouldToast = method !== "get" && method !== "head";
+            const method = (response.config.method || 'get').toLowerCase();
+            const shouldToast = method !== 'get' && method !== 'head';
             const data: any = response.data;
-            const message = typeof data?.message === "string" ? data.message : null;
+            const message = typeof data?.message === 'string' ? data.message : null;
             const skipToast = Boolean((response.config as any)?.toast?.success === false);
 
             if (shouldToast && message && !skipToast) {
-                useToastStore.getState().show({ type: "success", title: "Success", message });
+                useToastStore.getState().show({ type: 'success', title: 'Success', message });
             }
         } catch {
             // ignore toast failures
@@ -79,10 +79,16 @@ apiClient.interceptors.response.use(
         const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
         if (ENV.ENABLE_LOGGING) {
-            console.error(
-                `[API Error] ${error.response?.status || "Network Error"} ${error.config?.url}`,
-                error.response?.data || error.message
-            );
+            // Don't log expected errors (conflict, unavailable items)
+            const status = error.response?.status;
+            const shouldLog = status !== 409 && status !== 400;
+
+            if (shouldLog) {
+                console.error(
+                    `[API Error] ${error.response?.status || 'Network Error'} ${error.config?.url}`,
+                    error.response?.data || error.message,
+                );
+            }
         }
 
         // Handle 401 Unauthorized - Token expired
@@ -104,7 +110,7 @@ apiClient.interceptors.response.use(
             try {
                 const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
                 if (!refreshToken) {
-                    throw new Error("No refresh token");
+                    throw new Error('No refresh token');
                 }
 
                 // Call refresh token endpoint
@@ -119,7 +125,7 @@ apiClient.interceptors.response.use(
                 await AsyncStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
 
                 // Update authorization header
-                apiClient.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+                apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
                 originalRequest.headers!.Authorization = `Bearer ${access_token}`;
 
                 processQueue(null, access_token);
@@ -142,9 +148,14 @@ apiClient.interceptors.response.use(
         try {
             const toastConfig = (originalRequest as any)?.toast;
             const skipToast = Boolean(toastConfig?.error === false);
-            if (!skipToast && !(error as any).__toastShown) {
+            const status = error.response?.status;
+
+            // Don't toast expected errors (conflict, unavailable items)
+            const shouldSkipToast = skipToast || status === 409 || status === 400;
+
+            if (!shouldSkipToast && !(error as any).__toastShown) {
                 const message = handleApiError(error);
-                useToastStore.getState().show({ type: "error", title: "Error", message });
+                useToastStore.getState().show({ type: 'error', title: 'Error', message });
                 (error as any).__toastShown = true;
             }
         } catch {
@@ -152,7 +163,7 @@ apiClient.interceptors.response.use(
         }
 
         return Promise.reject(error);
-    }
+    },
 );
 
 export default apiClient;

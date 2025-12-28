@@ -74,7 +74,8 @@ export default function OnboardingScreen() {
                 <TouchableOpacity
                     onPress={handleNext}
                     disabled={isLoading}
-                    className="bg-SecondaryBase h-14 rounded-full items-center justify-center active:bg-secondary-dark"
+                    className="h-14 rounded-full items-center justify-center active:opacity-90"
+                    style={{ backgroundColor: "#E95322" }}
                 >
                     <Text className="text-white font-bold text-lg">{isLastStep ? "Get Started" : "Next"}</Text>
                 </TouchableOpacity>

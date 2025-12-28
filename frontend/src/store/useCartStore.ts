@@ -1,8 +1,8 @@
-import { create } from "zustand";
-import orderService from "@/services/api/order.service";
-import voucherService from "@/services/api/voucher.service";
-import { Cart, AddToCartRequest } from "@/types/api/order";
-import { AppliedVoucher, VoucherValidationResponse } from "@/types/api/voucher";
+import { create } from 'zustand';
+import orderService from '@/services/api/order.service';
+import voucherService from '@/services/api/voucher.service';
+import { Cart, AddToCartRequest } from '@/types/api/order';
+import { AppliedVoucher, VoucherValidationResponse } from '@/types/api/voucher';
 
 interface CartState {
     cart: Cart | null;
@@ -65,7 +65,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         try {
             const cart = await orderService.getCart();
 
-            const itemIds = cart?.items?.map(item => item.id) || [];
+            const itemIds = cart?.items?.map((item) => item.id) || [];
             set({ cart, isLoading: false, selectedItemIds: new Set(itemIds) });
         } catch (error: any) {
             if (error.response?.status === 404) {
@@ -83,10 +83,41 @@ export const useCartStore = create<CartState>((set, get) => ({
             const cart = await orderService.getCart();
             set({ cart, isLoading: false });
         } catch (error: any) {
-            set({ error: error.message, isLoading: false });
+            set({ isLoading: false });
+
+            const { useToastStore } = await import('@/store/useToastStore');
+
+            // Handle menu item unavailable
+            if (error.response?.status === 400) {
+                useToastStore.getState().show({
+                    type: 'error',
+                    title: 'Cannot Add to Cart',
+                    message:
+                        error.response?.data?.message ||
+                        'This menu item is currently unavailable. Please try another item.',
+                });
+                return;
+            }
+
+            // Handle restaurant conflict
             if (error.response?.status === 409) {
+                useToastStore.getState().show({
+                    type: 'error',
+                    title: 'Cannot Add to Cart',
+                    message:
+                        'You can only add items from one restaurant. Please clear your cart to order from a different restaurant.',
+                });
                 throw { isConflict: true, ...error };
             }
+
+            // Handle other errors
+            useToastStore.getState().show({
+                type: 'error',
+                title: 'Cannot Add to Cart',
+                message: error.response?.data?.message || 'An error occurred. Please try again.',
+            });
+
+            set({ error: error.message });
             throw error;
         }
     },
@@ -151,7 +182,7 @@ export const useCartStore = create<CartState>((set, get) => ({
                 const cart = await orderService.getCart();
                 // Remove deleted items from selection
                 const newSelection = new Set(get().selectedItemIds);
-                itemIds.forEach(id => newSelection.delete(id));
+                itemIds.forEach((id) => newSelection.delete(id));
                 set({ cart, isLoading: false, selectedItemIds: newSelection });
             } catch (error: any) {
                 if (error.response?.status === 404) {
@@ -179,7 +210,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     selectAllItems: () => {
         const cart = get().cart;
         if (!cart?.items) return;
-        const allItemIds = new Set(cart.items.map(item => item.id));
+        const allItemIds = new Set(cart.items.map((item) => item.id));
         set({ selectedItemIds: allItemIds });
     },
 
@@ -211,8 +242,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         if (!cart?.items || !Array.isArray(cart.items)) return 0;
 
         return cart.items
-            .filter(item => selectedIds.has(item.id))
-            .reduce((sum, item) => sum + (Number(item.unit_price) * item.quantity), 0);
+            .filter((item) => selectedIds.has(item.id))
+            .reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
     },
 
     selectedTotal: () => {
@@ -224,9 +255,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         const selectedIds = get().selectedItemIds;
         if (!cart?.items || !Array.isArray(cart.items)) return 0;
 
-        return cart.items
-            .filter(item => selectedIds.has(item.id))
-            .reduce((sum, item) => sum + item.quantity, 0);
+        return cart.items.filter((item) => selectedIds.has(item.id)).reduce((sum, item) => sum + item.quantity, 0);
     },
 
     applyVoucher: async (code: string, restaurantId: string) => {
@@ -240,7 +269,12 @@ export const useCartStore = create<CartState>((set, get) => ({
                 order_amount: orderAmount,
             });
 
-            if (validation.is_valid && validation.voucher && validation.discount_amount !== undefined && validation.final_amount !== undefined) {
+            if (
+                validation.is_valid &&
+                validation.voucher &&
+                validation.discount_amount !== undefined &&
+                validation.final_amount !== undefined
+            ) {
                 set({
                     appliedVoucher: {
                         voucher: validation.voucher,
