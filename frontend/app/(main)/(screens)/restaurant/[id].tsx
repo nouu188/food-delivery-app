@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Image,
     RefreshControl,
     ScrollView,
@@ -23,6 +22,8 @@ import { Restaurant, MenuItem, MenuCategory } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
 import { formatPrice, formatRating } from "@/utils/format";
 import { CartSidebar } from "@/components/common/cart";
+import { useToastStore } from "@/store/useToastStore";
+import { confirm } from "@/utils/confirm";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -45,12 +46,13 @@ export default function RestaurantDetailsScreen() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
-    const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'name' | null>(null);
+    const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "name" | null>(null);
 
     const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
     const [showItemModal, setShowItemModal] = useState(false);
 
     const { addToCart, clearCart, openDrawer } = useCartStore();
+    const showToast = useToastStore((s) => s.show);
 
     const fetchData = async (showRefreshIndicator = false) => {
         if (!id) return;
@@ -71,7 +73,7 @@ export default function RestaurantDetailsScreen() {
             if (restaurantData) {
                 setRestaurant(restaurantData);
             } else {
-                showErrorAlert(new Error('Restaurant not found'), 'Failed to Load Restaurant');
+                showErrorAlert(new Error("Restaurant not found"), "Failed to Load Restaurant");
                 router.back();
                 return;
             }
@@ -80,7 +82,7 @@ export default function RestaurantDetailsScreen() {
                 setMenuCategories(menuCategories);
 
                 const allItems: MenuItem[] = [];
-                menuCategories.forEach(category => {
+                menuCategories.forEach((category) => {
                     if (category?.items && Array.isArray(category.items)) {
                         allItems.push(...category.items);
                     }
@@ -90,12 +92,12 @@ export default function RestaurantDetailsScreen() {
             }
 
             if (favoritesData && Array.isArray(favoritesData)) {
-                setIsFavorite(favoritesData.some(f => f.restaurant_id === id));
+                setIsFavorite(favoritesData.some((f) => f.restaurant_id === id));
             } else {
                 setIsFavorite(false);
             }
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Restaurant');
+            showErrorAlert(error, "Failed to Load Restaurant");
             router.back();
         } finally {
             setIsLoading(false);
@@ -108,21 +110,20 @@ export default function RestaurantDetailsScreen() {
 
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
-            items = items.filter(item =>
-                item.name.toLowerCase().includes(query) ||
-                item.description?.toLowerCase().includes(query)
+            items = items.filter(
+                (item) => item.name.toLowerCase().includes(query) || item.description?.toLowerCase().includes(query)
             );
         }
 
         if (selectedCategory) {
-            items = items.filter(item => item.category_id === selectedCategory);
+            items = items.filter((item) => item.category_id === selectedCategory);
         }
 
-        if (sortBy === 'price_asc') {
+        if (sortBy === "price_asc") {
             items.sort((a, b) => Number(a.price) - Number(b.price));
-        } else if (sortBy === 'price_desc') {
+        } else if (sortBy === "price_desc") {
             items.sort((a, b) => Number(b.price) - Number(a.price));
-        } else if (sortBy === 'name') {
+        } else if (sortBy === "name") {
             items.sort((a, b) => a.name.localeCompare(b.name));
         }
 
@@ -156,11 +157,21 @@ export default function RestaurantDetailsScreen() {
             }
         } catch (error) {
             setIsFavorite(wasFavorite);
-            showErrorAlert(error, 'Failed to Update Favorite');
+            showErrorAlert(error, "Failed to Update Favorite");
         }
     };
 
     const handleMenuItemPress = (item: MenuItem) => {
+        // Check if item is available
+        if (!item.is_available) {
+            showToast({
+                type: 'error',
+                title: 'Cannot Add to Cart',
+                message: 'This menu item is currently unavailable. Please try another item.',
+            });
+            return;
+        }
+
         if (item.options && item.options.length > 0) {
             setSelectedMenuItem(item);
             setShowItemModal(true);
@@ -183,34 +194,31 @@ export default function RestaurantDetailsScreen() {
                 quantity: 1,
             });
 
-            Alert.alert("Success", `${item.name} added to cart!`);
+            showToast({ type: "success", title: "Added to cart", message: `${item.name} added to cart.` });
         } catch (error: any) {
             if (error.isConflict && error.response?.data) {
                 isConflictError = true;
                 const conflictData = error.response.data;
-                const currentRestaurantName = conflictData.currentRestaurant?.name || 'another restaurant';
-                const newRestaurantName = conflictData.newRestaurant?.name || 'this restaurant';
+                const currentRestaurantName = conflictData.currentRestaurant?.name || "another restaurant";
+                const newRestaurantName = conflictData.newRestaurant?.name || "this restaurant";
 
-                Alert.alert(
-                    'Replace Cart Items?',
-                    `Your cart contains items from ${currentRestaurantName}. Do you want to clear your cart and add items from ${newRestaurantName} instead?`,
-                    [
-                        {
-                            text: 'Cancel',
-                            style: 'cancel',
-                            onPress: () => setAddingToCart(false),
-                        },
-                        {
-                            text: 'Replace Cart',
-                            style: 'destructive',
-                            onPress: () => handleQuickAdd(item, true),
-                        },
-                    ],
-                    { cancelable: false }
-                );
+                const ok = await confirm({
+                    title: "Replace Cart Items?",
+                    message: `Your cart contains items from ${currentRestaurantName}. Clear your cart and add items from ${newRestaurantName}?`,
+                    confirmText: "Replace Cart",
+                    cancelText: "Cancel",
+                    destructive: true,
+                });
+
+                if (!ok) {
+                    setAddingToCart(false);
+                    return;
+                }
+
+                await handleQuickAdd(item, true);
                 return;
             }
-            showErrorAlert(error, 'Failed to Add to Cart');
+            showErrorAlert(error, "Failed to Add to Cart");
         } finally {
             if (!isConflictError) {
                 setAddingToCart(false);
@@ -244,35 +252,33 @@ export default function RestaurantDetailsScreen() {
                 special_instructions: specialInstructions,
             });
 
-            Alert.alert("Success", `${item.name} added to cart!`);
+            showToast({ type: "success", title: "Added to cart", message: `${item.name} added to cart.` });
             setShowItemModal(false);
             setSelectedMenuItem(null);
         } catch (error: any) {
             if (error.isConflict && error.response?.data) {
                 isConflictError = true;
                 const conflictData = error.response.data;
-                const currentRestaurantName = conflictData.currentRestaurant?.name || 'another restaurant';
-                const newRestaurantName = conflictData.newRestaurant?.name || 'this restaurant';
+                const currentRestaurantName = conflictData.currentRestaurant?.name || "another restaurant";
+                const newRestaurantName = conflictData.newRestaurant?.name || "this restaurant";
 
-                Alert.alert(
-                    'Replace Cart Items?',
-                    `Your cart contains items from ${currentRestaurantName}. Do you want to clear your cart and add items from ${newRestaurantName} instead?`,
-                    [
-                        {
-                            text: 'Cancel',
-                            style: 'cancel',
-                        },
-                        {
-                            text: 'Replace Cart',
-                            style: 'destructive',
-                            onPress: () => handleAddToCartFromModal(item, quantity, selectedOptions, specialInstructions, true),
-                        },
-                    ],
-                    { cancelable: false }
-                );
+                const ok = await confirm({
+                    title: "Replace Cart Items?",
+                    message: `Your cart contains items from ${currentRestaurantName}. Clear your cart and add items from ${newRestaurantName}?`,
+                    confirmText: "Replace Cart",
+                    cancelText: "Cancel",
+                    destructive: true,
+                });
+
+                if (!ok) {
+                    setAddingToCart(false);
+                    return;
+                }
+
+                await handleAddToCartFromModal(item, quantity, selectedOptions, specialInstructions, true);
                 return;
             }
-            showErrorAlert(error, 'Failed to Add to Cart');
+            showErrorAlert(error, "Failed to Add to Cart");
         } finally {
             if (!isConflictError) {
                 setAddingToCart(false);
@@ -316,12 +322,7 @@ export default function RestaurantDetailsScreen() {
                 title={restaurant.name}
                 rightComponent={
                     <TouchableOpacity onPress={toggleFavorite} className="p-2">
-                        <Heart
-                            size={24}
-                            color="#E95322"
-                            fill={isFavorite ? "#E95322" : "none"}
-                            strokeWidth={2}
-                        />
+                        <Heart size={24} color="#E95322" fill={isFavorite ? "#E95322" : "none"} strokeWidth={2} />
                     </TouchableOpacity>
                 }
             />
@@ -339,11 +340,7 @@ export default function RestaurantDetailsScreen() {
                 >
                     <View className="relative">
                         {restaurant.logo_url ? (
-                            <Image
-                                source={{ uri: restaurant.logo_url }}
-                                className="w-full h-56"
-                                resizeMode="cover"
-                            />
+                            <Image source={{ uri: restaurant.logo_url }} className="w-full h-56" resizeMode="cover" />
                         ) : (
                             <View className="w-full h-56 bg-gray-200 items-center justify-center">
                                 <Text className="text-gray-500">No Image</Text>
@@ -370,14 +367,16 @@ export default function RestaurantDetailsScreen() {
                             </View>
                         )}
 
-                        {restaurant.phone && (
-                            <Text className="text-gray-600 mt-2">{restaurant.phone}</Text>
-                        )}
+                        {restaurant.phone && <Text className="text-gray-600 mt-2">{restaurant.phone}</Text>}
 
                         {restaurant.is_open !== undefined && (
                             <View className="flex-row items-center mt-3">
                                 <Clock size={16} color={restaurant.is_open ? "#10B981" : "#EF4444"} />
-                                <Text className={`ml-2 font-semibold ${restaurant.is_open ? "text-green-600" : "text-red-600"}`}>
+                                <Text
+                                    className={`ml-2 font-semibold ${
+                                        restaurant.is_open ? "text-green-600" : "text-red-600"
+                                    }`}
+                                >
                                     {restaurant.is_open ? "Open Now" : "Closed"}
                                 </Text>
                             </View>
@@ -386,24 +385,25 @@ export default function RestaurantDetailsScreen() {
 
                     <View className="px-5 pt-6">
                         <View className="flex-row items-center gap-3 mb-4">
-                            <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-4">
-                                <Search size={20} color="#9CA3AF" />
+                            <View className="flex-1 flex-row items-center bg-white rounded-full px-4 border border-[#F5CB58]">
+                                <Search size={20} color="#E95322" />
                                 <TextInput
-                                    className="flex-1 ml-2 text-base"
+                                    className="flex-1 ml-2 text-base text-[#070707]"
                                     placeholder="Search menu items..."
                                     value={searchQuery}
                                     onChangeText={setSearchQuery}
                                     placeholderTextColor="#9CA3AF"
                                 />
                                 {searchQuery.length > 0 && (
-                                    <TouchableOpacity onPress={() => setSearchQuery("")}>
-                                        <X size={20} color="#9CA3AF" />
+                                    <TouchableOpacity onPress={() => setSearchQuery("")} activeOpacity={0.7}>
+                                        <X size={20} color="#6B7280" />
                                     </TouchableOpacity>
                                 )}
                             </View>
                             <TouchableOpacity
                                 onPress={() => setShowFilters(!showFilters)}
                                 className="bg-[#E95322] p-3 rounded-full"
+                                activeOpacity={0.85}
                             >
                                 <Filter size={20} color="#FFFFFF" />
                             </TouchableOpacity>
@@ -422,23 +422,27 @@ export default function RestaurantDetailsScreen() {
                                     <View className="mb-3">
                                         <Text className="text-sm font-semibold text-gray-700 mb-2">Categories</Text>
                                         <View className="flex-row flex-wrap gap-2">
-                                            {menuCategories.map(category => (
+                                            {menuCategories.map((category) => (
                                                 <TouchableOpacity
                                                     key={category.id}
-                                                    onPress={() => setSelectedCategory(
-                                                        selectedCategory === category.id ? null : category.id
-                                                    )}
+                                                    onPress={() =>
+                                                        setSelectedCategory(
+                                                            selectedCategory === category.id ? null : category.id
+                                                        )
+                                                    }
                                                     className={`px-4 py-2 rounded-full ${
                                                         selectedCategory === category.id
-                                                            ? 'bg-[#E95322]'
-                                                            : 'bg-white border border-gray-300'
+                                                            ? "bg-[#E95322]"
+                                                            : "bg-white border border-gray-300"
                                                     }`}
                                                 >
-                                                    <Text className={`text-sm font-medium ${
-                                                        selectedCategory === category.id
-                                                            ? 'text-white'
-                                                            : 'text-gray-700'
-                                                    }`}>
+                                                    <Text
+                                                        className={`text-sm font-medium ${
+                                                            selectedCategory === category.id
+                                                                ? "text-white"
+                                                                : "text-gray-700"
+                                                        }`}
+                                                    >
                                                         {category.name}
                                                     </Text>
                                                 </TouchableOpacity>
@@ -451,26 +455,26 @@ export default function RestaurantDetailsScreen() {
                                     <Text className="text-sm font-semibold text-gray-700 mb-2">Sort By</Text>
                                     <View className="flex-row flex-wrap gap-2">
                                         {[
-                                            { value: 'name', label: 'Name' },
-                                            { value: 'price_asc', label: 'Price: Low to High' },
-                                            { value: 'price_desc', label: 'Price: High to Low' },
-                                        ].map(option => (
+                                            { value: "name", label: "Name" },
+                                            { value: "price_asc", label: "Price: Low to High" },
+                                            { value: "price_desc", label: "Price: High to Low" },
+                                        ].map((option) => (
                                             <TouchableOpacity
                                                 key={option.value}
-                                                onPress={() => setSortBy(
-                                                    sortBy === option.value ? null : option.value as any
-                                                )}
+                                                onPress={() =>
+                                                    setSortBy(sortBy === option.value ? null : (option.value as any))
+                                                }
                                                 className={`px-4 py-2 rounded-full ${
                                                     sortBy === option.value
-                                                        ? 'bg-[#E95322]'
-                                                        : 'bg-white border border-gray-300'
+                                                        ? "bg-[#E95322]"
+                                                        : "bg-white border border-gray-300"
                                                 }`}
                                             >
-                                                <Text className={`text-sm font-medium ${
-                                                    sortBy === option.value
-                                                        ? 'text-white'
-                                                        : 'text-gray-700'
-                                                }`}>
+                                                <Text
+                                                    className={`text-sm font-medium ${
+                                                        sortBy === option.value ? "text-white" : "text-gray-700"
+                                                    }`}
+                                                >
                                                     {option.label}
                                                 </Text>
                                             </TouchableOpacity>
@@ -558,15 +562,17 @@ export default function RestaurantDetailsScreen() {
                                 {totalPages > 1 && (
                                     <View className="flex-row items-center justify-center gap-2 mt-4">
                                         <TouchableOpacity
-                                            onPress={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
                                             disabled={currentPage === 1}
                                             className={`px-4 py-2 rounded-full ${
-                                                currentPage === 1 ? 'bg-gray-200' : 'bg-[#E95322]'
+                                                currentPage === 1 ? "bg-gray-200" : "bg-[#E95322]"
                                             }`}
                                         >
-                                            <Text className={`font-semibold ${
-                                                currentPage === 1 ? 'text-gray-400' : 'text-white'
-                                            }`}>
+                                            <Text
+                                                className={`font-semibold ${
+                                                    currentPage === 1 ? "text-gray-400" : "text-white"
+                                                }`}
+                                            >
                                                 Previous
                                             </Text>
                                         </TouchableOpacity>
@@ -576,15 +582,17 @@ export default function RestaurantDetailsScreen() {
                                         </Text>
 
                                         <TouchableOpacity
-                                            onPress={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                                             disabled={currentPage === totalPages}
                                             className={`px-4 py-2 rounded-full ${
-                                                currentPage === totalPages ? 'bg-gray-200' : 'bg-[#E95322]'
+                                                currentPage === totalPages ? "bg-gray-200" : "bg-[#E95322]"
                                             }`}
                                         >
-                                            <Text className={`font-semibold ${
-                                                currentPage === totalPages ? 'text-gray-400' : 'text-white'
-                                            }`}>
+                                            <Text
+                                                className={`font-semibold ${
+                                                    currentPage === totalPages ? "text-gray-400" : "text-white"
+                                                }`}
+                                            >
                                                 Next
                                             </Text>
                                         </TouchableOpacity>
@@ -595,8 +603,8 @@ export default function RestaurantDetailsScreen() {
                             <View className="items-center py-10">
                                 <Text className="text-gray-500">
                                     {searchQuery || selectedCategory || sortBy
-                                        ? 'No menu items match your filters'
-                                        : 'No menu items available'}
+                                        ? "No menu items match your filters"
+                                        : "No menu items available"}
                                 </Text>
                                 {(searchQuery || selectedCategory || sortBy) && (
                                     <TouchableOpacity

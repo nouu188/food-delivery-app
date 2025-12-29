@@ -3,13 +3,15 @@ import { useUserStore } from "@/store/useUserStore";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/common/Header";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
 
 export default function MyProfileScreen() {
     const { profile, isLoading, fetchProfile, updateProfile } = useUserStore();
+    const showToast = useToastStore((s) => s.show);
 
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
@@ -19,7 +21,7 @@ export default function MyProfileScreen() {
 
     useEffect(() => {
         fetchProfile();
-    }, []);
+    }, [fetchProfile]);
 
     useEffect(() => {
         if (profile) {
@@ -32,20 +34,47 @@ export default function MyProfileScreen() {
 
     const handleUpdateProfile = async () => {
         if (!fullName.trim()) {
-            Alert.alert("Error", "Full name is required");
+            showToast({ type: "error", title: "Validation", message: "Full name is required." });
+            return;
+        }
+
+        const isLocalAvatar = typeof avatar === "string" && avatar.length > 0 && !/^https?:\/\//i.test(avatar);
+        const serverAvatar = (profile?.avatar_url ?? "").trim();
+        const avatarChanged = (avatar ?? "").trim() !== serverAvatar;
+        if (avatarChanged && isLocalAvatar) {
+            showToast({
+                type: "info",
+                title: "Avatar",
+                message: "Avatar hiện chỉ đổi tạm trên máy. Muốn lưu lên server cần backend upload endpoint.",
+            });
+            return;
+        }
+
+        const initialFullName = (profile?.full_name ?? "").trim();
+        const nextFullName = fullName.trim();
+        const initialPhone = (profile?.phone ?? "").trim();
+        const nextPhone = phone.trim();
+
+        const payload: any = {};
+        if (nextFullName !== initialFullName) payload.full_name = nextFullName;
+        if (nextPhone !== initialPhone) payload.phone = nextPhone;
+
+        // Only allow avatar_url updates when user provides a real URL (backend expects URL)
+        if (avatarChanged && /^https?:\/\//i.test((avatar ?? "").trim())) {
+            payload.avatar_url = (avatar ?? "").trim();
+        }
+
+        if (Object.keys(payload).length === 0) {
+            showToast({ type: "info", title: "Info", message: "No changes to update." });
             return;
         }
 
         setIsUpdating(true);
         try {
-            await updateProfile({
-                full_name: fullName.trim(),
-                phone: phone.trim() || undefined,
-                // Note: avatar upload would require separate endpoint
-            });
-            Alert.alert("Success", "Profile updated successfully!");
+            await updateProfile(payload);
+            showToast({ type: "success", title: "Success", message: "Profile updated successfully." });
         } catch (error) {
-            showErrorAlert(error, 'Failed to Update Profile');
+            showErrorAlert(error, "Failed to Update Profile");
         } finally {
             setIsUpdating(false);
         }
@@ -61,12 +90,15 @@ export default function MyProfileScreen() {
 
         if (!result.canceled) {
             setAvatar(result.assets[0].uri);
-            // TODO: Implement avatar upload to server
-            Alert.alert("Note", "Avatar upload will be implemented with backend endpoint");
+            showToast({
+                type: "info",
+                title: "Avatar",
+                message: "Đã chọn ảnh. Hiện tại chỉ preview, chưa thể lưu lên server (thiếu backend upload endpoint).",
+            });
         }
     };
 
-    if (isLoading) {
+    if (isLoading && !profile) {
         return (
             <SafeAreaView style={styles.safeArea}>
                 <Header title="My Profile" />
@@ -84,7 +116,13 @@ export default function MyProfileScreen() {
 
             <View style={styles.container}>
                 <View style={styles.profilePicContainer}>
-                    <Image source={{ uri: avatar }} style={styles.profilePic} />
+                    {avatar ? (
+                        <Image source={{ uri: avatar }} style={styles.profilePic} />
+                    ) : (
+                        <View style={[styles.profilePic, styles.profilePicPlaceholder]}>
+                            <Feather name="user" size={44} color="#9CA3AF" />
+                        </View>
+                    )}
                     <TouchableOpacity style={styles.cameraIconContainer} onPress={pickImage}>
                         <Camera width={20} height={20} />
                     </TouchableOpacity>
@@ -125,11 +163,7 @@ export default function MyProfileScreen() {
                     {profile?.role && (
                         <>
                             <Text style={styles.label}>Account Type</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={profile.role}
-                                editable={false}
-                            />
+                            <TextInput style={styles.input} value={profile.role} editable={false} />
                         </>
                     )}
                 </View>
@@ -198,6 +232,11 @@ const styles = StyleSheet.create({
         borderRadius: 20, // Bo tròn nhẹ
         borderWidth: 2,
         borderColor: "#FFF",
+    },
+    profilePicPlaceholder: {
+        backgroundColor: "#F3F4F6",
+        alignItems: "center",
+        justifyContent: "center",
     },
     cameraIconContainer: {
         position: "absolute",

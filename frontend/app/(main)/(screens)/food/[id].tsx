@@ -1,15 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import restaurantService from "@/services/api/restaurant.service";
 import { useCartStore } from "@/store/useCartStore";
 import { MenuItem, MenuItemOption } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
 import { formatPrice, parseNumeric } from "@/utils/format";
+import { useToastStore } from "@/store/useToastStore";
+import { confirm } from "@/utils/confirm";
 
 export default function FoodDetail() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const { id, restaurantId } = useLocalSearchParams<{ id: string; restaurantId: string }>();
     const { addToCart, clearCart } = useCartStore();
 
@@ -26,7 +29,7 @@ export default function FoodDetail() {
 
     const fetchMenuItem = async () => {
         if (!id || !restaurantId) {
-            Alert.alert('Error', 'Menu item information is missing');
+            showToast({ type: "error", title: "Error", message: "Menu item information is missing" });
             router.back();
             return;
         }
@@ -49,7 +52,7 @@ export default function FoodDetail() {
             }
 
             if (!foundItem) {
-                Alert.alert('Error', 'Menu item not found');
+                showToast({ type: "error", title: "Error", message: "Menu item not found" });
                 router.back();
                 return;
             }
@@ -57,11 +60,11 @@ export default function FoodDetail() {
             setMenuItem(foundItem);
 
             if (foundItem.options && Array.isArray(foundItem.options)) {
-                const defaultOpts = foundItem.options.filter(opt => opt.is_default);
+                const defaultOpts = foundItem.options.filter((opt) => opt.is_default);
                 setSelectedOptions(defaultOpts);
             }
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Menu Item');
+            showErrorAlert(error, "Failed to Load Menu Item");
             router.back();
         } finally {
             setIsLoading(false);
@@ -69,24 +72,19 @@ export default function FoodDetail() {
     };
 
     const toggleOption = (option: MenuItemOption) => {
-        const existingIndex = selectedOptions.findIndex(
-            opt => opt.option_group === option.option_group
-        );
+        const existingIndex = selectedOptions.findIndex((opt) => opt.option_group === option.option_group);
 
         if (existingIndex !== -1) {
             const newOptions = [...selectedOptions];
             newOptions[existingIndex] = option;
             setSelectedOptions(newOptions);
         } else {
-
             setSelectedOptions([...selectedOptions, option]);
         }
     };
 
     const isOptionSelected = (option: MenuItemOption): boolean => {
-        return selectedOptions.some(
-            opt => opt.id === option.id && opt.option_group === option.option_group
-        );
+        return selectedOptions.some((opt) => opt.id === option.id && opt.option_group === option.option_group);
     };
 
     const calculateTotalPrice = (): number => {
@@ -112,48 +110,46 @@ export default function FoodDetail() {
             await addToCart({
                 menu_item_id: menuItem.id,
                 quantity: qty,
-                selected_options: selectedOptions.map(opt => ({
+                selected_options: selectedOptions.map((opt) => ({
                     option_group: opt.option_group,
                     name: opt.name,
                     price_modifier: opt.price_modifier,
                 })),
             });
 
-            Alert.alert(
-                'Success',
-                'Item added to cart',
-                [
-                    { text: 'Continue Shopping', onPress: () => router.back() },
-                    { text: 'View Cart', onPress: () => router.push('/cart') },
-                ]
-            );
+            const ok = await confirm({
+                title: "Success",
+                message: "Item added to cart",
+                confirmText: "View Cart",
+                cancelText: "Continue Shopping",
+            });
+
+            if (ok) router.push("/cart");
+            else router.back();
         } catch (error: any) {
             if (error.isConflict && error.response?.data) {
                 isConflictError = true;
                 const conflictData = error.response.data;
-                const currentRestaurantName = conflictData.currentRestaurant?.name || 'another restaurant';
-                const newRestaurantName = conflictData.newRestaurant?.name || 'this restaurant';
+                const currentRestaurantName = conflictData.currentRestaurant?.name || "another restaurant";
+                const newRestaurantName = conflictData.newRestaurant?.name || "this restaurant";
 
-                Alert.alert(
-                    'Replace Cart Items?',
-                    `Your cart contains items from ${currentRestaurantName}. Do you want to clear your cart and add items from ${newRestaurantName} instead?`,
-                    [
-                        {
-                            text: 'Cancel',
-                            style: 'cancel',
-                            onPress: () => setIsAddingToCart(false),
-                        },
-                        {
-                            text: 'Replace Cart',
-                            style: 'destructive',
-                            onPress: () => handleAddToCart(true),
-                        },
-                    ],
-                    { cancelable: false }
-                );
+                const ok = await confirm({
+                    title: "Replace Cart Items?",
+                    message: `Your cart contains items from ${currentRestaurantName}. Do you want to clear your cart and add items from ${newRestaurantName} instead?`,
+                    confirmText: "Replace Cart",
+                    cancelText: "Cancel",
+                    destructive: true,
+                });
+
+                if (!ok) {
+                    setIsAddingToCart(false);
+                    return;
+                }
+
+                await handleAddToCart(true);
                 return;
             }
-            showErrorAlert(error, 'Failed to Add to Cart');
+            showErrorAlert(error, "Failed to Add to Cart");
         } finally {
             if (!isConflictError) {
                 setIsAddingToCart(false);
@@ -174,19 +170,19 @@ export default function FoodDetail() {
         return (
             <View className="flex-1 bg-[#F9CF63] items-center justify-center px-8">
                 <Text className="text-[#391713] text-xl font-bold text-center">Menu item not found</Text>
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    className="mt-6 bg-[#E95322] px-6 py-3 rounded-full"
-                >
+                <TouchableOpacity onPress={() => router.back()} className="mt-6 bg-[#E95322] px-6 py-3 rounded-full">
                     <Text className="text-white font-semibold">Go Back</Text>
                 </TouchableOpacity>
             </View>
         );
     }
 
-    const discount = menuItem.original_price && menuItem.original_price > menuItem.price
-        ? Math.round(((Number(menuItem.original_price) - Number(menuItem.price)) / Number(menuItem.original_price)) * 100)
-        : 0;
+    const discount =
+        menuItem.original_price && menuItem.original_price > menuItem.price
+            ? Math.round(
+                  ((Number(menuItem.original_price) - Number(menuItem.price)) / Number(menuItem.original_price)) * 100
+              )
+            : 0;
 
     return (
         <View className="flex-1 bg-[#F9CF63]">
@@ -214,11 +210,7 @@ export default function FoodDetail() {
                         className="w-10 h-10 rounded-full items-center justify-center"
                         activeOpacity={0.8}
                     >
-                        <Ionicons
-                            name={isFavorite ? "heart" : "heart-outline"}
-                            size={24}
-                            color="#E95322"
-                        />
+                        <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={24} color="#E95322" />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -256,11 +248,12 @@ export default function FoodDetail() {
                                 <Text className="text-[#E95322] text-2xl font-extrabold">
                                     ${formatPrice(menuItem.price)}
                                 </Text>
-                                {menuItem.original_price && parseNumeric(menuItem.original_price) > parseNumeric(menuItem.price) && (
-                                    <Text className="text-[#9CA3AF] text-sm font-semibold line-through ml-2">
-                                        ${formatPrice(menuItem.original_price)}
-                                    </Text>
-                                )}
+                                {menuItem.original_price &&
+                                    parseNumeric(menuItem.original_price) > parseNumeric(menuItem.price) && (
+                                        <Text className="text-[#9CA3AF] text-sm font-semibold line-through ml-2">
+                                            ${formatPrice(menuItem.original_price)}
+                                        </Text>
+                                    )}
                             </View>
                         </View>
 
@@ -286,9 +279,7 @@ export default function FoodDetail() {
                     {menuItem.description && (
                         <View className="mt-4">
                             <Text className="text-[#391713] font-bold text-base">Description</Text>
-                            <Text className="text-[#6B7280] text-sm mt-1 leading-5">
-                                {menuItem.description}
-                            </Text>
+                            <Text className="text-[#6B7280] text-sm mt-1 leading-5">{menuItem.description}</Text>
                         </View>
                     )}
 
@@ -303,54 +294,63 @@ export default function FoodDetail() {
 
                     {menuItem.options && menuItem.options.length > 0 && (
                         <View className="mt-6">
-                            {Array.from(new Set(menuItem.options.map(opt => opt.option_group))).map((group, groupIdx) => {
-                                const groupOptions = menuItem.options!.filter(opt => opt.option_group === group);
+                            {Array.from(new Set(menuItem.options.map((opt) => opt.option_group))).map(
+                                (group, groupIdx) => {
+                                    const groupOptions = menuItem.options!.filter((opt) => opt.option_group === group);
 
-                                return (
-                                    <View key={groupIdx} className="mb-6">
-                                        <Text className="text-[#391713] text-lg font-bold">{group}</Text>
+                                    return (
+                                        <View key={groupIdx} className="mb-6">
+                                            <Text className="text-[#391713] text-lg font-bold">{group}</Text>
 
-                                        <View className="mt-3 rounded-2xl overflow-hidden border border-[#F2DFA2]">
-                                            {groupOptions.map((option, idx) => {
-                                                const selected = isOptionSelected(option);
-                                                const priceText = option.price_modifier === 0
-                                                    ? 'Included'
-                                                    : option.price_modifier > 0
-                                                        ? `+$${option.price_modifier}`
-                                                        : `-$${Math.abs(option.price_modifier)}`;
+                                            <View className="mt-3 rounded-2xl overflow-hidden border border-[#F2DFA2]">
+                                                {groupOptions.map((option, idx) => {
+                                                    const selected = isOptionSelected(option);
+                                                    const priceText =
+                                                        option.price_modifier === 0
+                                                            ? "Included"
+                                                            : option.price_modifier > 0
+                                                            ? `+$${option.price_modifier}`
+                                                            : `-$${Math.abs(option.price_modifier)}`;
 
-                                                return (
-                                                    <View key={option.id}>
-                                                        <TouchableOpacity
-                                                            onPress={() => toggleOption(option)}
-                                                            className="flex-row items-center justify-between px-4 py-3 bg-white"
-                                                            activeOpacity={0.8}
-                                                        >
-                                                            <Text className="text-[#391713] text-sm flex-1">
-                                                                {option.name}
-                                                            </Text>
-
-                                                            <View className="flex-row items-center">
-                                                                <Text className="text-[#6B7280] text-sm mr-3">
-                                                                    {priceText}
+                                                    return (
+                                                        <View key={option.id}>
+                                                            <TouchableOpacity
+                                                                onPress={() => toggleOption(option)}
+                                                                className="flex-row items-center justify-between px-4 py-3 bg-white"
+                                                                activeOpacity={0.8}
+                                                            >
+                                                                <Text className="text-[#391713] text-sm flex-1">
+                                                                    {option.name}
                                                                 </Text>
-                                                                <View
-                                                                    className={`w-5 h-5 rounded-full border-2 items-center justify-center ${
-                                                                        selected ? "border-[#E95322] bg-[#E95322]" : "border-[#D1D5DB]"
-                                                                    }`}
-                                                                >
-                                                                    {selected && <View className="w-2 h-2 rounded-full bg-white" />}
+
+                                                                <View className="flex-row items-center">
+                                                                    <Text className="text-[#6B7280] text-sm mr-3">
+                                                                        {priceText}
+                                                                    </Text>
+                                                                    <View
+                                                                        className={`w-5 h-5 rounded-full border-2 items-center justify-center ${
+                                                                            selected
+                                                                                ? "border-[#E95322] bg-[#E95322]"
+                                                                                : "border-[#D1D5DB]"
+                                                                        }`}
+                                                                    >
+                                                                        {selected && (
+                                                                            <View className="w-2 h-2 rounded-full bg-white" />
+                                                                        )}
+                                                                    </View>
                                                                 </View>
-                                                            </View>
-                                                        </TouchableOpacity>
-                                                        {idx < groupOptions.length - 1 && <View className="h-px bg-[#F2DFA2]" />}
-                                                    </View>
-                                                );
-                                            })}
+                                                            </TouchableOpacity>
+                                                            {idx < groupOptions.length - 1 && (
+                                                                <View className="h-px bg-[#F2DFA2]" />
+                                                            )}
+                                                        </View>
+                                                    );
+                                                })}
+                                            </View>
                                         </View>
-                                    </View>
-                                );
-                            })}
+                                    );
+                                }
+                            )}
                         </View>
                     )}
                 </ScrollView>
@@ -358,9 +358,7 @@ export default function FoodDetail() {
                 <View className="mb-8">
                     <View className="flex-row items-center justify-between mb-3">
                         <Text className="text-[#6B7280] text-sm">Total</Text>
-                        <Text className="text-[#E95322] text-2xl font-extrabold">
-                            ${calculateTotalPrice()}
-                        </Text>
+                        <Text className="text-[#E95322] text-2xl font-extrabold">${calculateTotalPrice()}</Text>
                     </View>
 
                     <TouchableOpacity
@@ -376,7 +374,7 @@ export default function FoodDetail() {
                             <>
                                 <Ionicons name="cart-outline" size={22} color="#fff" />
                                 <Text className="text-white text-base font-semibold ml-2">
-                                    {menuItem.is_available ? 'Add to Cart' : 'Unavailable'}
+                                    {menuItem.is_available ? "Add to Cart" : "Unavailable"}
                                 </Text>
                             </>
                         )}

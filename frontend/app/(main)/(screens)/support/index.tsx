@@ -1,8 +1,20 @@
 import Header from "@/components/common/Header";
 import React, { useRef, useState, useEffect } from "react";
-import { FlatList, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, Alert } from "react-native";
+import { FlatList, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Send, Bot, User, Clock, CheckCheck, Package, DollarSign, MapPin, Settings2, HelpCircle } from "lucide-react-native";
+import {
+    Send,
+    Bot,
+    User,
+    Clock,
+    CheckCheck,
+    Package,
+    DollarSign,
+    MapPin,
+    Settings2,
+    HelpCircle,
+} from "lucide-react-native";
+import { confirm } from "@/utils/confirm";
 
 type MessageFrom = "user" | "bot";
 
@@ -30,7 +42,7 @@ export default function SupportScreen() {
         {
             id: "m1",
             from: "bot",
-            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
             text: "Hi there! 👋 I'm your virtual assistant. How can I help you today?",
             type: "options",
             options: ["Track Order", "Payment Issues", "Account Help", "Report Problem"],
@@ -86,7 +98,7 @@ export default function SupportScreen() {
             id: `m_${Date.now()}`,
             from: "user",
             text: textToSend,
-            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
             isDelivered: false,
             isRead: false,
         };
@@ -97,11 +109,7 @@ export default function SupportScreen() {
 
         // Simulate delivery
         setTimeout(() => {
-            setMessages((prev) =>
-                prev.map((msg) =>
-                    msg.id === newMessage.id ? { ...msg, isDelivered: true } : msg
-                )
-            );
+            setMessages((prev) => prev.map((msg) => (msg.id === newMessage.id ? { ...msg, isDelivered: true } : msg)));
         }, 500);
 
         // Simulate bot typing and response
@@ -112,7 +120,7 @@ export default function SupportScreen() {
                 id: `m_bot_${Date.now()}`,
                 from: "bot",
                 text: botResponse,
-                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
                 isDelivered: true,
                 isRead: true,
             };
@@ -121,11 +129,7 @@ export default function SupportScreen() {
 
             // Mark user message as read
             setTimeout(() => {
-                setMessages((prev) =>
-                    prev.map((msg) =>
-                        msg.id === newMessage.id ? { ...msg, isRead: true } : msg
-                    )
-                );
+                setMessages((prev) => prev.map((msg) => (msg.id === newMessage.id ? { ...msg, isRead: true } : msg)));
             }, 1000);
         }, 1500 + Math.random() * 1000);
     };
@@ -154,40 +158,37 @@ export default function SupportScreen() {
         sendMessage(action.message);
     };
 
-    const connectToAgent = () => {
-        Alert.alert(
-            "Connect to Agent",
-            "Would you like to be connected to a human support agent? Average wait time is 2-3 minutes.",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Connect",
-                    onPress: () => {
-                        const agentMessage: Message = {
-                            id: `m_agent_${Date.now()}`,
-                            from: "bot",
-                            text: "Connecting you to the next available agent... Please wait.",
-                            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-                            isDelivered: true,
-                            isRead: true,
-                        };
-                        setMessages((prev) => [...prev, agentMessage]);
+    const connectToAgent = async () => {
+        const ok = await confirm({
+            title: "Connect to Agent",
+            message: "Would you like to be connected to a human support agent? Average wait time is 2-3 minutes.",
+            confirmText: "Connect",
+            cancelText: "Cancel",
+        });
 
-                        setTimeout(() => {
-                            const connectedMessage: Message = {
-                                id: `m_connected_${Date.now()}`,
-                                from: "bot",
-                                text: "Agent Sarah has joined the chat. Hello! How can I help you today? 👋",
-                                time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-                                isDelivered: true,
-                                isRead: true,
-                            };
-                            setMessages((prev) => [...prev, connectedMessage]);
-                        }, 3000);
-                    },
-                },
-            ]
-        );
+        if (!ok) return;
+
+        const agentMessage: Message = {
+            id: `m_agent_${Date.now()}`,
+            from: "bot",
+            text: "Connecting you to the next available agent... Please wait.",
+            time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+            isDelivered: true,
+            isRead: true,
+        };
+        setMessages((prev) => [...prev, agentMessage]);
+
+        setTimeout(() => {
+            const connectedMessage: Message = {
+                id: `m_connected_${Date.now()}`,
+                from: "bot",
+                text: "Agent Sarah has joined the chat. Hello! How can I help you today? 👋",
+                time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+                isDelivered: true,
+                isRead: true,
+            };
+            setMessages((prev) => [...prev, connectedMessage]);
+        }, 3000);
     };
 
     const renderMessage = ({ item }: { item: Message }) => {
@@ -201,11 +202,7 @@ export default function SupportScreen() {
                             isUser ? "bg-[#E95322] ml-2" : "bg-[#FFE3D6] mr-2"
                         }`}
                     >
-                        {isUser ? (
-                            <User size={16} color="#FFFFFF" />
-                        ) : (
-                            <Bot size={16} color="#E95322" />
-                        )}
+                        {isUser ? <User size={16} color="#FFFFFF" /> : <Bot size={16} color="#E95322" />}
                     </View>
 
                     <View className={`max-w-[75%]`}>
@@ -216,7 +213,7 @@ export default function SupportScreen() {
                                     : "bg-[#F9FAFB] border border-[#E5E7EB] rounded-bl-md"
                             }`}
                             style={{
-                                shadowColor: '#000',
+                                shadowColor: "#000",
                                 shadowOpacity: 0.05,
                                 shadowOffset: { width: 0, height: 2 },
                                 shadowRadius: 4,
@@ -252,11 +249,7 @@ export default function SupportScreen() {
                             <Clock size={10} color="#9CA3AF" />
                             <Text className="text-[#9CA3AF] text-xs ml-1">{item.time}</Text>
                             {isUser && item.isDelivered && (
-                                <CheckCheck
-                                    size={14}
-                                    color={item.isRead ? "#10B981" : "#9CA3AF"}
-                                    className="ml-1"
-                                />
+                                <CheckCheck size={14} color={item.isRead ? "#10B981" : "#9CA3AF"} className="ml-1" />
                             )}
                         </View>
                     </View>
@@ -298,9 +291,7 @@ export default function SupportScreen() {
                                     onPress={() => handleQuickAction(action)}
                                 >
                                     {action.icon}
-                                    <Text className="text-[#070707] font-semibold text-xs ml-2">
-                                        {action.label}
-                                    </Text>
+                                    <Text className="text-[#070707] font-semibold text-xs ml-2">{action.label}</Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
@@ -341,7 +332,7 @@ export default function SupportScreen() {
                     <View
                         className="px-4 pb-4 pt-3 bg-white border-t border-[#E5E7EB]"
                         style={{
-                            shadowColor: '#000',
+                            shadowColor: "#000",
                             shadowOpacity: 0.05,
                             shadowOffset: { width: 0, height: -2 },
                             shadowRadius: 8,

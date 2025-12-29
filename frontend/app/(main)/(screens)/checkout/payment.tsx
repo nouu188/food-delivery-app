@@ -1,7 +1,7 @@
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useAddressStore } from "@/store/useAddressStore";
@@ -9,11 +9,12 @@ import { useCartStore } from "@/store/useCartStore";
 import orderService from "@/services/api/order.service";
 import { PaymentMethod } from "@/types/api/order";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
 
 const PAYMENT_METHODS: Array<{
     id: PaymentMethod;
     label: string;
-    icon: React.ComponentProps<typeof Feather>['name'];
+    icon: React.ComponentProps<typeof Feather>["name"];
 }> = [
     { id: PaymentMethod.COD, label: "Cash on Delivery", icon: "dollar-sign" },
     { id: PaymentMethod.CARD, label: "Credit/Debit Card", icon: "credit-card" },
@@ -24,26 +25,25 @@ const PAYMENT_METHODS: Array<{
 
 export default function PaymentScreen() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const { addresses, selectedAddressId } = useAddressStore();
     const { cart, selectedItemIds, removeBulkItems, clearSelection, fetchCart, appliedVoucher } = useCartStore();
     const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(PaymentMethod.COD);
     const [isProcessing, setIsProcessing] = useState(false);
     const [specialInstructions, setSpecialInstructions] = useState("");
 
-    const selectedAddress = selectedAddressId
-        ? addresses.find(a => a.id === selectedAddressId) || null
-        : null;
+    const selectedAddress = selectedAddressId ? addresses.find((a) => a.id === selectedAddressId) || null : null;
 
-    const selectedItems = cart?.items?.filter(item => selectedItemIds.has(item.id)) || [];
+    const selectedItems = cart?.items?.filter((item) => selectedItemIds.has(item.id)) || [];
 
     const handlePlaceOrder = async () => {
         if (!selectedAddress) {
-            Alert.alert('Error', 'Please select a delivery address');
+            showToast({ type: "error", title: "Error", message: "Please select a delivery address" });
             return;
         }
 
         if (selectedItems.length === 0) {
-            Alert.alert('Error', 'No items selected for checkout');
+            showToast({ type: "error", title: "Error", message: "No items selected for checkout" });
             return;
         }
 
@@ -62,11 +62,11 @@ export default function PaymentScreen() {
             clearSelection();
 
             router.replace({
-                pathname: '/checkout/order-confirmed',
-                params: { orderId: order.id }
+                pathname: "/checkout/order-confirmed",
+                params: { orderId: order.id },
             });
         } catch (error) {
-            showErrorAlert(error, 'Failed to Place Order');
+            showErrorAlert(error, "Failed to Place Order");
         } finally {
             setIsProcessing(false);
         }
@@ -78,7 +78,6 @@ export default function PaymentScreen() {
 
             <View className="flex-1 bg-white rounded-t-3xl px-6 pt-6">
                 <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 140 }}>
-
                     <View className="flex-row items-center justify-between">
                         <Text className="text-[#070707] font-bold">Shipping Address</Text>
                         <TouchableOpacity activeOpacity={0.8} onPress={() => router.back()}>
@@ -90,7 +89,8 @@ export default function PaymentScreen() {
                             <>
                                 <Text className="text-[#070707] font-semibold">{selectedAddress.label}</Text>
                                 <Text className="text-[#6B7280] text-xs mt-1">
-                                    {selectedAddress.address_line}, {selectedAddress.ward}, {selectedAddress.district}, {selectedAddress.city}
+                                    {selectedAddress.address_line}, {selectedAddress.ward}, {selectedAddress.district},{" "}
+                                    {selectedAddress.city}
                                 </Text>
                             </>
                         ) : (
@@ -102,11 +102,11 @@ export default function PaymentScreen() {
                         <View>
                             <Text className="text-[#070707] font-bold">Order Summary</Text>
                             <Text className="text-xs text-[#6B7280] mt-1">
-                                {selectedItems.length} item{selectedItems.length !== 1 ? 's' : ''} selected
+                                {selectedItems.length} item{selectedItems.length !== 1 ? "s" : ""} selected
                             </Text>
                         </View>
                         <Text className="font-extrabold text-[#E95322]">
-                            ${selectedItems.reduce((sum, item) => sum + (Number(item.unit_price) * item.quantity), 0)}
+                            ${selectedItems.reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0)}
                         </Text>
                     </View>
 
@@ -140,7 +140,10 @@ export default function PaymentScreen() {
                         ))}
                     </View>
 
-                    <View className="mt-6 flex-row items-center justify-between py-4 px-4 rounded-2xl" style={{ backgroundColor: "#FFF5D6" }}>
+                    <View
+                        className="mt-6 flex-row items-center justify-between py-4 px-4 rounded-2xl"
+                        style={{ backgroundColor: "#FFF5D6" }}
+                    >
                         <Text className="text-[#070707] font-bold">Estimated Delivery Time</Text>
                         <Text className="text-[#E95322] font-semibold">25-30 mins</Text>
                     </View>
@@ -151,9 +154,8 @@ export default function PaymentScreen() {
                         disabled={isProcessing || !selectedAddress || selectedItems.length === 0}
                         className="self-center mt-10 px-16 py-4 rounded-full"
                         style={{
-                            backgroundColor: (isProcessing || !selectedAddress || selectedItems.length === 0)
-                                ? "#9CA3AF"
-                                : "#E95322"
+                            backgroundColor:
+                                isProcessing || !selectedAddress || selectedItems.length === 0 ? "#9CA3AF" : "#E95322",
                         }}
                     >
                         {isProcessing ? (
@@ -161,10 +163,10 @@ export default function PaymentScreen() {
                         ) : (
                             <Text className="text-white font-semibold text-base">
                                 {selectedItems.length === 0
-                                    ? 'No Items Selected'
+                                    ? "No Items Selected"
                                     : selectedPayment === PaymentMethod.COD
-                                        ? `Place Order (${selectedItems.length})`
-                                        : `Proceed to Payment (${selectedItems.length})`}
+                                    ? `Place Order (${selectedItems.length})`
+                                    : `Proceed to Payment (${selectedItems.length})`}
                             </Text>
                         )}
                     </TouchableOpacity>

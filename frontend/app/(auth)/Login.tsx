@@ -3,7 +3,7 @@ import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
-import { Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from "react-native";
+import { Text, TextInput, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "tamagui";
 import { useForm, Controller } from "react-hook-form";
@@ -12,7 +12,7 @@ import { loginSchema, LoginFormData } from "@/utils/validation/auth.schema";
 import authService from "@/services/api/auth.service";
 import { setTokens } from "@/services/api/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { showErrorAlert, isErrorStatus } from "@/utils/error-handler";
+import { showErrorAlert } from "@/utils/error-handler";
 
 const Login = () => {
     const router = useRouter();
@@ -40,11 +40,7 @@ const Login = () => {
             await setTokens(response.access_token, response.refresh_token);
             await signIn();
         } catch (error: any) {
-            if (isErrorStatus(error, 401)) {
-                Alert.alert("Login Failed", "Invalid email or password");
-            } else {
-                showErrorAlert(error, "Login Failed");
-            }
+            showErrorAlert(error, "Login Failed");
         } finally {
             setIsLoading(false);
         }

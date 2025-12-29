@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
-    Alert,
     Animated,
     Dimensions,
     FlatList,
@@ -20,12 +19,16 @@ import { formatPrice } from "@/utils/format";
 import { CartItem } from "@/types/api/order";
 import CartItemDetailsModal from "./CartItemDetailsModal";
 import VoucherInput from "../voucher/VoucherInput";
+import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
+import { confirm } from "@/utils/confirm";
 
 const { width } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.86;
 
 export default function CartSidebar() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const {
         cart,
         isDrawerOpen,
@@ -41,7 +44,7 @@ export default function CartSidebar() {
         selectedCount,
         fetchCart,
         appliedVoucher,
-        getDiscountedTotal
+        getDiscountedTotal,
     } = useCartStore();
 
     const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
@@ -59,7 +62,7 @@ export default function CartSidebar() {
     const items = cart?.items || [];
     const totalAmount = selectedTotal();
     const selectedItemCount = selectedCount();
-    const allSelected = items.length > 0 && items.every(item => selectedItemIds.has(item.id));
+    const allSelected = items.length > 0 && items.every((item) => selectedItemIds.has(item.id));
 
     // Fetch cart when drawer opens
     useEffect(() => {
@@ -99,17 +102,13 @@ export default function CartSidebar() {
 
         if (newQuantity === currentQuantity) return;
 
-        setLoadingItems(prev => new Set(prev).add(itemId));
+        setLoadingItems((prev) => new Set(prev).add(itemId));
         try {
             await updateQuantity(itemId, newQuantity);
         } catch (error: any) {
-            Alert.alert(
-                "Update Failed",
-                error.message || "Failed to update item quantity. Please try again.",
-                [{ text: "OK" }]
-            );
+            showErrorAlert(error, "Update Failed");
         } finally {
-            setLoadingItems(prev => {
+            setLoadingItems((prev) => {
                 const newSet = new Set(prev);
                 newSet.delete(itemId);
                 return newSet;
@@ -118,73 +117,58 @@ export default function CartSidebar() {
     };
 
     const handleRemoveItem = async (itemId: string) => {
-        Alert.alert(
-            "Remove Item",
-            "Are you sure you want to remove this item from your cart?",
-            [
-                {
-                    text: "Cancel",
-                    style: "cancel",
-                },
-                {
-                    text: "Remove",
-                    style: "destructive",
-                    onPress: async () => {
-                        setRemovingItems(prev => new Set(prev).add(itemId));
-                        try {
-                            await removeItem(itemId);
-                        } catch (error: any) {
-                            Alert.alert(
-                                "Remove Failed",
-                                error.message || "Failed to remove item. Please try again.",
-                                [{ text: "OK" }]
-                            );
-                        } finally {
-                            setRemovingItems(prev => {
-                                const newSet = new Set(prev);
-                                newSet.delete(itemId);
-                                return newSet;
-                            });
-                        }
-                    },
-                },
-            ]
-        );
+        const ok = await confirm({
+            title: "Remove Item",
+            message: "Are you sure you want to remove this item from your cart?",
+            confirmText: "Remove",
+            cancelText: "Cancel",
+            destructive: true,
+        });
+
+        if (!ok) return;
+
+        setRemovingItems((prev) => new Set(prev).add(itemId));
+        try {
+            await removeItem(itemId);
+        } catch (error: any) {
+            showErrorAlert(error, "Remove Failed");
+        } finally {
+            setRemovingItems((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(itemId);
+                return newSet;
+            });
+        }
     };
 
     const handleBulkDelete = async () => {
         const selectedIds = Array.from(selectedItemIds);
         if (selectedIds.length === 0) {
-            Alert.alert("No Items Selected", "Please select items to delete.");
+            showToast({ type: "info", title: "Cart", message: "Please select items to delete." });
             return;
         }
 
-        Alert.alert(
-            "Delete Selected Items",
-            `Are you sure you want to remove ${selectedIds.length} item${selectedIds.length > 1 ? 's' : ''} from your cart?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        setIsBulkDeleting(true);
-                        try {
-                            await removeBulkItems(selectedIds);
-                            Alert.alert("Success", "Selected items removed from cart");
-                        } catch (error: any) {
-                            Alert.alert(
-                                "Delete Failed",
-                                error.message || "Failed to remove items. Please try again.",
-                                [{ text: "OK" }]
-                            );
-                        } finally {
-                            setIsBulkDeleting(false);
-                        }
-                    },
-                },
-            ]
-        );
+        const ok = await confirm({
+            title: "Delete Selected Items",
+            message: `Are you sure you want to remove ${selectedIds.length} item${
+                selectedIds.length > 1 ? "s" : ""
+            } from your cart?`,
+            confirmText: "Delete",
+            cancelText: "Cancel",
+            destructive: true,
+        });
+
+        if (!ok) return;
+
+        setIsBulkDeleting(true);
+        try {
+            await removeBulkItems(selectedIds);
+            showToast({ type: "success", title: "Success", message: "Selected items removed from cart." });
+        } catch (error: any) {
+            showErrorAlert(error, "Delete Failed");
+        } finally {
+            setIsBulkDeleting(false);
+        }
     };
 
     const handleToggleSelectAll = () => {
@@ -197,7 +181,7 @@ export default function CartSidebar() {
 
     const handleCheckout = () => {
         if (selectedItemIds.size === 0) {
-            Alert.alert("No Items Selected", "Please select items to checkout.");
+            showToast({ type: "info", title: "Cart", message: "Please select items to checkout." });
             return;
         }
         closeSidebar();
@@ -261,9 +245,7 @@ export default function CartSidebar() {
                                     ) : (
                                         <>
                                             <Feather name="trash-2" size={16} color="#FFFFFF" />
-                                            <Text style={styles.bulkDeleteText}>
-                                                Delete ({selectedItemIds.size})
-                                            </Text>
+                                            <Text style={styles.bulkDeleteText}>Delete ({selectedItemIds.size})</Text>
                                         </>
                                     )}
                                 </TouchableOpacity>
@@ -329,33 +311,63 @@ export default function CartSidebar() {
                                         </TouchableOpacity>
                                         <Text style={styles.itemPrice}>${formatPrice(item.unit_price)}</Text>
 
-                                        {item.selected_options && Array.isArray(item.selected_options) && item.selected_options.length > 0 && (
-                                            <View style={styles.optionsSummary}>
-                                                <Feather name="plus-circle" size={10} color="#E95322" style={{ marginRight: 4 }} />
-                                                <Text numberOfLines={1} style={styles.optionsSummaryText}>
-                                                    {item.selected_options.map(opt => opt.name).join(', ')}
-                                                </Text>
-                                            </View>
-                                        )}
+                                        {item.selected_options &&
+                                            Array.isArray(item.selected_options) &&
+                                            item.selected_options.length > 0 && (
+                                                <View style={styles.optionsSummary}>
+                                                    <Feather
+                                                        name="plus-circle"
+                                                        size={10}
+                                                        color="#E95322"
+                                                        style={{ marginRight: 4 }}
+                                                    />
+                                                    <Text numberOfLines={1} style={styles.optionsSummaryText}>
+                                                        {item.selected_options.map((opt) => opt.name).join(", ")}
+                                                    </Text>
+                                                </View>
+                                            )}
 
                                         <View style={styles.qtyRow}>
                                             {isLoading ? (
-                                                <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
+                                                <ActivityIndicator
+                                                    size="small"
+                                                    color="#FFFFFF"
+                                                    style={{ marginRight: 10 }}
+                                                />
                                             ) : (
                                                 <>
                                                     <TouchableOpacity
-                                                        onPress={() => handleUpdateQuantity(item.id, item.quantity, item.quantity - 1)}
+                                                        onPress={() =>
+                                                            handleUpdateQuantity(
+                                                                item.id,
+                                                                item.quantity,
+                                                                item.quantity - 1
+                                                            )
+                                                        }
                                                         activeOpacity={0.8}
                                                         style={[styles.qtyBtn, isDisabled && styles.btnDisabled]}
                                                         disabled={isDisabled}
                                                     >
-                                                        <Feather name="minus" size={16} color={isDisabled ? "#CCC" : "#E5634D"} />
+                                                        <Feather
+                                                            name="minus"
+                                                            size={16}
+                                                            color={isDisabled ? "#CCC" : "#E5634D"}
+                                                        />
                                                     </TouchableOpacity>
                                                     <Text style={styles.qtyText}>{item.quantity}</Text>
                                                     <TouchableOpacity
-                                                        onPress={() => handleUpdateQuantity(item.id, item.quantity, item.quantity + 1)}
+                                                        onPress={() =>
+                                                            handleUpdateQuantity(
+                                                                item.id,
+                                                                item.quantity,
+                                                                item.quantity + 1
+                                                            )
+                                                        }
                                                         activeOpacity={0.8}
-                                                        style={[styles.qtyBtn, { backgroundColor: isDisabled ? "#CCC" : "#E5634D" }]}
+                                                        style={[
+                                                            styles.qtyBtn,
+                                                            { backgroundColor: isDisabled ? "#CCC" : "#E5634D" },
+                                                        ]}
                                                         disabled={isDisabled}
                                                     >
                                                         <Feather name="plus" size={16} color="#FFFFFF" />
@@ -372,7 +384,11 @@ export default function CartSidebar() {
                                                 {isRemoving ? (
                                                     <ActivityIndicator size="small" color="#E5634D" />
                                                 ) : (
-                                                    <Feather name="trash-2" size={16} color={isDisabled ? "#CCC" : "#E5634D"} />
+                                                    <Feather
+                                                        name="trash-2"
+                                                        size={16}
+                                                        color={isDisabled ? "#CCC" : "#E5634D"}
+                                                    />
                                                 )}
                                             </TouchableOpacity>
                                         </View>
@@ -392,14 +408,13 @@ export default function CartSidebar() {
                             <View style={styles.selectedInfo}>
                                 <Feather name="check-circle" size={16} color="#FFD34E" />
                                 <Text style={styles.selectedInfoText}>
-                                    {selectedItemIds.size} item{selectedItemIds.size > 1 ? 's' : ''} selected ({selectedItemCount} total qty)
+                                    {selectedItemIds.size} item{selectedItemIds.size > 1 ? "s" : ""} selected (
+                                    {selectedItemCount} total qty)
                                 </Text>
                             </View>
                         )}
 
-                        {cart?.restaurant_id && items.length > 0 && (
-                            <VoucherInput restaurantId={cart.restaurant_id} />
-                        )}
+                        {cart?.restaurant_id && items.length > 0 && <VoucherInput restaurantId={cart.restaurant_id} />}
 
                         <View style={styles.totalRow}>
                             <Text style={styles.totalLabel}>Subtotal</Text>
@@ -430,7 +445,7 @@ export default function CartSidebar() {
                         >
                             <Text style={styles.checkoutText}>
                                 {selectedItemIds.size === 0
-                                    ? 'Select Items to Checkout'
+                                    ? "Select Items to Checkout"
                                     : `Checkout (${selectedItemIds.size})`}
                             </Text>
                         </TouchableOpacity>

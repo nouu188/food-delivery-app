@@ -1,13 +1,14 @@
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useCartStore } from "@/store/useCartStore";
 import { showErrorAlert } from "@/utils/error-handler";
 import { CartItem } from "@/types/api/order";
 import CartItemDetailsModal from "@/components/common/cart/CartItemDetailsModal";
 import { Feather } from "@expo/vector-icons";
+import { confirm } from "@/utils/confirm";
 
 export default function CartScreen() {
     const router = useRouter();
@@ -24,27 +25,24 @@ export default function CartScreen() {
 
     const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
         if (newQuantity < 1) {
-            Alert.alert(
-                "Remove Item",
-                "Do you want to remove this item from cart?",
-                [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                        text: "Remove",
-                        style: "destructive",
-                        onPress: async () => {
-                            setIsUpdating(itemId);
-                            try {
-                                await removeItem(itemId);
-                            } catch (error) {
-                                showErrorAlert(error, 'Failed to Remove Item');
-                            } finally {
-                                setIsUpdating(null);
-                            }
-                        }
-                    }
-                ]
-            );
+            const ok = await confirm({
+                title: "Remove Item",
+                message: "Do you want to remove this item from cart?",
+                confirmText: "Remove",
+                cancelText: "Cancel",
+                destructive: true,
+            });
+
+            if (!ok) return;
+
+            setIsUpdating(itemId);
+            try {
+                await removeItem(itemId);
+            } catch (error) {
+                showErrorAlert(error, "Failed to Remove Item");
+            } finally {
+                setIsUpdating(null);
+            }
             return;
         }
 
@@ -52,34 +50,31 @@ export default function CartScreen() {
         try {
             await updateQuantity(itemId, newQuantity);
         } catch (error) {
-            showErrorAlert(error, 'Failed to Update Cart');
+            showErrorAlert(error, "Failed to Update Cart");
         } finally {
             setIsUpdating(null);
         }
     };
 
     const handleRemoveItem = async (itemId: string) => {
-        Alert.alert(
-            "Remove Item",
-            "Are you sure you want to remove this item from cart?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Remove",
-                    style: "destructive",
-                    onPress: async () => {
-                        setIsUpdating(itemId);
-                        try {
-                            await removeItem(itemId);
-                        } catch (error) {
-                            showErrorAlert(error, 'Failed to Remove Item');
-                        } finally {
-                            setIsUpdating(null);
-                        }
-                    }
-                }
-            ]
-        );
+        const ok = await confirm({
+            title: "Remove Item",
+            message: "Are you sure you want to remove this item from cart?",
+            confirmText: "Remove",
+            cancelText: "Cancel",
+            destructive: true,
+        });
+
+        if (!ok) return;
+
+        setIsUpdating(itemId);
+        try {
+            await removeItem(itemId);
+        } catch (error) {
+            showErrorAlert(error, "Failed to Remove Item");
+        } finally {
+            setIsUpdating(null);
+        }
     };
 
     const handleCheckout = () => {
@@ -111,13 +106,7 @@ export default function CartScreen() {
                     <ScrollView
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: 140 }}
-                        refreshControl={
-                            <RefreshControl
-                                refreshing={false}
-                                onRefresh={fetchCart}
-                                tintColor="#E95322"
-                            />
-                        }
+                        refreshControl={<RefreshControl refreshing={false} onRefresh={fetchCart} tintColor="#E95322" />}
                     >
                         {cart && cart.items && Array.isArray(cart.items) && cart.items.length > 0 ? (
                             <>
@@ -134,13 +123,19 @@ export default function CartScreen() {
                                             style={{ backgroundColor: "#FFE3D6" }}
                                         >
                                             {item.menu_item?.image_url ? (
-                                                <Image source={{ uri: item.menu_item.image_url }} className="w-full h-full" />
+                                                <Image
+                                                    source={{ uri: item.menu_item.image_url }}
+                                                    className="w-full h-full"
+                                                />
                                             ) : (
                                                 <View className="w-full h-full items-center justify-center">
                                                     <Text className="text-gray-400 text-xs">No Image</Text>
                                                 </View>
                                             )}
-                                            <View className="absolute bottom-1 right-1 w-6 h-6 rounded-full items-center justify-center" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+                                            <View
+                                                className="absolute bottom-1 right-1 w-6 h-6 rounded-full items-center justify-center"
+                                                style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                                            >
                                                 <Feather name="eye" size={12} color="#FFFFFF" />
                                             </View>
                                         </TouchableOpacity>
@@ -154,18 +149,29 @@ export default function CartScreen() {
                                                     {item.menu_item?.name || item.item_name}
                                                 </Text>
                                             </TouchableOpacity>
-                                            <Text className="text-[#E95322] font-bold mt-1">
-                                                ${item.unit_price}
-                                            </Text>
+                                            <Text className="text-[#E95322] font-bold mt-1">${item.unit_price}</Text>
 
-                                            {item.selected_options && Array.isArray(item.selected_options) && item.selected_options.length > 0 && (
-                                                <View className="flex-row items-center mt-2 px-2 py-1 rounded-lg self-start" style={{ backgroundColor: "#FFF5E6" }}>
-                                                    <Feather name="plus-circle" size={10} color="#E95322" style={{ marginRight: 4 }} />
-                                                    <Text numberOfLines={1} className="text-[10px] text-[#E95322] font-semibold flex-1">
-                                                        {item.selected_options.map(opt => opt.name).join(', ')}
-                                                    </Text>
-                                                </View>
-                                            )}
+                                            {item.selected_options &&
+                                                Array.isArray(item.selected_options) &&
+                                                item.selected_options.length > 0 && (
+                                                    <View
+                                                        className="flex-row items-center mt-2 px-2 py-1 rounded-lg self-start"
+                                                        style={{ backgroundColor: "#FFF5E6" }}
+                                                    >
+                                                        <Feather
+                                                            name="plus-circle"
+                                                            size={10}
+                                                            color="#E95322"
+                                                            style={{ marginRight: 4 }}
+                                                        />
+                                                        <Text
+                                                            numberOfLines={1}
+                                                            className="text-[10px] text-[#E95322] font-semibold flex-1"
+                                                        >
+                                                            {item.selected_options.map((opt) => opt.name).join(", ")}
+                                                        </Text>
+                                                    </View>
+                                                )}
 
                                             <View className="flex-row items-center mt-3">
                                                 <TouchableOpacity
@@ -206,17 +212,13 @@ export default function CartScreen() {
 
                                 <View className="mt-8 flex-row items-center justify-between">
                                     <Text className="text-lg font-extrabold text-[#070707]">Subtotal</Text>
-                                    <Text className="text-lg font-extrabold text-[#070707]">
-                                        ${cart.subtotal}
-                                    </Text>
+                                    <Text className="text-lg font-extrabold text-[#070707]">${cart.subtotal}</Text>
                                 </View>
 
                                 {cart.discount_amount > 0 && (
                                     <View className="mt-2 flex-row items-center justify-between">
                                         <Text className="text-sm text-green-600">Discount</Text>
-                                        <Text className="text-sm text-green-600">
-                                            -${cart.discount_amount}
-                                        </Text>
+                                        <Text className="text-sm text-green-600">-${cart.discount_amount}</Text>
                                     </View>
                                 )}
 

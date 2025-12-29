@@ -1,7 +1,9 @@
 import { useCartStore } from "@/store/useCartStore";
 import { router } from "expo-router";
-import { Alert, Image, Text, TouchableOpacity, View, ImageSourcePropType } from "react-native";
+import { Image, Text, TouchableOpacity, View, ImageSourcePropType } from "react-native";
 import { Clock, Package, Navigation, Star, ShoppingBag, CheckCircle, XCircle, Calendar } from "lucide-react-native";
+import { useToastStore } from "@/store/useToastStore";
+import { confirm } from "@/utils/confirm";
 
 type Props = {
     id: string;
@@ -17,16 +19,16 @@ type Props = {
 };
 
 const STATUS_COLORS = {
-    PENDING: { bg: '#FFF5D6', text: '#E95322', icon: Clock },
-    CONFIRMED: { bg: '#E0F2FE', text: '#0284C7', icon: CheckCircle },
-    PREPARING: { bg: '#FEF3C7', text: '#D97706', icon: Clock },
-    READY_FOR_PICKUP: { bg: '#DBEAFE', text: '#2563EB', icon: Package },
-    PICKED_UP: { bg: '#E0E7FF', text: '#6366F1', icon: Navigation },
-    ON_THE_WAY: { bg: '#E0E7FF', text: '#6366F1', icon: Navigation },
-    DELIVERED: { bg: '#D1FAE5', text: '#059669', icon: CheckCircle },
-    COMPLETED: { bg: '#D1FAE5', text: '#059669', icon: CheckCircle },
-    CANCELLED: { bg: '#FEE2E2', text: '#DC2626', icon: XCircle },
-    FAILED: { bg: '#FEE2E2', text: '#DC2626', icon: XCircle },
+    PENDING: { bg: "#FFF5D6", text: "#E95322", icon: Clock },
+    CONFIRMED: { bg: "#E0F2FE", text: "#0284C7", icon: CheckCircle },
+    PREPARING: { bg: "#FEF3C7", text: "#D97706", icon: Clock },
+    READY_FOR_PICKUP: { bg: "#DBEAFE", text: "#2563EB", icon: Package },
+    PICKED_UP: { bg: "#E0E7FF", text: "#6366F1", icon: Navigation },
+    ON_THE_WAY: { bg: "#E0E7FF", text: "#6366F1", icon: Navigation },
+    DELIVERED: { bg: "#D1FAE5", text: "#059669", icon: CheckCircle },
+    COMPLETED: { bg: "#D1FAE5", text: "#059669", icon: CheckCircle },
+    CANCELLED: { bg: "#FEE2E2", text: "#DC2626", icon: XCircle },
+    FAILED: { bg: "#FEE2E2", text: "#DC2626", icon: XCircle },
 };
 
 export default function OrderItem({
@@ -41,9 +43,11 @@ export default function OrderItem({
     hasReview = false,
     orderStatus,
 }: Props) {
+    const showToast = useToastStore((s) => s.show);
+
     const handleViewDetails = () => {
-        if (!id || id.trim() === '') {
-            Alert.alert('Error', 'Invalid order ID');
+        if (!id || id.trim() === "") {
+            showToast({ type: "error", title: "Error", message: "Invalid order ID" });
             return;
         }
         router.push(`/orders/${id}`);
@@ -51,30 +55,27 @@ export default function OrderItem({
 
     const handleLeaveReview = (e: any) => {
         e.stopPropagation();
-        if (!id || id.trim() === '') {
-            Alert.alert('Error', 'Invalid order ID');
+        if (!id || id.trim() === "") {
+            showToast({ type: "error", title: "Error", message: "Invalid order ID" });
             return;
         }
 
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (!uuidRegex.test(id)) {
-            Alert.alert('Error', 'Invalid order format. Please try again.');
-            console.error('Invalid order ID format:', id);
+            showToast({ type: "error", title: "Error", message: "Invalid order format. Please try again." });
+            console.error("Invalid order ID format:", id);
             return;
         }
 
         if (hasReview) {
-            Alert.alert(
-                'Already Reviewed',
-                'You have already reviewed this order.',
-                [
-                    { text: 'OK', style: 'default' },
-                    {
-                        text: 'View Details',
-                        onPress: () => router.push(`/orders/${id}`),
-                    },
-                ]
-            );
+            confirm({
+                title: "Already Reviewed",
+                message: "You have already reviewed this order.",
+                confirmText: "View Details",
+                cancelText: "OK",
+            }).then((ok) => {
+                if (ok) router.push(`/orders/${id}`);
+            });
             return;
         }
 
@@ -83,8 +84,8 @@ export default function OrderItem({
 
     const handleCancelOrder = (e: any) => {
         e.stopPropagation();
-        if (!id || id.trim() === '') {
-            Alert.alert('Error', 'Invalid order ID');
+        if (!id || id.trim() === "") {
+            showToast({ type: "error", title: "Error", message: "Invalid order ID" });
             return;
         }
         router.push(`/cancel-order/${id}`);
@@ -92,8 +93,8 @@ export default function OrderItem({
 
     const handleTrackDriver = (e: any) => {
         e.stopPropagation();
-        if (!id || id.trim() === '') {
-            Alert.alert('Error', 'Invalid order ID');
+        if (!id || id.trim() === "") {
+            showToast({ type: "error", title: "Error", message: "Invalid order ID" });
             return;
         }
         router.push(`/live-tracking/${id}`);
@@ -101,15 +102,15 @@ export default function OrderItem({
 
     const handleReorder = (e: any) => {
         e.stopPropagation();
-        if (!id || id.trim() === '') {
-            Alert.alert('Error', 'Invalid order ID');
+        if (!id || id.trim() === "") {
+            showToast({ type: "error", title: "Error", message: "Invalid order ID" });
             return;
         }
         router.push(`/orders/${id}`);
     };
 
     const getStatusConfig = (status: string) => {
-        const upperStatus = status.toUpperCase().replace(/ /g, '_');
+        const upperStatus = status.toUpperCase().replace(/ /g, "_");
         return STATUS_COLORS[upperStatus as keyof typeof STATUS_COLORS] || STATUS_COLORS.PENDING;
     };
 
@@ -122,7 +123,7 @@ export default function OrderItem({
             className="bg-white rounded-2xl mb-4 overflow-hidden border border-gray-100"
             activeOpacity={0.9}
             style={{
-                shadowColor: '#000',
+                shadowColor: "#000",
                 shadowOpacity: 0.08,
                 shadowOffset: { width: 0, height: 2 },
                 shadowRadius: 8,
@@ -156,20 +157,15 @@ export default function OrderItem({
                             style={{ backgroundColor: statusConfig.bg }}
                         >
                             <StatusIcon size={12} color={statusConfig.text} />
-                            <Text
-                                className="text-xs font-semibold ml-1"
-                                style={{ color: statusConfig.text }}
-                            >
-                                {orderStatus?.replace(/_/g, ' ')}
+                            <Text className="text-xs font-semibold ml-1" style={{ color: statusConfig.text }}>
+                                {orderStatus?.replace(/_/g, " ")}
                             </Text>
                         </View>
                     )}
 
                     <View className="flex-row items-center mb-1">
                         <Calendar size={14} color="#6B7280" />
-                        <Text className="text-xs text-[#6B7280] ml-1.5">
-                            {date}
-                        </Text>
+                        <Text className="text-xs text-[#6B7280] ml-1.5">{date}</Text>
                     </View>
 
                     <Text className="text-xl font-bold text-[#E95322] mt-1">{price}</Text>

@@ -2,17 +2,19 @@ import { Button } from "@/components/common";
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forgotPasswordSchema, ForgotPasswordFormData } from "@/utils/validation/auth.schema";
 import authService from "@/services/api/auth.service";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
 
 const ForgotPassword = () => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const showToast = useToastStore((s) => s.show);
 
     const {
         control,
@@ -21,7 +23,7 @@ const ForgotPassword = () => {
     } = useForm<ForgotPasswordFormData>({
         resolver: zodResolver(forgotPasswordSchema),
         defaultValues: {
-            email: '',
+            email: "",
         },
     });
 
@@ -30,14 +32,18 @@ const ForgotPassword = () => {
         try {
             await authService.forgotPassword({ email: data.email });
 
-            Alert.alert('Success', 'OTP has been sent to your email. Please check your inbox.');
+            showToast({
+                type: "success",
+                title: "Success",
+                message: "OTP has been sent to your email. Please check your inbox.",
+            });
 
             router.push({
-                pathname: '/(auth)/VerifyOTP',
-                params: { email: data.email, type: 'PASSWORD_RESET' },
+                pathname: "/(auth)/VerifyOTP",
+                params: { email: data.email, type: "PASSWORD_RESET" },
             });
         } catch (error: any) {
-            showErrorAlert(error, 'Failed to Send OTP');
+            showErrorAlert(error, "Failed to Send OTP");
         } finally {
             setIsLoading(false);
         }
@@ -73,9 +79,7 @@ const ForgotPassword = () => {
                             </View>
                         )}
                     />
-                    {errors.email && (
-                        <Text className="text-red-500 text-sm mt-1">{errors.email.message}</Text>
-                    )}
+                    {errors.email && <Text className="text-red-500 text-sm mt-1">{errors.email.message}</Text>}
                 </View>
 
                 <Button

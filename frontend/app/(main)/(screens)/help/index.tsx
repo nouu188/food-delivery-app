@@ -1,9 +1,36 @@
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Linking, ScrollView, Text, TextInput, TouchableOpacity, View, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import { useToastStore } from "@/store/useToastStore";
+import {
+    Linking,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    KeyboardAvoidingView,
+    Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Phone, Mail, MessageCircle, Search, ChevronRight, ChevronDown, ChevronUp, Facebook, Twitter, Instagram, Send, HelpCircle, ShieldCheck, CreditCard, MapPin, Clock } from "lucide-react-native";
+import {
+    Phone,
+    Mail,
+    MessageCircle,
+    Search,
+    ChevronRight,
+    ChevronDown,
+    ChevronUp,
+    Facebook,
+    Twitter,
+    Instagram,
+    Send,
+    HelpCircle,
+    ShieldCheck,
+    CreditCard,
+    MapPin,
+    Clock,
+} from "lucide-react-native";
 
 interface FAQ {
     id: string;
@@ -21,6 +48,7 @@ interface Category {
 
 export default function HelpScreen() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState("");
@@ -135,7 +163,8 @@ export default function HelpScreen() {
 
     const filteredFaqs = faqs.filter((faq) => {
         const matchesCategory = selectedCategory === "all" || faq.category === selectedCategory;
-        const matchesSearch = searchQuery === "" ||
+        const matchesSearch =
+            searchQuery === "" ||
             faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
             faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
@@ -147,19 +176,18 @@ export default function HelpScreen() {
 
     const handleSubmitFeedback = () => {
         if (!contactForm.name || !contactForm.email || !contactForm.message) {
-            Alert.alert("Required Fields", "Please fill in all required fields");
+            showToast({ type: "error", title: "Required Fields", message: "Please fill in all required fields" });
             return;
         }
 
         // TODO: Integrate with backend API
-        Alert.alert(
-            "Thank You!",
-            "Your message has been received. Our support team will get back to you within 24 hours.",
-            [{ text: "OK", onPress: () => {
-                setShowContactForm(false);
-                setContactForm({ name: "", email: "", subject: "", message: "" });
-            }}]
-        );
+        showToast({
+            type: "success",
+            title: "Thank You!",
+            message: "Your message has been received. Our support team will get back to you within 24 hours.",
+        });
+        setShowContactForm(false);
+        setContactForm({ name: "", email: "", subject: "", message: "" });
     };
 
     return (
@@ -167,18 +195,16 @@ export default function HelpScreen() {
             <Header title="Help & Support" />
 
             <View className="flex-1 bg-white rounded-t-3xl">
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    className="flex-1"
-                >
+                <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
                     <ScrollView
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: 100 }}
                         className="px-6 pt-6"
                     >
-                        <View className="bg-gradient-to-br from-[#FFE3D6] to-[#FFF5D6] rounded-3xl p-6 mb-6"
+                        <View
+                            className="bg-gradient-to-br from-[#FFE3D6] to-[#FFF5D6] rounded-3xl p-6 mb-6"
                             style={{
-                                shadowColor: '#000',
+                                shadowColor: "#000",
                                 shadowOpacity: 0.1,
                                 shadowOffset: { width: 0, height: 4 },
                                 shadowRadius: 12,
@@ -214,7 +240,7 @@ export default function HelpScreen() {
                                     onPress={option.onPress}
                                     className="bg-white rounded-2xl p-4 mb-3 flex-row items-center border border-[#FFE3D6]"
                                     style={{
-                                        shadowColor: '#000',
+                                        shadowColor: "#000",
                                         shadowOpacity: 0.05,
                                         shadowOffset: { width: 0, height: 2 },
                                         shadowRadius: 8,

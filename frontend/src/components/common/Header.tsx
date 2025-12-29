@@ -17,11 +17,11 @@ export default function Header({ title, showBackButton = true, onBack, rightComp
     };
 
     return (
-        <View className="bg-YellowBase px-6 pt-12 pb-6">
+        <View className="bg-YellowBase px-6 pt-6 pb-6">
             <View className="flex-row items-center justify-between relative">
                 {showBackButton && (
                     <TouchableOpacity onPress={handleBack} activeOpacity={0.7} className="absolute left-0 z-10">
-                        <ArrowLeft size={28} color="#000" />
+                        <ArrowLeft size={28} color="#E95322" />
                     </TouchableOpacity>
                 )}
 

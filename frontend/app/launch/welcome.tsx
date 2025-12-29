@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function WelcomeScreen() {
     const router = useRouter();
     const { checkOnboardingStatus } = useOnboarding();
-    const { continueAsGuest } = useAuth();
+    useAuth();
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -73,16 +73,6 @@ export default function WelcomeScreen() {
                             <Text className="text-[#E95322] text-lg font-bold">Sign Up</Text>
                         </TouchableOpacity>
                     </View>
-
-                    <TouchableOpacity
-                        onPress={async () => {
-                            await continueAsGuest();
-                            router.replace("/(main)/(tabs)/Home");
-                        }}
-                        className="mt-6"
-                    >
-                        <Text className="text-[#F8F8F8] text-sm">Continue as Guest</Text>
-                    </TouchableOpacity>
                 </View>
             </SafeAreaView>
         </Animated.View>

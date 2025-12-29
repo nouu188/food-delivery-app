@@ -29,7 +29,7 @@ export default function OrderConfirmedScreen() {
             const orderData = await orderService.getOrderById(orderId);
             setOrder(orderData);
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Order');
+            showErrorAlert(error, "Failed to Load Order");
         } finally {
             setIsLoading(false);
         }
@@ -39,13 +39,13 @@ export default function OrderConfirmedScreen() {
         if (!dateString) return "Coming soon";
 
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'short',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
+        return date.toLocaleDateString("en-US", {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
         });
     };
 
@@ -74,7 +74,14 @@ export default function OrderConfirmedScreen() {
                             <View className="mt-6 bg-white rounded-2xl px-6 py-4 w-full">
                                 <View className="flex-row justify-between mb-2">
                                     <Text className="text-[#6B7280]">Order Number</Text>
-                                    <Text className="font-semibold text-[#070707]">{order.order_number}</Text>
+                                    <Text
+                                        className="font-semibold text-[#070707]"
+                                        numberOfLines={1}
+                                        ellipsizeMode="middle"
+                                        style={{ flexShrink: 1, textAlign: "right", marginLeft: 12 }}
+                                    >
+                                        {order.order_number}
+                                    </Text>
                                 </View>
                                 <View className="flex-row justify-between mb-2">
                                     <Text className="text-[#6B7280]">Total Amount</Text>
@@ -82,7 +89,11 @@ export default function OrderConfirmedScreen() {
                                 </View>
                                 <View className="flex-row justify-between">
                                     <Text className="text-[#6B7280]">Estimated Delivery</Text>
-                                    <Text className="font-semibold text-[#070707]">
+                                    <Text
+                                        className="font-semibold text-[#070707]"
+                                        numberOfLines={1}
+                                        style={{ flexShrink: 1, textAlign: "right", marginLeft: 12 }}
+                                    >
                                         {formatDeliveryTime(order.estimated_delivery)}
                                     </Text>
                                 </View>
@@ -95,7 +106,7 @@ export default function OrderConfirmedScreen() {
                                 if (order) {
                                     router.replace(`/orders/${order.id}`);
                                 } else {
-                                    router.replace('/(main)/(tabs)/Orders');
+                                    router.replace("/(main)/(tabs)/Orders");
                                 }
                             }}
                             className="mt-8 px-10 py-4 rounded-full"
@@ -106,7 +117,7 @@ export default function OrderConfirmedScreen() {
 
                         <TouchableOpacity
                             activeOpacity={0.7}
-                            onPress={() => router.replace('/(main)/(tabs)/Home')}
+                            onPress={() => router.replace("/(main)/(tabs)/Home")}
                             className="mt-4"
                         >
                             <Text className="text-[#E95322] font-semibold">Back to Home</Text>

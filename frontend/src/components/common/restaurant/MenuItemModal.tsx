@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { X, Plus, Minus, ShoppingCart } from "lucide-react-native";
 import { MenuItem, MenuItemOption } from "@/types/api/restaurant";
 import { formatPrice } from "@/utils/format";
+import { useToastStore } from "@/store/useToastStore";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -21,11 +22,16 @@ interface MenuItemModalProps {
     visible: boolean;
     item: MenuItem | null;
     onClose: () => void;
-    onAddToCart: (item: MenuItem, quantity: number, selectedOptions: Array<{
-        option_group: string;
-        name: string;
-        price_modifier: number;
-    }>, specialInstructions?: string) => void;
+    onAddToCart: (
+        item: MenuItem,
+        quantity: number,
+        selectedOptions: Array<{
+            option_group: string;
+            name: string;
+            price_modifier: number;
+        }>,
+        specialInstructions?: string
+    ) => void;
     isAdding?: boolean;
 }
 
@@ -33,13 +39,8 @@ interface GroupedOptions {
     [groupName: string]: MenuItemOption[];
 }
 
-export default function MenuItemModal({
-    visible,
-    item,
-    onClose, 
-    onAddToCart,
-    isAdding = false,
-}: MenuItemModalProps) {
+export default function MenuItemModal({ visible, item, onClose, onAddToCart, isAdding = false }: MenuItemModalProps) {
+    const showToast = useToastStore((s) => s.show);
     const [quantity, setQuantity] = useState(1);
     const [selectedOptions, setSelectedOptions] = useState<{
         [groupName: string]: Set<string>;
@@ -63,9 +64,18 @@ export default function MenuItemModal({
 
             const defaults: { [groupName: string]: Set<string> } = {};
             Object.entries(groupedOptions).forEach(([groupName, options]) => {
-                const defaultOptions = options.filter(opt => opt.is_default);
+                const maxSelections = options[0]?.max_selections || 1;
+                const defaultOptions = options.filter((opt) => opt.is_default);
+                
                 if (defaultOptions.length > 0) {
-                    defaults[groupName] = new Set(defaultOptions.map(opt => opt.name));
+                    if (maxSelections === 1) {
+                        // For single selection, only pick the first default option
+                        defaults[groupName] = new Set([defaultOptions[0].name]);
+                    } else {
+                        // For multiple selections, respect max_selections limit
+                        const selectedDefaults = defaultOptions.slice(0, maxSelections);
+                        defaults[groupName] = new Set(selectedDefaults.map((opt) => opt.name));
+                    }
                 } else {
                     defaults[groupName] = new Set();
                 }
@@ -80,23 +90,34 @@ export default function MenuItemModal({
         const groupOptions = groupedOptions[groupName];
         const maxSelections = groupOptions[0]?.max_selections || 1;
 
-        setSelectedOptions(prev => {
+        setSelectedOptions((prev) => {
             const newSelections = { ...prev };
-            if (!newSelections[groupName]) {
-                newSelections[groupName] = new Set();
-            }
-
+            
             if (maxSelections === 1) {
-                if (newSelections[groupName].has(optionName)) {
+                // For single selection (radio), always replace with new selection
+                if (newSelections[groupName]?.has(optionName)) {
+                    // If clicking the same option, deselect it
                     newSelections[groupName] = new Set();
                 } else {
+                    // Replace with new selection
                     newSelections[groupName] = new Set([optionName]);
                 }
             } else {
+                // For multiple selections (checkbox)
+                if (!newSelections[groupName]) {
+                    newSelections[groupName] = new Set();
+                }
+                
                 if (newSelections[groupName].has(optionName)) {
-                    newSelections[groupName].delete(optionName);
+                    // Create new Set without the option
+                    const updated = new Set(newSelections[groupName]);
+                    updated.delete(optionName);
+                    newSelections[groupName] = updated;
                 } else if (newSelections[groupName].size < maxSelections) {
-                    newSelections[groupName].add(optionName);
+                    // Create new Set with the option added
+                    const updated = new Set(newSelections[groupName]);
+                    updated.add(optionName);
+                    newSelections[groupName] = updated;
                 }
             }
 
@@ -110,8 +131,8 @@ export default function MenuItemModal({
 
         Object.entries(selectedOptions).forEach(([groupName, optionNames]) => {
             const groupOpts = groupedOptions[groupName] || [];
-            optionNames.forEach(optName => {
-                const option = groupOpts.find(opt => opt.name === optName);
+            optionNames.forEach((optName) => {
+                const option = groupOpts.find((opt) => opt.name === optName);
                 if (option) {
                     optionsPrice += Number(option.price_modifier || 0);
                 }
@@ -123,9 +144,9 @@ export default function MenuItemModal({
 
     const handleAddToCart = () => {
         for (const [groupName, options] of Object.entries(groupedOptions)) {
-            const isRequired = options.some(opt => opt.is_required);
+            const isRequired = options.some((opt) => opt.is_required);
             if (isRequired && (!selectedOptions[groupName] || selectedOptions[groupName].size === 0)) {
-                alert(`Please select ${groupName}`);
+                showToast({ type: "error", title: "Required", message: `Please select ${groupName}` });
                 return;
             }
         }
@@ -138,8 +159,8 @@ export default function MenuItemModal({
 
         Object.entries(selectedOptions).forEach(([groupName, optionNames]) => {
             const groupOpts = groupedOptions[groupName] || [];
-            optionNames.forEach(optName => {
-                const option = groupOpts.find(opt => opt.name === optName);
+            optionNames.forEach((optName) => {
+                const option = groupOpts.find((opt) => opt.name === optName);
                 if (option) {
                     formattedOptions.push({
                         option_group: groupName,
@@ -158,22 +179,9 @@ export default function MenuItemModal({
     };
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            transparent={true}
-            onRequestClose={onClose}
-        >
-            <TouchableOpacity
-                style={styles.overlay}
-                activeOpacity={1}
-                onPress={onClose}
-            >
-                <TouchableOpacity
-                    activeOpacity={1}
-                    style={styles.modalContainer}
-                    onPress={(e) => e.stopPropagation()}
-                >
+        <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+            <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
+                <TouchableOpacity activeOpacity={1} style={styles.modalContainer} onPress={(e) => e.stopPropagation()}>
                     <SafeAreaView style={styles.safeArea}>
                         <View style={styles.header}>
                             <Text style={styles.headerTitle}>Customize Your Order</Text>
@@ -207,9 +215,7 @@ export default function MenuItemModal({
                                             {item.description}
                                         </Text>
                                     )}
-                                    <Text style={styles.basePrice}>
-                                        Base: ${formatPrice(item.price)}
-                                    </Text>
+                                    <Text style={styles.basePrice}>Base: ${formatPrice(item.price)}</Text>
                                 </View>
                             </View>
 
@@ -217,7 +223,7 @@ export default function MenuItemModal({
                                 <View style={styles.optionsContainer}>
                                     {Object.entries(groupedOptions).map(([groupName, options]) => {
                                         const maxSelections = options[0]?.max_selections || 1;
-                                        const isRequired = options.some(opt => opt.is_required);
+                                        const isRequired = options.some((opt) => opt.is_required);
 
                                         return (
                                             <View key={groupName} style={styles.optionGroup}>
@@ -227,7 +233,9 @@ export default function MenuItemModal({
                                                         {isRequired && <Text style={styles.required}> *</Text>}
                                                     </Text>
                                                     <Text style={styles.optionGroupSubtitle}>
-                                                        {maxSelections === 1 ? "Select one" : `Select up to ${maxSelections}`}
+                                                        {maxSelections === 1
+                                                            ? "Select one"
+                                                            : `Select up to ${maxSelections}`}
                                                     </Text>
                                                 </View>
 
@@ -246,10 +254,17 @@ export default function MenuItemModal({
                                                             activeOpacity={0.7}
                                                         >
                                                             <View style={styles.optionLeft}>
-                                                                <View style={[
-                                                                    maxSelections === 1 ? styles.radio : styles.checkbox,
-                                                                    isSelected && (maxSelections === 1 ? styles.radioSelected : styles.checkboxSelected),
-                                                                ]}>
+                                                                <View
+                                                                    style={[
+                                                                        maxSelections === 1
+                                                                            ? styles.radio
+                                                                            : styles.checkbox,
+                                                                        isSelected &&
+                                                                            (maxSelections === 1
+                                                                                ? styles.radioSelected
+                                                                                : styles.checkboxSelected),
+                                                                    ]}
+                                                                >
                                                                     {isSelected && maxSelections > 1 && (
                                                                         <View style={styles.checkmark} />
                                                                     )}
@@ -257,16 +272,19 @@ export default function MenuItemModal({
                                                                         <View style={styles.radioDot} />
                                                                     )}
                                                                 </View>
-                                                                <Text style={[
-                                                                    styles.optionName,
-                                                                    isSelected && styles.optionNameSelected,
-                                                                ]}>
+                                                                <Text
+                                                                    style={[
+                                                                        styles.optionName,
+                                                                        isSelected && styles.optionNameSelected,
+                                                                    ]}
+                                                                >
                                                                     {option.name}
                                                                 </Text>
                                                             </View>
                                                             {priceModifier !== 0 && (
                                                                 <Text style={styles.optionPrice}>
-                                                                    {priceModifier > 0 ? '+' : ''}${formatPrice(Math.abs(priceModifier))}
+                                                                    {priceModifier > 0 ? "+" : ""}$
+                                                                    {formatPrice(Math.abs(priceModifier))}
                                                                 </Text>
                                                             )}
                                                         </TouchableOpacity>
@@ -305,9 +323,7 @@ export default function MenuItemModal({
                         <View style={styles.footer}>
                             <View style={styles.totalContainer}>
                                 <Text style={styles.totalLabel}>Total</Text>
-                                <Text style={styles.totalPrice}>
-                                    ${formatPrice(calculateTotalPrice())}
-                                </Text>
+                                <Text style={styles.totalPrice}>${formatPrice(calculateTotalPrice())}</Text>
                             </View>
 
                             <TouchableOpacity

@@ -39,6 +39,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                             placeholderTextColor="#9CA3AF"
                             editable={false}
                             pointerEvents="none"
+                            numberOfLines={1}
                             style={{
                                 fontSize: 14,
                                 color: "#151312",
@@ -70,6 +71,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     value={searchText}
                     onChangeText={handleChangeText}
                     autoFocus
+                    numberOfLines={1}
+                    maxLength={50}
                     style={{
                         fontSize: 14,
                         color: "#151312",

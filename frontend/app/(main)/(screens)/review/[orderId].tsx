@@ -1,16 +1,18 @@
 import Header from "@/components/common/Header";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Star } from "@tamagui/lucide-icons";
 import orderService from "@/services/api/order.service";
 import reviewService from "@/services/api/review.service";
 import { Order } from "@/types/api/order";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
 
 export default function ReviewScreen() {
     const router = useRouter();
+    const showToast = useToastStore((s) => s.show);
     const { orderId } = useLocalSearchParams<{ orderId: string }>();
 
     const [order, setOrder] = useState<Order | null>(null);
@@ -25,7 +27,7 @@ export default function ReviewScreen() {
 
     const fetchOrder = async () => {
         if (!orderId) {
-            Alert.alert("Error", "Order ID is required");
+            showToast({ type: "error", title: "Error", message: "Order ID is required" });
             router.back();
             return;
         }
@@ -46,7 +48,7 @@ export default function ReviewScreen() {
         if (!order) return;
 
         if (rating < 1 || rating > 5) {
-            Alert.alert("Error", "Please select a rating");
+            showToast({ type: "error", title: "Error", message: "Please select a rating" });
             return;
         }
 
@@ -59,12 +61,8 @@ export default function ReviewScreen() {
                 comment: comment.trim() || undefined,
             });
 
-            Alert.alert("Success", "Thank you for your review!", [
-                {
-                    text: "OK",
-                    onPress: () => router.back(),
-                },
-            ]);
+            showToast({ type: "success", title: "Success", message: "Thank you for your review!" });
+            router.back();
         } catch (error) {
             showErrorAlert(error, "Failed to Submit Review");
         } finally {

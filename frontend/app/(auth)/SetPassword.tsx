@@ -3,14 +3,16 @@ import Header from "@/components/common/Header";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
-import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import authService from "@/services/api/auth.service";
 import { showErrorAlert } from "@/utils/error-handler";
+import { useToastStore } from "@/store/useToastStore";
 
 const SetPassword = () => {
     const router = useRouter();
     const params = useLocalSearchParams<{ email: string; otp: string }>();
+    const showToast = useToastStore((s) => s.show);
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,22 +22,22 @@ const SetPassword = () => {
 
     const handleSubmit = async () => {
         if (!password || !confirmPassword) {
-            Alert.alert("Error", "Please fill in all fields");
+            showToast({ type: "error", title: "Error", message: "Please fill in all fields." });
             return;
         }
 
         if (password !== confirmPassword) {
-            Alert.alert("Error", "Passwords do not match");
+            showToast({ type: "error", title: "Error", message: "Passwords do not match." });
             return;
         }
 
         if (password.length < 8) {
-            Alert.alert("Error", "Password must be at least 8 characters");
+            showToast({ type: "error", title: "Error", message: "Password must be at least 8 characters." });
             return;
         }
 
         if (!params.email || !params.otp) {
-            Alert.alert("Error", "Missing required parameters");
+            showToast({ type: "error", title: "Error", message: "Missing required parameters." });
             return;
         }
 
@@ -47,18 +49,14 @@ const SetPassword = () => {
                 new_password: password,
             });
 
-            Alert.alert(
-                "Success",
-                "Password has been reset successfully! You can now login with your new password.",
-                [
-                    {
-                        text: "OK",
-                        onPress: () => router.replace("/(auth)/Login"),
-                    },
-                ]
-            );
+            showToast({
+                type: "success",
+                title: "Success",
+                message: "Password has been reset successfully! You can now login with your new password.",
+            });
+            router.replace("/(auth)/Login");
         } catch (error: any) {
-            showErrorAlert(error, 'Failed to Reset Password');
+            showErrorAlert(error, "Failed to Reset Password");
         } finally {
             setIsLoading(false);
         }

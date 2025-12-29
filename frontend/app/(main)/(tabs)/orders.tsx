@@ -32,14 +32,14 @@ export default function MyOrders() {
         const cancelledStatuses = [OrderStatus.CANCELLED, OrderStatus.REFUNDED, OrderStatus.FAILED];
 
         return {
-            active: allOrders.filter(o => activeStatuses.includes(o.status)).length,
-            completed: allOrders.filter(o => completedStatuses.includes(o.status)).length,
-            cancelled: allOrders.filter(o => cancelledStatuses.includes(o.status)).length,
+            active: allOrders.filter((o) => activeStatuses.includes(o.status)).length,
+            completed: allOrders.filter((o) => completedStatuses.includes(o.status)).length,
+            cancelled: allOrders.filter((o) => cancelledStatuses.includes(o.status)).length,
         };
     }, [allOrders]);
 
     const statistics = useMemo(() => {
-        const completedOrders = allOrders.filter(o =>
+        const completedOrders = allOrders.filter((o) =>
             [OrderStatus.DELIVERED, OrderStatus.COMPLETED].includes(o.status)
         );
 
@@ -150,17 +150,10 @@ export default function MyOrders() {
 
     return (
         <SafeAreaView className="flex-1 bg-YellowBase">
-            <Header
-                title="My Orders"
-                showBackButton={false}
-            />
+            <Header title="My Orders" />
 
             <View className="flex-1 bg-white rounded-t-3xl px-5 pt-6">
-                <OrderTabHeader
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
-                    counts={orderCounts}
-                />
+                <OrderTabHeader activeTab={activeTab} onTabChange={setActiveTab} counts={orderCounts} />
 
                 {isLoading ? (
                     <View className="flex-1 items-center justify-center pt-20">
@@ -182,11 +175,12 @@ export default function MyOrders() {
                             {orders.length === 0 ? (
                                 <View className="items-center pt-12">
                                     <EmptyState
-                                        message={activeTab === "Active"
-                                            ? "You don't have any\nactive orders at this time"
-                                            : activeTab === "Completed"
-                                            ? "You don't have any\ncompleted orders yet"
-                                            : "You don't have any\ncancelled orders"
+                                        message={
+                                            activeTab === "Active"
+                                                ? "You don't have any\nactive orders at this time"
+                                                : activeTab === "Completed"
+                                                ? "You don't have any\ncompleted orders yet"
+                                                : "You don't have any\ncancelled orders"
                                         }
                                     />
                                     {activeTab === "Active" && (
