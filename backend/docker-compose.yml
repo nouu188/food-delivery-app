@@ -39,6 +39,16 @@ services:
     networks:
       - food-delivery-network
 
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: food-delivery-mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+    networks:
+      - food-delivery-network
+
   api-gateway:
     build:
       context: .
@@ -102,6 +112,11 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-dg.pthinh@gmail.com}
     depends_on:
       postgres:
         condition: service_healthy

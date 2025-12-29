@@ -11,10 +11,18 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { User, RefreshToken, OtpVerification } from '@backend/database';
+import { User, RefreshToken } from '@backend/database';
 import { RegisterDto, LoginDto, RegisterResponseDto } from '@backend/shared';
 import { OtpType, UserStatus } from '@backend/shared';
 import { RpcException } from '@nestjs/microservices';
+import { EmailService } from './services/email.service';
+import { RedisService } from './services/redis.service';
+
+interface OtpData {
+  otpHash: string;
+  attempts: number;
+  createdAt: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -23,13 +31,15 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
-    @InjectRepository(OtpVerification)
-    private readonly otpRepository: Repository<OtpVerification>,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly emailService: EmailService,
+    private readonly redisService: RedisService
   ) {}
 
   private readonly logger = new Logger('AuthService');
+  private readonly OTP_TTL_SECONDS = 600; // 10 minutes
+  private readonly MAX_OTP_ATTEMPTS = 3;
 
   async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {
     try {
@@ -218,47 +228,38 @@ export class AuthService {
     const otp = this.generateOTP();
     const otpHash = await bcrypt.hash(otp, 10);
 
-    await this.otpRepository.save({
-      identifier: email,
-      otp_hash: otpHash,
-      type: OtpType.PASSWORD_RESET,
-      expires_at: new Date(Date.now() + 10 * 60 * 1000),
+    await this.saveOtpData(email, OtpType.PASSWORD_RESET, {
+      otpHash,
       attempts: 0,
-      is_used: false,
+      createdAt: new Date().toISOString(),
     });
+
+    try {
+      await this.emailService.sendOtpEmail(email, otp, 'password-reset');
+      this.logger.log(`Password reset OTP sent to ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send password reset OTP to ${email}:`, error);
+    }
 
     return { message: 'If email exists, OTP has been sent' };
   }
 
   async resetPassword(email: string, otp: string, newPassword: string) {
-    const otpRecord = await this.otpRepository.findOne({
-      where: {
-        identifier: email,
-        type: OtpType.PASSWORD_RESET,
-        is_used: false,
-      },
-      order: { created_at: 'DESC' },
-    });
+    const otpData = await this.getOtpData(email, OtpType.PASSWORD_RESET);
 
-    if (!otpRecord) {
+    if (!otpData) {
       throw new BadRequestException('Invalid or expired OTP');
     }
 
-    if (otpRecord.expires_at < new Date()) {
-      throw new BadRequestException('OTP expired');
-    }
-
-    if (otpRecord.attempts >= 3) {
+    if (otpData.attempts >= this.MAX_OTP_ATTEMPTS) {
       throw new BadRequestException('Maximum OTP attempts exceeded');
     }
 
-    const isOtpValid = await bcrypt.compare(otp, otpRecord.otp_hash);
+    const isOtpValid = await bcrypt.compare(otp, otpData.otpHash);
 
     if (!isOtpValid) {
-      await this.otpRepository.update(
-        { id: otpRecord.id },
-        { attempts: otpRecord.attempts + 1 }
-      );
+      otpData.attempts += 1;
+      await this.saveOtpData(email, OtpType.PASSWORD_RESET, otpData);
       throw new BadRequestException('Invalid OTP');
     }
 
@@ -274,40 +275,31 @@ export class AuthService {
       { password_hash: hashedPassword }
     );
 
-    await this.otpRepository.update({ id: otpRecord.id }, { is_used: true });
+    await this.deleteOtpData(email, OtpType.PASSWORD_RESET);
 
     return { message: 'Password reset successfully' };
   }
 
   async verifyOtp(identifier: string, otp: string, type: OtpType) {
-    const otpRecord = await this.otpRepository.findOne({
-      where: { identifier, type, is_used: false },
-      order: { created_at: 'DESC' },
-    });
+    const otpData = await this.getOtpData(identifier, type);
 
-    if (!otpRecord) {
+    if (!otpData) {
       throw new BadRequestException('Invalid or expired OTP');
     }
 
-    if (otpRecord.expires_at < new Date()) {
-      throw new BadRequestException('OTP expired');
-    }
-
-    if (otpRecord.attempts >= 3) {
+    if (otpData.attempts >= this.MAX_OTP_ATTEMPTS) {
       throw new BadRequestException('Maximum OTP attempts exceeded');
     }
 
-    const isOtpValid = await bcrypt.compare(otp, otpRecord.otp_hash);
+    const isOtpValid = await bcrypt.compare(otp, otpData.otpHash);
 
     if (!isOtpValid) {
-      await this.otpRepository.update(
-        { id: otpRecord.id },
-        { attempts: otpRecord.attempts + 1 }
-      );
+      otpData.attempts += 1;
+      await this.saveOtpData(identifier, type, otpData);
       throw new BadRequestException('Invalid OTP');
     }
 
-    await this.otpRepository.update({ id: otpRecord.id }, { is_used: true });
+    await this.deleteOtpData(identifier, type);
 
     if (type === OtpType.EMAIL_VERIFY) {
       await this.userRepository.update(
@@ -328,14 +320,27 @@ export class AuthService {
     const otp = this.generateOTP();
     const otpHash = await bcrypt.hash(otp, 10);
 
-    await this.otpRepository.save({
-      identifier,
-      otp_hash: otpHash,
-      type,
-      expires_at: new Date(Date.now() + 10 * 60 * 1000),
+    await this.saveOtpData(identifier, type, {
+      otpHash,
       attempts: 0,
-      is_used: false,
+      createdAt: new Date().toISOString(),
     });
+
+    try {
+      if (type === OtpType.EMAIL_VERIFY || type === OtpType.PASSWORD_RESET) {
+        const emailType = type === OtpType.EMAIL_VERIFY ? 'verification' : 'password-reset';
+        await this.emailService.sendOtpEmail(identifier, otp, emailType);
+        this.logger.log(`OTP sent to ${identifier} for type: ${type}`);
+      } else if (type === OtpType.PHONE_VERIFY) {
+        this.logger.warn(`Phone OTP sending not implemented for ${identifier}`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to send OTP to ${identifier}:`, error);
+      throw new RpcException({
+        statusCode: 500,
+        message: 'Failed to send OTP. Please try again later.',
+      });
+    }
 
     return { message: 'OTP resent successfully' };
   }
@@ -372,5 +377,35 @@ export class AuthService {
 
   private generateOTP(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  private getOtpRedisKey(identifier: string, type: OtpType): string {
+    return `otp:${type}:${identifier}`;
+  }
+
+  private async getOtpData(identifier: string, type: OtpType): Promise<OtpData | null> {
+    const key = this.getOtpRedisKey(identifier, type);
+    const data = await this.redisService.get(key);
+
+    if (!data) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(data);
+    } catch (error) {
+      this.logger.error(`Failed to parse OTP data for ${identifier}:`, error);
+      return null;
+    }
+  }
+
+  private async saveOtpData(identifier: string, type: OtpType, otpData: OtpData): Promise<void> {
+    const key = this.getOtpRedisKey(identifier, type);
+    await this.redisService.set(key, JSON.stringify(otpData), this.OTP_TTL_SECONDS);
+  }
+
+  private async deleteOtpData(identifier: string, type: OtpType): Promise<void> {
+    const key = this.getOtpRedisKey(identifier, type);
+    await this.redisService.del(key);
   }
 }
