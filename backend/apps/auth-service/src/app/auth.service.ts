@@ -48,15 +48,11 @@ export class AuthService {
       });
 
       if (existingUser) {
-        throw new RpcException(
-          new ConflictException('User with this email or phone already exists')
-        );
+        throw new ConflictException('User with this email or phone already exists')
       }
 
       if (!registerDto.password) {
-        throw new RpcException(
-          new InternalServerErrorException('Password is required')
-        );
+        throw new InternalServerErrorException('Password is required')
       }
       const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
