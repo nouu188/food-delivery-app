@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ToastType = "success" | "error" | "info";
+export type ToastType = "success" | "error" | "info" | "warning";
 
 export type ToastPayload = {
     type: ToastType;
@@ -16,11 +16,19 @@ type ToastState = {
     hide: () => void;
 };
 
+const DEFAULT_DURATIONS: Record<ToastType, number> = {
+    success: 2800,
+    error: 4000,
+    info: 3000,
+    warning: 3500,
+};
+
 export const useToastStore = create<ToastState>((set, get) => ({
     isVisible: false,
     current: null,
     show: (payload) => {
-        set({ isVisible: true, current: { durationMs: 2800, ...payload } });
+        const durationMs = payload.durationMs ?? DEFAULT_DURATIONS[payload.type];
+        set({ isVisible: true, current: { ...payload, durationMs } });
     },
     hide: () => {
         // Avoid redundant renders

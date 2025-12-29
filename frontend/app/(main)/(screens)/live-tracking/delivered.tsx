@@ -24,7 +24,7 @@ export default function OrderDeliveredScreen() {
                     <View className="w-3 h-3 rounded-full" style={{ backgroundColor: "#E95322" }} />
                 </View>
 
-                <Text className="mt-10 text-2xl font-extrabold text-[#070707]">iOrder Delivered!</Text>
+                <Text className="mt-10 text-2xl font-extrabold text-[#070707]">Order Delivered!</Text>
                 <Text className="mt-2 text-center text-[#6B7280] font-semibold">
                     Your order has been successfully{`\n`}delivered, enjoy it!
                 </Text>

@@ -31,6 +31,7 @@ import {
     Clock,
 } from "lucide-react-native";
 import { X } from "@tamagui/lucide-icons";
+import { useToastStore } from "@/store/useToastStore";
 
 interface FAQ {
     id: string;
@@ -58,6 +59,7 @@ export default function HelpScreen() {
         subject: "",
         message: "",
     });
+    const showToast = useToastStore((s) => s.show);
 
     const categories: Category[] = [
         {

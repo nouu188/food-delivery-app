@@ -6,8 +6,8 @@ import React, { useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import authService from "@/services/api/auth.service";
-import { showErrorAlert } from "@/utils/error-handler";
 import { useToastStore } from "@/store/useToastStore";
+import { showErrorAlert } from "@/utils/error-handler";
 
 const SetPassword = () => {
     const router = useRouter();
@@ -55,7 +55,7 @@ const SetPassword = () => {
                 message: "Password has been reset successfully! You can now login with your new password.",
             });
             router.replace("/(auth)/Login");
-        } catch (error: any) {
+        } catch (error) {
             showErrorAlert(error, "Failed to Reset Password");
         } finally {
             setIsLoading(false);

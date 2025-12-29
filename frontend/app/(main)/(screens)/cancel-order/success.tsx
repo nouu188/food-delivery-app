@@ -1,5 +1,6 @@
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,10 +16,10 @@ export default function CancelOrderSuccess() {
                     className="w-40 h-40 rounded-full items-center justify-center"
                     style={{ borderWidth: 4, borderColor: "#E95322" }}
                 >
-                    <View className="w-3 h-3 rounded-full" style={{ backgroundColor: "#E95322" }} />
+                    <Feather name="check-circle" size={64} color="#22C55E" />
                 </View>
 
-                <Text className="mt-10 text-2xl font-extrabold text-[#070707]">iOrder Cancelled!</Text>
+                <Text className="mt-10 text-2xl font-extrabold text-[#070707]">Order Cancelled!</Text>
                 <Text className="mt-2 text-center text-[#6B7280] font-semibold">
                     Your order has been successfully{`\n`}cancelled
                 </Text>

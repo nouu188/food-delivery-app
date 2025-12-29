@@ -84,7 +84,8 @@ apiClient.interceptors.response.use(
             const shouldLog = status !== 409 && status !== 400;
 
             if (shouldLog) {
-                console.error(
+                // Use console.log instead of console.error to avoid red screen in dev mode
+                console.log(
                     `[API Error] ${error.response?.status || 'Network Error'} ${error.config?.url}`,
                     error.response?.data || error.message,
                 );
@@ -92,7 +93,13 @@ apiClient.interceptors.response.use(
         }
 
         // Handle 401 Unauthorized - Token expired
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
+                               originalRequest.url?.includes('/auth/register') ||
+                               originalRequest.url?.includes('/auth/forgot-password') ||
+                               originalRequest.url?.includes('/auth/reset-password') ||
+                               originalRequest.url?.includes('/auth/verify-otp');
+
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
@@ -150,12 +157,30 @@ apiClient.interceptors.response.use(
             const skipToast = Boolean(toastConfig?.error === false);
             const status = error.response?.status;
 
-            // Don't toast expected errors (conflict, unavailable items)
-            const shouldSkipToast = skipToast || status === 409 || status === 400;
+            // Determine if we should show a toast
+            let shouldShowToast = !skipToast && !(error as any).__toastShown;
 
-            if (!shouldSkipToast && !(error as any).__toastShown) {
+            // For 400 validation errors, show them (they're user-facing)
+            // For 409 conflicts, let the caller handle it (business logic)
+            if (shouldShowToast && status === 409) {
+                shouldShowToast = false;
+            }
+
+            if (shouldShowToast) {
                 const message = handleApiError(error);
-                useToastStore.getState().show({ type: 'error', title: 'Error', message });
+                const title = status === 401 ? 'Authentication Error' :
+                             status === 403 ? 'Permission Denied' :
+                             status === 404 ? 'Not Found' :
+                             status === 400 ? 'Validation Error' :
+                             status && status >= 500 ? 'Server Error' :
+                             'Error';
+
+                useToastStore.getState().show({
+                    type: 'error',
+                    title,
+                    message,
+                    durationMs: status === 401 ? 5000 : undefined // Show auth errors longer
+                });
                 (error as any).__toastShown = true;
             }
         } catch {

@@ -82,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 setUser(null);
             }
         } catch (error) {
-            console.error("Auth check error:", error);
+            console.log("[Auth] Check error:", error);
             setIsAuthenticated(false);
             setIsGuest(false);
             setUser(null);
