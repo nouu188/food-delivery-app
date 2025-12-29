@@ -57,9 +57,15 @@ export default function PaymentScreen() {
             });
 
             const selectedIds = Array.from(selectedItemIds);
-            await removeBulkItems(selectedIds);
+            await removeBulkItems(selectedIds, true);
 
             clearSelection();
+
+            showToast({
+                type: "success",
+                title: "Order Placed Successfully!",
+                message: "Your order has been confirmed and is being processed.",
+            });
 
             router.replace({
                 pathname: "/checkout/order-confirmed",

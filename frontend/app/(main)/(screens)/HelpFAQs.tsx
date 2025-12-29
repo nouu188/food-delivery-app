@@ -9,24 +9,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const dummyFAQs = [
     {
-        question: "Lorem ipsum dolor sit amet?",
-        answer: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus pellentesque congue libero, vel tincidunt tortor placerat a. Proin ut diam quam. Aenean in sagittis magna, ut feugiat diam.",
+        question: "How do I track my order?",
+        answer: "You can track your order in real-time by going to the Orders tab and selecting your active order. You'll see the delivery driver's location and estimated arrival time.",
     },
     {
-        question: "Lorem ipsum dolor sit amet?",
-        answer: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+        question: "What payment methods do you accept?",
+        answer: "We accept multiple payment methods including Cash on Delivery, Credit/Debit Cards, MoMo Wallet, VNPay, and App Wallet.",
     },
     {
-        question: "Lorem ipsum dolor sit amet?",
-        answer: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+        question: "How do I cancel my order?",
+        answer: "You can cancel your order before it's confirmed by the restaurant. Go to your order details and tap the Cancel Order button. Refunds will be processed within 5-7 business days.",
     },
     {
-        question: "Lorem ipsum dolor sit amet?",
-        answer: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+        question: "What if my food arrives cold or incorrect?",
+        answer: "If there's any issue with your order, please contact our customer support immediately through the Help section. We'll assist you with a refund or replacement.",
     },
     {
-        question: "Lorem ipsum dolor sit amet?",
-        answer: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+        question: "How do I apply a voucher or promo code?",
+        answer: "You can apply vouchers during checkout. Simply enter your promo code in the voucher section before confirming your order. Applicable discounts will be automatically calculated.",
     },
 ];
 
