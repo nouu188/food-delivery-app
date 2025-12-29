@@ -14,7 +14,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom, catchError } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { JwtAuthGuard, Roles, RolesGuard, AuthenticatedRequest } from '@backend/common';
 import {
   UserRole,
@@ -40,14 +40,23 @@ export class OrderController {
       const errorData = error?.error || error;
 
       if (errorData?.statusCode === 404) {
-        throw new HttpException('Cart not found', HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          errorData.message || 'Cart not found',
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       if (errorData?.statusCode) {
-        throw new HttpException(errorData.message || 'Failed to get cart', errorData.statusCode);
+        throw new HttpException(
+          errorData.message || 'Failed to get cart',
+          errorData.statusCode,
+        );
       }
 
-      throw error;
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -66,21 +75,29 @@ export class OrderController {
 
       if (errorData?.statusCode === 409) {
         throw new HttpException(
-          {
-            statusCode: HttpStatus.CONFLICT,
-            message: errorData.message || 'Cart already contains items from another restaurant',
-            currentRestaurant: errorData.currentRestaurant,
-            newRestaurant: errorData.newRestaurant,
-          },
-          HttpStatus.CONFLICT
+          errorData.message || 'Cart already contains items from another restaurant',
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      if (errorData?.statusCode === 400) {
+        throw new HttpException(
+          errorData.message || 'Invalid cart item data',
+          HttpStatus.BAD_REQUEST,
         );
       }
 
       if (errorData?.statusCode) {
-        throw new HttpException(errorData, errorData.statusCode);
+        throw new HttpException(
+          errorData.message || 'Failed to add to cart',
+          errorData.statusCode,
+        );
       }
 
-      throw error;
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -102,11 +119,31 @@ export class OrderController {
     } catch (error: any) {
       const errorData = error?.error || error;
 
-      if (errorData?.statusCode) {
-        throw new HttpException(errorData.message || 'Failed to update cart item', errorData.statusCode);
+      if (errorData?.statusCode === 404) {
+        throw new HttpException(
+          errorData.message || 'Cart item not found',
+          HttpStatus.NOT_FOUND,
+        );
       }
 
-      throw error;
+      if (errorData?.statusCode === 400) {
+        throw new HttpException(
+          errorData.message || 'Invalid cart item data',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to update cart item',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -123,48 +160,146 @@ export class OrderController {
     } catch (error: any) {
       const errorData = error?.error || error;
 
-      if (errorData?.statusCode) {
-        throw new HttpException(errorData.message || 'Failed to remove cart item', errorData.statusCode);
+      if (errorData?.statusCode === 404) {
+        throw new HttpException(
+          errorData.message || 'Cart item not found',
+          HttpStatus.NOT_FOUND,
+        );
       }
 
-      throw error;
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to remove cart item',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   @Delete('cart')
   @UseGuards(JwtAuthGuard)
   async clearCart(@Request() req: AuthenticatedRequest) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.CLEAR_CART, { userId: req.user.id })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.CLEAR_CART, { userId: req.user.id })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to clear cart',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Post('orders')
   @UseGuards(JwtAuthGuard)
   async createOrder(@Request() req: AuthenticatedRequest, @Body() data: CreateOrderDto) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.CREATE_ORDER, {
-        userId: req.user.id,
-        ...data,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.CREATE_ORDER, {
+          userId: req.user.id,
+          ...data,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 400) {
+        throw new HttpException(
+          errorData.message || 'Invalid order data',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (errorData?.statusCode === 404) {
+        throw new HttpException(
+          errorData.message || 'Resource not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to create order',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get('orders')
   @UseGuards(JwtAuthGuard)
   async getUserOrders(@Request() req: AuthenticatedRequest, @Query() query: OrderQueryDto) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.GET_ORDERS, {
-        userId: req.user.id,
-        ...query,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.GET_ORDERS, {
+          userId: req.user.id,
+          ...query,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to get orders',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get('orders/:id')
   @UseGuards(JwtAuthGuard)
   async getOrder(@Param('id') id: string) {
-    return firstValueFrom(this.orderService.send(ORDER_PATTERNS.GET_ORDER, { id }));
+    try {
+      return await firstValueFrom(this.orderService.send(ORDER_PATTERNS.GET_ORDER, { id }));
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 404) {
+        throw new HttpException(
+          errorData.message || 'Order not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to get order',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Put('orders/:id/cancel')
@@ -174,46 +309,180 @@ export class OrderController {
     @Param('id') id: string,
     @Body() data: CancelOrderDto
   ) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.CANCEL_ORDER, {
-        id,
-        userId: req.user.id,
-        ...data,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.CANCEL_ORDER, {
+          id,
+          userId: req.user.id,
+          ...data,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 404) {
+        throw new HttpException(
+          errorData.message || 'Order not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (errorData?.statusCode === 400) {
+        throw new HttpException(
+          errorData.message || 'Cannot cancel order',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (errorData?.statusCode === 403) {
+        throw new HttpException(
+          errorData.message || 'Not authorized to cancel this order',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to cancel order',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Post('orders/:id/reorder')
   @UseGuards(JwtAuthGuard)
   async reorder(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.REORDER, {
-        userId: req.user.id,
-        orderId: id,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.REORDER, {
+          userId: req.user.id,
+          orderId: id,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 404) {
+        throw new HttpException(
+          errorData.message || 'Order not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (errorData?.statusCode === 400) {
+        throw new HttpException(
+          errorData.message || 'Cannot reorder',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to reorder',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get('restaurants/:id/orders')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.RESTAURANT_OWNER)
   async getRestaurantOrders(@Param('id') id: string, @Query() query: OrderQueryDto) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.GET_RESTAURANT_ORDERS, {
-        restaurantId: id,
-        ...query,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.GET_RESTAURANT_ORDERS, {
+          restaurantId: id,
+          ...query,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 404) {
+        throw new HttpException(
+          errorData.message || 'Restaurant not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (errorData?.statusCode === 403) {
+        throw new HttpException(
+          errorData.message || 'Not authorized to view restaurant orders',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to get restaurant orders',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Put('orders/:id/status')
   @UseGuards(JwtAuthGuard)
   async updateOrderStatus(@Param('id') id: string, @Body() data: UpdateOrderStatusDto) {
-    return firstValueFrom(
-      this.orderService.send(ORDER_PATTERNS.UPDATE_ORDER_STATUS, {
-        id,
-        ...data,
-      })
-    );
+    try {
+      return await firstValueFrom(
+        this.orderService.send(ORDER_PATTERNS.UPDATE_ORDER_STATUS, {
+          id,
+          ...data,
+        })
+      );
+    } catch (error: any) {
+      const errorData = error?.error || error;
+
+      if (errorData?.statusCode === 404) {
+        throw new HttpException(
+          errorData.message || 'Order not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (errorData?.statusCode === 400) {
+        throw new HttpException(
+          errorData.message || 'Invalid status update',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (errorData?.statusCode === 403) {
+        throw new HttpException(
+          errorData.message || 'Not authorized to update order status',
+          HttpStatus.FORBIDDEN,
+        );
+      }
+
+      if (errorData?.statusCode) {
+        throw new HttpException(
+          errorData.message || 'Failed to update order status',
+          errorData.statusCode,
+        );
+      }
+
+      throw new HttpException(
+        'Internal order error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
