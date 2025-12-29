@@ -25,7 +25,7 @@ interface CartState {
     updateQuantity: (itemId: string, quantity: number) => Promise<void>;
     removeItem: (itemId: string) => Promise<void>;
     clearCart: () => Promise<void>;
-    removeBulkItems: (itemIds: string[]) => Promise<void>;
+    removeBulkItems: (itemIds: string[], silent?: boolean) => Promise<void>;
 
     toggleItemSelection: (itemId: string) => void;
     selectAllItems: () => void;
@@ -167,14 +167,14 @@ export const useCartStore = create<CartState>((set, get) => ({
         }
     },
 
-    removeBulkItems: async (itemIds: string[]) => {
+    removeBulkItems: async (itemIds: string[], silent: boolean = false) => {
         if (itemIds.length === 0) return;
 
         set({ isLoading: true, error: null });
         try {
             // Remove items sequentially
             for (const itemId of itemIds) {
-                await orderService.removeCartItem(itemId);
+                await orderService.removeCartItem(itemId, silent);
             }
 
             // Fetch updated cart

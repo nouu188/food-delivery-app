@@ -65,8 +65,7 @@ const Login = () => {
                 <View>
                     <Text className="text-2xl font-bold mb-2">Welcome</Text>
                     <Text className="text-base font-light mb-6">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                        labore et dolore magna aliqua.
+                        Sign in to your account to start ordering your favorite meals and track your deliveries.
                     </Text>
 
                     <View className="mb-3">

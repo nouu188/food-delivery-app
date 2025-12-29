@@ -41,7 +41,7 @@ export const FavoriteItem = ({ id, name, price, image, liked, onToggleLike }: Fa
                 </Text>
                 <Text className="text-orange-600 font-bold text-base mt-1">${price}</Text>
                 <Text className="text-gray-500 text-xs mt-1 leading-4" numberOfLines={2}>
-                    Lorem ipsum dolor sit amet, consectetur...
+                    Your favorite dish
                 </Text>
             </View>
         </TouchableOpacity>
