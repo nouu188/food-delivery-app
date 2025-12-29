@@ -72,6 +72,14 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ isVisible, onClose }) =
             setLogoutVisible(false);
             onClose();
             await signOut();
+            
+            // Show success toast after logout
+            const { useToastStore } = await import("@/store/useToastStore");
+            useToastStore.getState().show({
+                type: "success",
+                title: "Logged Out",
+                message: "You have been successfully logged out."
+            });
         } catch (error) {
             showErrorAlert(error, 'Logout Failed');
         }

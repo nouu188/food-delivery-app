@@ -1,4 +1,11 @@
-import { Injectable, UnauthorizedException, BadRequestException, ConflictException, Logger, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  ConflictException,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -19,26 +26,27 @@ export class AuthService {
     @InjectRepository(OtpVerification)
     private readonly otpRepository: Repository<OtpVerification>,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
-  ) { }
+    private readonly configService: ConfigService
+  ) {}
 
   private readonly logger = new Logger('AuthService');
 
   async register(registerDto: RegisterDto): Promise<RegisterResponseDto> {
     try {
       const existingUser = await this.userRepository.findOne({
-        where: [
-          { email: registerDto.email },
-          { phone: registerDto.phone },
-        ],
+        where: [{ email: registerDto.email }, { phone: registerDto.phone }],
       });
 
       if (existingUser) {
-        throw new RpcException(new ConflictException('User with this email or phone already exists'));
+        throw new RpcException(
+          new ConflictException('User with this email or phone already exists')
+        );
       }
 
       if (!registerDto.password) {
-        throw new RpcException(new InternalServerErrorException('Password is required'));
+        throw new RpcException(
+          new InternalServerErrorException('Password is required')
+        );
       }
       const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
@@ -59,7 +67,6 @@ export class AuthService {
         role: savedUser.role,
         status: savedUser.status,
       };
-
     } catch (error) {
       this.logger.error(`Registration failed: ${error.message}`, error.stack);
 
@@ -75,46 +82,74 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.userRepository.findOne({
-      where: { email: loginDto.email },
-    });
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email: loginDto.email },
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      if (!user) {
+        throw new RpcException({
+          statusCode: 401,
+          message: 'Invalid credentials',
+        });
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        loginDto.password,
+        user.password_hash
+      );
+
+      if (!isPasswordValid) {
+        throw new RpcException({
+          statusCode: 401,
+          message: 'Invalid credentials',
+        });
+      }
+
+      if (
+        user.status !== UserStatus.ACTIVE &&
+        user.status !== UserStatus.PENDING_VERIFICATION
+      ) {
+        throw new RpcException({
+          statusCode: 401,
+          message: 'Account is suspended or inactive',
+        });
+      }
+
+      user.last_login_at = new Date();
+      await this.userRepository.save(user);
+
+      const tokens = await this.generateTokens(user);
+
+      return {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        user: {
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          role: user.role,
+          status: user.status,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Login failed: ${error.message}`, error.stack);
+
+      if (error instanceof RpcException) {
+        throw error;
+      }
+
+      throw new RpcException({
+        statusCode: error.status || 500,
+        message: error.message || 'Internal Server Error during login',
+      });
     }
-
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password_hash);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    if (user.status !== UserStatus.ACTIVE && user.status !== UserStatus.PENDING_VERIFICATION) {
-      throw new UnauthorizedException('Account is suspended or inactive');
-    }
-
-    user.last_login_at = new Date();
-    await this.userRepository.save(user);
-
-    const tokens = await this.generateTokens(user);
-
-    return {
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
-      user: {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        role: user.role,
-        status: user.status,
-      },
-    };
   }
 
   async logout(userId: string, refreshToken: string) {
     await this.refreshTokenRepository.update(
       { user_id: userId, token_hash: await bcrypt.hash(refreshToken, 10) },
-      { is_revoked: true },
+      { is_revoked: true }
     );
 
     return { message: 'Logged out successfully' };
@@ -122,7 +157,9 @@ export class AuthService {
 
   async refreshToken(refreshToken: string) {
     const decoded = this.jwtService.verify(refreshToken, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'your-refresh-secret',
+      secret:
+        this.configService.get<string>('JWT_REFRESH_SECRET') ||
+        'your-refresh-secret',
     });
 
     const storedTokens = await this.refreshTokenRepository.find({
@@ -162,7 +199,7 @@ export class AuthService {
 
     await this.refreshTokenRepository.update(
       { id: validToken.id },
-      { is_revoked: true },
+      { is_revoked: true }
     );
 
     return {
@@ -220,7 +257,7 @@ export class AuthService {
     if (!isOtpValid) {
       await this.otpRepository.update(
         { id: otpRecord.id },
-        { attempts: otpRecord.attempts + 1 },
+        { attempts: otpRecord.attempts + 1 }
       );
       throw new BadRequestException('Invalid OTP');
     }
@@ -234,13 +271,10 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await this.userRepository.update(
       { id: user.id },
-      { password_hash: hashedPassword },
+      { password_hash: hashedPassword }
     );
 
-    await this.otpRepository.update(
-      { id: otpRecord.id },
-      { is_used: true },
-    );
+    await this.otpRepository.update({ id: otpRecord.id }, { is_used: true });
 
     return { message: 'Password reset successfully' };
   }
@@ -268,25 +302,22 @@ export class AuthService {
     if (!isOtpValid) {
       await this.otpRepository.update(
         { id: otpRecord.id },
-        { attempts: otpRecord.attempts + 1 },
+        { attempts: otpRecord.attempts + 1 }
       );
       throw new BadRequestException('Invalid OTP');
     }
 
-    await this.otpRepository.update(
-      { id: otpRecord.id },
-      { is_used: true },
-    );
+    await this.otpRepository.update({ id: otpRecord.id }, { is_used: true });
 
     if (type === OtpType.EMAIL_VERIFY) {
       await this.userRepository.update(
         { email: identifier },
-        { email_verified_at: new Date() },
+        { email_verified_at: new Date() }
       );
     } else if (type === OtpType.PHONE_VERIFY) {
       await this.userRepository.update(
         { phone: identifier },
-        { phone_verified_at: new Date() },
+        { phone_verified_at: new Date() }
       );
     }
 
@@ -318,7 +349,9 @@ export class AuthService {
     });
 
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'your-refresh-secret',
+      secret:
+        this.configService.get<string>('JWT_REFRESH_SECRET') ||
+        'your-refresh-secret',
       expiresIn: '7d',
     });
 

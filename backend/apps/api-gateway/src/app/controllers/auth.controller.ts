@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Inject, UseGuards, Request, HttpStatus, HttpException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, catchError, throwError } from 'rxjs';
 import { JwtAuthGuard, AuthenticatedRequest } from '@backend/common';
 import { AUTH_PATTERNS } from '@backend/contracts';
 import {
@@ -11,7 +11,7 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
   VerifyOtpDto,
-  SendOtpDto
+  SendOtpDto,
 } from '@backend/shared';
 
 @Controller('auth')

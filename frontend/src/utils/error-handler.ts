@@ -1,6 +1,6 @@
-import axios, { AxiosError } from "axios";
-import { ApiError } from "@/types/error";
-import { useToastStore } from "@/store/useToastStore";
+import axios, { AxiosError } from 'axios';
+import { ApiError } from '@/types/error';
+import { useToastStore } from '@/store/useToastStore';
 
 export const handleApiError = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
@@ -8,27 +8,32 @@ export const handleApiError = (error: unknown): string => {
 
         // Network error
         if (!axiosError.response) {
-            return "Network error. Please check your connection.";
+            return 'Network error. Please check your connection.';
         }
 
         const { statusCode, message, errors } = axiosError.response.data as any;
 
         const normalizeMessage = (value: unknown): string => {
-            if (typeof value === "string") return value;
+            if (typeof value === 'string') return value;
             if (Array.isArray(value)) {
-                return value.filter((v) => typeof v === "string").join("\n") || "An error occurred";
+                return value.filter((v) => typeof v === 'string').join('\n') || 'An error occurred';
             }
-            return "An error occurred";
+            return 'An error occurred';
         };
+
+        // Login authentication errors (401)
+        if (statusCode === 401) {
+            return 'Tên đăng nhập hoặc mật khẩu không đúng. Vui lòng thử lại.';
+        }
 
         // Validation errors
         if (statusCode === 400 && errors && errors.length > 0) {
-            const validationMessages = errors.map((err) => Object.values(err.constraints).join(", ")).join("\n");
+            const validationMessages = errors.map((err) => Object.values(err.constraints).join(', ')).join('\n');
             return validationMessages;
         }
 
         // Other errors
-        return normalizeMessage(message) || "An error occurred";
+        return normalizeMessage(message) || 'An error occurred';
     }
 
     // Unknown error
@@ -36,17 +41,17 @@ export const handleApiError = (error: unknown): string => {
         return error.message;
     }
 
-    return "An unexpected error occurred";
+    return 'An unexpected error occurred';
 };
 
-export const showErrorAlert = (error: unknown, title: string = "Error") => {
+export const showErrorAlert = (error: unknown, title: string = 'Error') => {
     // If the Axios interceptor already showed a toast, don't show another.
     if ((error as any)?.__toastShown) return;
 
     const message = handleApiError(error);
 
     // Prefer in-app toast for better UX (avoid native Alert popups).
-    useToastStore.getState().show({ type: "error", title, message });
+    useToastStore.getState().show({ type: 'error', title, message });
 };
 
 // Get error message without showing alert

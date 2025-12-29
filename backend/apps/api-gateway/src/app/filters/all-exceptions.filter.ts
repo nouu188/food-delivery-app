@@ -26,14 +26,32 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === 'object') {
-        message =
-          (exceptionResponse as any).message || exception.message;
+        message = (exceptionResponse as any).message || exception.message;
         errors = (exceptionResponse as any).errors || null;
       } else {
         message = exceptionResponse;
       }
-    } else if (exception instanceof Error) {
-      message = exception.message;
+    } else if (typeof exception === 'object' && exception !== null) {
+      const exceptionObj = exception as any;
+
+      // Handle RPC exceptions from microservices
+      // RPC exceptions can be nested in error property
+      if (exceptionObj.error) {
+        const rpcError = exceptionObj.error;
+        if (rpcError.statusCode) {
+          status = rpcError.statusCode;
+        }
+        if (rpcError.message) {
+          message = rpcError.message;
+        }
+        errors = rpcError.errors || null;
+      } else if (exceptionObj.statusCode && exceptionObj.message) {
+        status = exceptionObj.statusCode;
+        message = exceptionObj.message;
+        errors = exceptionObj.errors || null;
+      } else if (exception instanceof Error) {
+        message = exception.message;
+      }
     }
 
     const errorResponse = {
@@ -46,8 +64,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     };
 
     this.logger.error(
-      `${request.method} ${request.url} - ${status} - ${message}`,
-      exception instanceof Error ? exception.stack : ''
+      `${request.method} ${request.url} - ${status} - ${message}`
     );
 
     response.status(status).json(errorResponse);
