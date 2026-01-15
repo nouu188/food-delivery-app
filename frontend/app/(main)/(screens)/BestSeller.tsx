@@ -1,18 +1,18 @@
-import { BestSellerItem } from '@/components/common/bestSeller/BestSellerItem';
-import Header from '@/components/common/Header';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, Text, View, TouchableOpacity, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import restaurantService from '@/services/api/restaurant.service';
-import userService from '@/services/api/user.service';
-import { Restaurant, RestaurantCategory } from '@/types/api/restaurant';
-import { showErrorAlert } from '@/utils/error-handler';
-import FloatingCartButton from '@/components/common/restaurant/FloatingCartButton';
-import { CartSidebar } from '@/components/common/cart';
-import { useCartStore } from '@/store/useCartStore';
-import { Star, TrendingUp, Filter, ChevronDown, X } from 'lucide-react-native';
-import { useFavoritesStore } from '@/store/useFavoritesStore';
+import { BestSellerItem } from "@/components/common/bestSeller/BestSellerItem";
+import Header from "@/components/common/Header";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, RefreshControl, ScrollView, Text, View, TouchableOpacity, FlatList } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import restaurantService from "@/services/api/restaurant.service";
+import userService from "@/services/api/user.service";
+import { Restaurant, RestaurantCategory } from "@/types/api/restaurant";
+import { showErrorAlert } from "@/utils/error-handler";
+import FloatingCartButton from "@/components/common/restaurant/FloatingCartButton";
+import { CartSidebar } from "@/components/common/cart";
+import { useCartStore } from "@/store/useCartStore";
+import { Star, TrendingUp, Filter, ChevronDown, X } from "lucide-react-native";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 const BestSellerScreen = () => {
     const router = useRouter();
@@ -22,7 +22,7 @@ const BestSellerScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [sortBy, setSortBy] = useState<'rating' | 'popular'>('rating');
+    const [sortBy, setSortBy] = useState<"rating" | "popular">("rating");
 
     const setFavoriteRestaurantIds = useFavoritesStore((s) => s.setFavoriteRestaurantIds);
     const addFavoriteRestaurantId = useFavoritesStore((s) => s.addFavoriteRestaurantId);
@@ -57,16 +57,11 @@ const BestSellerScreen = () => {
                 setCategories(categoriesData);
             }
         } catch (error) {
-            console.error('Failed to load categories:', error);
+            console.error("Failed to load categories:", error);
         }
     };
 
-    const fetchBestSellers = async (
-        page = 1,
-        showRefreshIndicator = false,
-        sortOption = sortBy,
-        append = false
-    ) => {
+    const fetchBestSellers = async (page = 1, showRefreshIndicator = false, sortOption = sortBy, append = false) => {
         try {
             if (showRefreshIndicator) {
                 setIsRefreshing(true);
@@ -77,12 +72,14 @@ const BestSellerScreen = () => {
             }
 
             const [restaurantsData, favoritesData] = await Promise.all([
-                restaurantService.getRestaurants({
-                    page,
-                    limit: 20,
-                    sort_by: sortOption,
-                    category_id: selectedCategory,
-                }).catch(() => null),
+                restaurantService
+                    .getRestaurants({
+                        page,
+                        limit: 20,
+                        sort_by: sortOption,
+                        category_id: selectedCategory,
+                    })
+                    .catch(() => null),
                 userService.getFavorites().catch(() => null),
             ]);
 
@@ -91,19 +88,15 @@ const BestSellerScreen = () => {
                 let filteredData = restaurantsData.data;
 
                 if (minRating > 0) {
-                    filteredData = filteredData.filter(
-                        r => Number(r.average_rating) >= minRating
-                    );
+                    filteredData = filteredData.filter((r) => Number(r.average_rating) >= minRating);
                 }
 
                 if (maxPrice < 100) {
-                    filteredData = filteredData.filter(
-                        r => Number(r.min_order_amount) <= maxPrice
-                    );
+                    filteredData = filteredData.filter((r) => Number(r.min_order_amount) <= maxPrice);
                 }
 
                 if (append) {
-                    setRestaurants(prev => [...prev, ...filteredData]);
+                    setRestaurants((prev) => [...prev, ...filteredData]);
                 } else {
                     setRestaurants(filteredData);
                 }
@@ -127,7 +120,7 @@ const BestSellerScreen = () => {
                 setFavoriteRestaurantIds([]);
             }
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Best Sellers');
+            showErrorAlert(error, "Failed to Load Best Sellers");
             if (!append) {
                 setRestaurants([]);
                 setFavorites(new Set());
@@ -167,7 +160,7 @@ const BestSellerScreen = () => {
     };
 
     const handleCategoryToggle = (categoryId: string) => {
-        setSelectedCategory(prev => prev === categoryId ? undefined : categoryId);
+        setSelectedCategory((prev) => (prev === categoryId ? undefined : categoryId));
     };
 
     const handleToggleLike = async (restaurantId: string) => {
@@ -196,7 +189,6 @@ const BestSellerScreen = () => {
                 await userService.addFavorite(restaurantId);
             }
         } catch (error) {
-
             setFavorites((prev) => {
                 const newSet = new Set(prev);
                 if (wasFavorite) {
@@ -212,7 +204,7 @@ const BestSellerScreen = () => {
             } else {
                 removeFavoriteRestaurantId(restaurantId);
             }
-            showErrorAlert(error, 'Failed to Update Favorite');
+            showErrorAlert(error, "Failed to Update Favorite");
         }
     };
 
@@ -220,7 +212,7 @@ const BestSellerScreen = () => {
         <SafeAreaView className="flex-1 bg-YellowBase">
             <Header title="Best Sellers" />
 
-            <View className="flex-1 bg-white rounded-t-3xl px-5 pt-6" style={{ position: 'relative' }}>
+            <View className="flex-1 bg-white rounded-t-3xl px-5 pt-6" style={{ position: "relative" }}>
                 <View className="mb-4">
                     <View className="flex-row items-center mb-2">
                         <TrendingUp size={24} color="#E95322" />
@@ -233,41 +225,47 @@ const BestSellerScreen = () => {
 
                 <View className="flex-row gap-2 mb-4">
                     <TouchableOpacity
-                        onPress={() => setSortBy('rating')}
+                        onPress={() => setSortBy("rating")}
                         activeOpacity={0.8}
                         className={`flex-1 flex-row items-center justify-center py-3 rounded-full ${
-                            sortBy === 'rating' ? 'bg-[#E95322]' : 'bg-[#FFE3D6]'
+                            sortBy === "rating" ? "bg-[#E95322]" : "bg-[#FFE3D6]"
                         }`}
                         style={{
-                            shadowColor: sortBy === 'rating' ? '#E95322' : '#000',
+                            shadowColor: sortBy === "rating" ? "#E95322" : "#000",
                             shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: sortBy === 'rating' ? 0.3 : 0.1,
+                            shadowOpacity: sortBy === "rating" ? 0.3 : 0.1,
                             shadowRadius: 4,
-                            elevation: sortBy === 'rating' ? 4 : 2,
+                            elevation: sortBy === "rating" ? 4 : 2,
                         }}
                     >
-                        <Star size={16} color={sortBy === 'rating' ? '#FFFFFF' : '#E95322'} fill={sortBy === 'rating' ? '#FFFFFF' : '#E95322'} />
-                        <Text className={`ml-2 font-semibold ${sortBy === 'rating' ? 'text-white' : 'text-[#E95322]'}`}>
+                        <Star
+                            size={16}
+                            color={sortBy === "rating" ? "#FFFFFF" : "#E95322"}
+                            fill={sortBy === "rating" ? "#FFFFFF" : "#E95322"}
+                        />
+                        <Text className={`ml-2 font-semibold ${sortBy === "rating" ? "text-white" : "text-[#E95322]"}`}>
                             Top Rated
                         </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        onPress={() => setSortBy('popular')}
+                        onPress={() => setSortBy("popular")}
                         activeOpacity={0.8}
                         className={`flex-1 flex-row items-center justify-center py-3 rounded-full ${
-                            sortBy === 'popular' ? 'bg-[#E95322]' : 'bg-[#FFE3D6]'
+                            sortBy === "popular" ? "bg-[#E95322]" : "bg-[#FFE3D6]"
                         }`}
                         style={{
-                            shadowColor: sortBy === 'popular' ? '#E95322' : '#000',
+                            shadowColor: sortBy === "popular" ? "#E95322" : "#000",
                             shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: sortBy === 'popular' ? 0.3 : 0.1,
+                            shadowOpacity: sortBy === "popular" ? 0.3 : 0.1,
                             shadowRadius: 4,
-                            elevation: sortBy === 'popular' ? 4 : 2,
+                            elevation: sortBy === "popular" ? 4 : 2,
                         }}
                     >
-                        <TrendingUp size={16} color={sortBy === 'popular' ? '#FFFFFF' : '#E95322'} />
-                        <Text className={`ml-2 font-semibold ${sortBy === 'popular' ? 'text-white' : 'text-[#E95322]'}`}>
+                        <TrendingUp size={16} color={sortBy === "popular" ? "#FFFFFF" : "#E95322"} />
+                        <Text
+                            className={`ml-2 font-semibold ${sortBy === "popular" ? "text-white" : "text-[#E95322]"}`}
+                        >
                             Most Popular
                         </Text>
                     </TouchableOpacity>
@@ -277,7 +275,7 @@ const BestSellerScreen = () => {
                         activeOpacity={0.8}
                         className="w-12 items-center justify-center rounded-full bg-[#FFE3D6]"
                         style={{
-                            shadowColor: '#000',
+                            shadowColor: "#000",
                             shadowOffset: { width: 0, height: 2 },
                             shadowOpacity: 0.1,
                             shadowRadius: 4,
@@ -307,12 +305,14 @@ const BestSellerScreen = () => {
                                             onPress={() => handleCategoryToggle(category.id)}
                                             activeOpacity={0.8}
                                             className={`px-4 py-2 rounded-full ${
-                                                selectedCategory === category.id ? 'bg-[#E95322]' : 'bg-white'
+                                                selectedCategory === category.id ? "bg-[#E95322]" : "bg-white"
                                             }`}
                                         >
-                                            <Text className={`text-sm font-semibold ${
-                                                selectedCategory === category.id ? 'text-white' : 'text-[#E95322]'
-                                            }`}>
+                                            <Text
+                                                className={`text-sm font-semibold ${
+                                                    selectedCategory === category.id ? "text-white" : "text-[#E95322]"
+                                                }`}
+                                            >
                                                 {category.name}
                                             </Text>
                                         </TouchableOpacity>
@@ -330,18 +330,20 @@ const BestSellerScreen = () => {
                                         onPress={() => setMinRating(rating)}
                                         activeOpacity={0.8}
                                         className={`flex-1 flex-row items-center justify-center py-2 rounded-full ${
-                                            minRating === rating ? 'bg-[#E95322]' : 'bg-white'
+                                            minRating === rating ? "bg-[#E95322]" : "bg-white"
                                         }`}
                                     >
                                         <Star
                                             size={14}
-                                            color={minRating === rating ? '#FFFFFF' : '#E95322'}
-                                            fill={minRating === rating ? '#FFFFFF' : '#E95322'}
+                                            color={minRating === rating ? "#FFFFFF" : "#E95322"}
+                                            fill={minRating === rating ? "#FFFFFF" : "#E95322"}
                                         />
-                                        <Text className={`ml-1 text-xs font-semibold ${
-                                            minRating === rating ? 'text-white' : 'text-[#E95322]'
-                                        }`}>
-                                            {rating === 0 ? 'All' : `${rating}+`}
+                                        <Text
+                                            className={`ml-1 text-xs font-semibold ${
+                                                minRating === rating ? "text-white" : "text-[#E95322]"
+                                            }`}
+                                        >
+                                            {rating === 0 ? "All" : `${rating}+`}
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
@@ -357,13 +359,15 @@ const BestSellerScreen = () => {
                                         onPress={() => setMaxPrice(price)}
                                         activeOpacity={0.8}
                                         className={`flex-1 items-center justify-center py-2 rounded-full ${
-                                            maxPrice === price ? 'bg-[#E95322]' : 'bg-white'
+                                            maxPrice === price ? "bg-[#E95322]" : "bg-white"
                                         }`}
                                     >
-                                        <Text className={`text-xs font-semibold ${
-                                            maxPrice === price ? 'text-white' : 'text-[#E95322]'
-                                        }`}>
-                                            {price >= 100 ? 'All' : `$${price}`}
+                                        <Text
+                                            className={`text-xs font-semibold ${
+                                                maxPrice === price ? "text-white" : "text-[#E95322]"
+                                            }`}
+                                        >
+                                            {price >= 100 ? "All" : `$${price}`}
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
@@ -383,7 +387,9 @@ const BestSellerScreen = () => {
                             <TouchableOpacity
                                 onPress={handleApplyFilters}
                                 activeOpacity={0.8}
-                                className={`${activeFiltersCount > 0 ? 'flex-1' : 'flex-1'} py-2 rounded-full bg-[#E95322] items-center`}
+                                className={`${
+                                    activeFiltersCount > 0 ? "flex-1" : "flex-1"
+                                } py-2 rounded-full bg-[#E95322] items-center`}
                             >
                                 <Text className="text-white font-semibold text-sm">Apply</Text>
                             </TouchableOpacity>
@@ -394,7 +400,7 @@ const BestSellerScreen = () => {
                 {!isLoading && restaurants.length > 0 && (
                     <View className="flex-row justify-between items-center mb-3">
                         <Text className="text-gray-500 text-sm">
-                            {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''} found
+                            {restaurants.length} restaurant{restaurants.length !== 1 ? "s" : ""} found
                         </Text>
                         <Text className="text-gray-500 text-xs">
                             Page {currentPage} of {totalPages}
@@ -414,7 +420,9 @@ const BestSellerScreen = () => {
                         </View>
                         <Text className="text-xl font-bold text-gray-600">No restaurants available</Text>
                         <Text className="text-gray-500 text-center mt-2 px-8">
-                            {activeFiltersCount > 0 ? 'Try adjusting your filters' : 'Check back later for our best sellers'}
+                            {activeFiltersCount > 0
+                                ? "Try adjusting your filters"
+                                : "Check back later for our best sellers"}
                         </Text>
                         {activeFiltersCount > 0 ? (
                             <TouchableOpacity
@@ -426,7 +434,7 @@ const BestSellerScreen = () => {
                             </TouchableOpacity>
                         ) : (
                             <TouchableOpacity
-                                onPress={() => router.push('/(main)/(tabs)/Home')}
+                                onPress={() => router.push("/(main)/(tabs)/Home")}
                                 className="mt-6 px-8 py-3 bg-[#E95322] rounded-full"
                                 activeOpacity={0.8}
                             >
@@ -439,7 +447,7 @@ const BestSellerScreen = () => {
                         data={restaurants}
                         keyExtractor={(item) => item.id}
                         numColumns={2}
-                        columnWrapperStyle={{ justifyContent: 'space-between' }}
+                        columnWrapperStyle={{ justifyContent: "space-between" }}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingBottom: 100 }}
                         renderItem={({ item }) => (
@@ -468,7 +476,7 @@ const BestSellerScreen = () => {
                         }
                         onEndReached={loadMore}
                         onEndReachedThreshold={0.5}
-                        ListFooterComponent={() => (
+                        ListFooterComponent={() =>
                             isLoadingMore ? (
                                 <View className="py-4 items-center">
                                     <ActivityIndicator size="small" color="#E95322" />
@@ -479,7 +487,7 @@ const BestSellerScreen = () => {
                                     <Text className="text-gray-500 text-xs">No more restaurants</Text>
                                 </View>
                             ) : null
-                        )}
+                        }
                     />
                 )}
 

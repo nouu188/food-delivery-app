@@ -185,9 +185,9 @@ export default function RestaurantDetailsScreen() {
         // Check if restaurant is closed
         if (restaurant && !restaurant.is_open) {
             showToast({
-                type: 'error',
-                title: 'Restaurant Closed',
-                message: 'This restaurant is currently closed. Please try again later.',
+                type: "error",
+                title: "Restaurant Closed",
+                message: "This restaurant is currently closed. Please try again later.",
             });
             return;
         }
@@ -195,9 +195,9 @@ export default function RestaurantDetailsScreen() {
         // Check if item is available
         if (!item.is_available) {
             showToast({
-                type: 'error',
-                title: 'Cannot Add to Cart',
-                message: 'This menu item is currently unavailable. Please try another item.',
+                type: "error",
+                title: "Cannot Add to Cart",
+                message: "This menu item is currently unavailable. Please try another item.",
             });
             return;
         }
@@ -214,9 +214,9 @@ export default function RestaurantDetailsScreen() {
         // Check if restaurant is closed
         if (restaurant && !restaurant.is_open) {
             showToast({
-                type: 'error',
-                title: 'Restaurant Closed',
-                message: 'This restaurant is currently closed. Please try again later.',
+                type: "error",
+                title: "Restaurant Closed",
+                message: "This restaurant is currently closed. Please try again later.",
             });
             return;
         }
@@ -280,9 +280,9 @@ export default function RestaurantDetailsScreen() {
         // Check if restaurant is closed
         if (restaurant && !restaurant.is_open) {
             showToast({
-                type: 'error',
-                title: 'Restaurant Closed',
-                message: 'This restaurant is currently closed. Please try again later.',
+                type: "error",
+                title: "Restaurant Closed",
+                message: "This restaurant is currently closed. Please try again later.",
             });
             return;
         }

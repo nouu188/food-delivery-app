@@ -1,7 +1,16 @@
 import { Star } from "@tamagui/lucide-icons";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState, useCallback } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, View, TouchableOpacity } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Pressable,
+    RefreshControl,
+    Text,
+    View,
+    TouchableOpacity,
+} from "react-native";
 import { SearchBar } from "@/components/common";
 import restaurantService from "@/services/api/restaurant.service";
 import userService from "@/services/api/user.service";
@@ -52,76 +61,83 @@ export default function SearchScreen() {
         setFilterMaxPrice(maxPriceParam ? parseInt(maxPriceParam) : undefined);
     }, [maxPriceParam]);
 
-    const fetchRestaurants = useCallback(async (searchQuery: string, showRefreshIndicator = false) => {
-        const hasQuery = searchQuery.trim().length > 0;
-        const hasFilters = filterCategory || (filterMinRating && filterMinRating > 0) || (filterMaxPrice && filterMaxPrice < 100);
+    const fetchRestaurants = useCallback(
+        async (searchQuery: string, showRefreshIndicator = false) => {
+            const hasQuery = searchQuery.trim().length > 0;
+            const hasFilters =
+                filterCategory || (filterMinRating && filterMinRating > 0) || (filterMaxPrice && filterMaxPrice < 100);
 
-        if (!hasQuery && !hasFilters) {
-            setRestaurants([]);
-            setHasSearched(false);
-            return;
-        }
-
-        try {
-            if (showRefreshIndicator) {
-                setIsRefreshing(true);
-            } else {
-                setIsLoading(true);
+            if (!hasQuery && !hasFilters) {
+                setRestaurants([]);
+                setHasSearched(false);
+                return;
             }
 
-            const [restaurantsData, favoritesData] = await Promise.all([
-                restaurantService.searchRestaurants({
-                    search: searchQuery.trim() || undefined,
-                    category_id: filterCategory,
-                    page: 1,
-                    limit: 50,
-                }).catch(() => null),
-                userService.getFavorites().catch(() => null),
-            ]);
-
-            let filteredRestaurants: Restaurant[] = [];
-            if (restaurantsData?.data && Array.isArray(restaurantsData.data)) {
-                filteredRestaurants = restaurantsData.data;
-
-                if (filterMinRating && filterMinRating > 0) {
-                    filteredRestaurants = filteredRestaurants.filter(
-                        r => Number(r.average_rating) >= filterMinRating
-                    );
+            try {
+                if (showRefreshIndicator) {
+                    setIsRefreshing(true);
+                } else {
+                    setIsLoading(true);
                 }
 
-                if (filterMaxPrice && filterMaxPrice > 1) {
-                    filteredRestaurants = filteredRestaurants.filter(
-                        r => Number(r.min_order_amount) <= filterMaxPrice
-                    );
+                const [restaurantsData, favoritesData] = await Promise.all([
+                    restaurantService
+                        .searchRestaurants({
+                            search: searchQuery.trim() || undefined,
+                            category_id: filterCategory,
+                            page: 1,
+                            limit: 50,
+                        })
+                        .catch(() => null),
+                    userService.getFavorites().catch(() => null),
+                ]);
+
+                let filteredRestaurants: Restaurant[] = [];
+                if (restaurantsData?.data && Array.isArray(restaurantsData.data)) {
+                    filteredRestaurants = restaurantsData.data;
+
+                    if (filterMinRating && filterMinRating > 0) {
+                        filteredRestaurants = filteredRestaurants.filter(
+                            (r) => Number(r.average_rating) >= filterMinRating
+                        );
+                    }
+
+                    if (filterMaxPrice && filterMaxPrice > 1) {
+                        filteredRestaurants = filteredRestaurants.filter(
+                            (r) => Number(r.min_order_amount) <= filterMaxPrice
+                        );
+                    }
                 }
-            }
 
-            setRestaurants(filteredRestaurants);
+                setRestaurants(filteredRestaurants);
 
-            if (favoritesData && Array.isArray(favoritesData)) {
-                const ids = favoritesData.map((f) => f.restaurant_id);
-                setFavorites(new Set(ids));
-                setFavoriteRestaurantIds(ids);
-            } else {
+                if (favoritesData && Array.isArray(favoritesData)) {
+                    const ids = favoritesData.map((f) => f.restaurant_id);
+                    setFavorites(new Set(ids));
+                    setFavoriteRestaurantIds(ids);
+                } else {
+                    setFavorites(new Set());
+                    setFavoriteRestaurantIds([]);
+                }
+
+                setHasSearched(true);
+            } catch (error) {
+                showErrorAlert(error, "Failed to Search Restaurants");
+                setRestaurants([]);
                 setFavorites(new Set());
                 setFavoriteRestaurantIds([]);
+                setHasSearched(true);
+            } finally {
+                setIsLoading(false);
+                setIsRefreshing(false);
             }
-
-            setHasSearched(true);
-        } catch (error) {
-            showErrorAlert(error, 'Failed to Search Restaurants');
-            setRestaurants([]);
-            setFavorites(new Set());
-            setFavoriteRestaurantIds([]);
-            setHasSearched(true);
-        } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
-        }
-    }, [filterCategory, filterMinRating, filterMaxPrice, setFavoriteRestaurantIds]);
+        },
+        [filterCategory, filterMinRating, filterMaxPrice, setFavoriteRestaurantIds]
+    );
 
     useEffect(() => {
-        const hasFilters = filterCategory || (filterMinRating && filterMinRating > 0) || (filterMaxPrice && filterMaxPrice < 100);
+        const hasFilters =
+            filterCategory || (filterMinRating && filterMinRating > 0) || (filterMaxPrice && filterMaxPrice < 100);
         if (hasFilters && !query) {
             fetchRestaurants(query);
             return;
@@ -167,11 +183,13 @@ export default function SearchScreen() {
                             )}
 
                             {item.is_open !== undefined && (
-                                <View className={`absolute left-3 top-3 px-3 py-1 rounded-full ${
-                                    item.is_open ? 'bg-green-500' : 'bg-red-500'
-                                }`}>
+                                <View
+                                    className={`absolute left-3 top-3 px-3 py-1 rounded-full ${
+                                        item.is_open ? "bg-green-500" : "bg-red-500"
+                                    }`}
+                                >
                                     <Text className="text-white text-xs font-semibold">
-                                        {item.is_open ? 'OPEN' : 'CLOSED'}
+                                        {item.is_open ? "OPEN" : "CLOSED"}
                                     </Text>
                                 </View>
                             )}
@@ -232,9 +250,7 @@ export default function SearchScreen() {
                         <View className="flex-row flex-wrap gap-2 mt-2">
                             {filterCategory && (
                                 <View className="bg-[#FFE3D6] px-3 py-1 rounded-full">
-                                    <Text className="text-[#E95322] text-xs font-semibold">
-                                        Category Filter
-                                    </Text>
+                                    <Text className="text-[#E95322] text-xs font-semibold">Category Filter</Text>
                                 </View>
                             )}
                             {filterMinRating && filterMinRating > 0 && (
@@ -246,9 +262,7 @@ export default function SearchScreen() {
                             )}
                             {filterMaxPrice && filterMaxPrice > 1 && (
                                 <View className="bg-[#FFE3D6] px-3 py-1 rounded-full">
-                                    <Text className="text-[#E95322] text-xs font-semibold">
-                                        Max ${filterMaxPrice}
-                                    </Text>
+                                    <Text className="text-[#E95322] text-xs font-semibold">Max ${filterMaxPrice}</Text>
                                 </View>
                             )}
                         </View>
@@ -271,12 +285,8 @@ export default function SearchScreen() {
                     </View>
                 ) : restaurants.length === 0 ? (
                     <View className="flex-1 items-center justify-center px-8">
-                        <Text className="text-xl font-medium text-gray-600 text-center">
-                            No restaurants found
-                        </Text>
-                        <Text className="text-gray-500 text-center mt-2">
-                            Try searching with different keywords
-                        </Text>
+                        <Text className="text-xl font-medium text-gray-600 text-center">No restaurants found</Text>
+                        <Text className="text-gray-500 text-center mt-2">Try searching with different keywords</Text>
                     </View>
                 ) : (
                     <FlatList
