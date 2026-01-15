@@ -1,7 +1,6 @@
 import Header from "@/components/common/Header";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { useToastStore } from "@/store/useToastStore";
 import {
     Linking,
     ScrollView,
@@ -31,6 +30,8 @@ import {
     MapPin,
     Clock,
 } from "lucide-react-native";
+import { X } from "@tamagui/lucide-icons";
+import { useToastStore } from "@/store/useToastStore";
 
 interface FAQ {
     id: string;
@@ -48,7 +49,6 @@ interface Category {
 
 export default function HelpScreen() {
     const router = useRouter();
-    const showToast = useToastStore((s) => s.show);
     const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState("");
@@ -59,9 +59,15 @@ export default function HelpScreen() {
         subject: "",
         message: "",
     });
+    const showToast = useToastStore((s) => s.show);
 
     const categories: Category[] = [
-        { id: "all", name: "All", icon: <HelpCircle size={20} color="#E95322" />, color: "#FFE3D6" },
+        {
+            id: "all",
+            name: "All",
+            icon: <HelpCircle size={20} color={`${selectedCategory === "all" ? "#FFFFFF" : "#E95322"}`} />,
+            color: "#FFE3D6",
+        },
         { id: "orders", name: "Orders", icon: <ShieldCheck size={20} color="#10B981" />, color: "#D1FAE5" },
         { id: "payments", name: "Payments", icon: <CreditCard size={20} color="#F59E0B" />, color: "#FEF3C7" },
         { id: "delivery", name: "Delivery", icon: <MapPin size={20} color="#3B82F6" />, color: "#DBEAFE" },
@@ -156,9 +162,17 @@ export default function HelpScreen() {
     ];
 
     const socialLinks = [
-        { icon: <Facebook size={24} color="#1877F2" />, name: "Facebook", url: "https://facebook.com/foodapp" },
+        {
+            icon: <Facebook size={24} color="#1877F2" />,
+            name: "Facebook",
+            url: "http://facebook.com/notoncebuttwice188",
+        },
         { icon: <Twitter size={24} color="#1DA1F2" />, name: "Twitter", url: "https://twitter.com/foodapp" },
-        { icon: <Instagram size={24} color="#E4405F" />, name: "Instagram", url: "https://instagram.com/foodapp" },
+        {
+            icon: <Instagram size={24} color="#E4405F" />,
+            name: "Instagram",
+            url: "https://www.instagram.com/notonce_buttwice/",
+        },
     ];
 
     const filteredFaqs = faqs.filter((faq) => {
@@ -201,33 +215,41 @@ export default function HelpScreen() {
                         contentContainerStyle={{ paddingBottom: 100 }}
                         className="px-6 pt-6"
                     >
-                        <View
-                            className="bg-gradient-to-br from-[#FFE3D6] to-[#FFF5D6] rounded-3xl p-6 mb-6"
-                            style={{
-                                shadowColor: "#000",
-                                shadowOpacity: 0.1,
-                                shadowOffset: { width: 0, height: 4 },
-                                shadowRadius: 12,
-                                elevation: 5,
-                            }}
-                        >
-                            <HelpCircle size={40} color="#E95322" />
-                            <Text className="text-[#070707] font-bold text-2xl mt-3">How can we help you?</Text>
-                            <Text className="text-[#6B7280] text-sm mt-2 leading-5">
+                        <View className="rounded-3xl pb-6">
+                            <View className="flex flex-row items-center gap-2">
+                                <HelpCircle size={24} color="#E95322" />
+                                <Text className="text-[#070707] font-bold text-2xl">How can we help you?</Text>
+                            </View>
+                            <Text className="text-[#6B7280] text-sm mt-2">
                                 Find answers to common questions, contact our support team, or send us your feedback
                             </Text>
                         </View>
 
                         <View className="mb-6">
-                            <View className="bg-[#F9FAFB] rounded-2xl flex-row items-center px-4 py-3 border border-[#E5E7EB]">
-                                <Search size={20} color="#9CA3AF" />
+                            <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-2 pl-4 py-2 mr-2">
+                                <Search size={20} color="#6B7280" />
                                 <TextInput
+                                    className="flex-1 py-1 px-3 text-[#070707]"
+                                    placeholder="Search restaurants..."
                                     value={searchQuery}
                                     onChangeText={setSearchQuery}
-                                    placeholder="Search for help..."
+                                    autoFocus
                                     placeholderTextColor="#9CA3AF"
-                                    className="flex-1 ml-3 text-[#070707]"
                                 />
+                                {searchQuery.length > 0 && (
+                                    <TouchableOpacity onPress={() => setSearchQuery("")} className="p-1 mr-2">
+                                        <X size={18} color="#6B7280" />
+                                    </TouchableOpacity>
+                                )}
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setSearchQuery("");
+                                    }}
+                                    className="bg-[#E95322] p-2 rounded-full"
+                                    activeOpacity={0.7}
+                                >
+                                    <X size={12} color="#FFFFFF" />
+                                </TouchableOpacity>
                             </View>
                         </View>
 
@@ -262,32 +284,32 @@ export default function HelpScreen() {
 
                         <View className="mb-6">
                             <Text className="text-[#070707] font-bold text-lg mb-4">Browse by Category</Text>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                className="mb-4 -mx-6 px-6"
-                            >
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4 -mx-6 px-6">
                                 {categories.map((category) => (
                                     <TouchableOpacity
                                         key={category.id}
                                         onPress={() => setSelectedCategory(category.id)}
                                         className={`mr-3 px-5 py-3 rounded-full flex-row items-center ${
-                                            selectedCategory === category.id ? 'bg-[#E95322]' : 'bg-[#F9FAFB]'
+                                            selectedCategory === category.id ? "bg-[#E95322]" : "bg-[#F9FAFB]"
                                         }`}
                                         style={{
                                             borderWidth: selectedCategory === category.id ? 0 : 1,
-                                            borderColor: '#E5E7EB'
+                                            borderColor: "#E5E7EB",
                                         }}
                                         activeOpacity={0.7}
                                     >
                                         {selectedCategory === category.id ? (
-                                            <View className="mr-2">{React.cloneElement(category.icon as React.ReactElement)}</View>
+                                            <View className="mr-2">
+                                                {React.cloneElement(category.icon as React.ReactElement)}
+                                            </View>
                                         ) : (
                                             <View className="mr-2">{category.icon}</View>
                                         )}
-                                        <Text className={`font-semibold ${
-                                            selectedCategory === category.id ? 'text-white' : 'text-[#070707]'
-                                        }`}>
+                                        <Text
+                                            className={`font-semibold ${
+                                                selectedCategory === category.id ? "text-white" : "text-[#070707]"
+                                            }`}
+                                        >
                                             {category.name}
                                         </Text>
                                     </TouchableOpacity>
@@ -297,7 +319,9 @@ export default function HelpScreen() {
 
                         <View className="mb-6">
                             <Text className="text-[#070707] font-bold text-lg mb-4">
-                                {selectedCategory === "all" ? "All Questions" : `${categories.find(c => c.id === selectedCategory)?.name} Questions`}
+                                {selectedCategory === "all"
+                                    ? "All Questions"
+                                    : `${categories.find((c) => c.id === selectedCategory)?.name} Questions`}
                                 {searchQuery && ` (${filteredFaqs.length} results)`}
                             </Text>
                             {filteredFaqs.length === 0 ? (
@@ -338,27 +362,22 @@ export default function HelpScreen() {
                             )}
                         </View>
 
+                        <Text className="font-bold text-xl mb-2">Still need help?</Text>
+                        <Text className="text-sm mb-5 leading-5">
+                            Cannot find what you are looking for? Send us a message and we will get back to you soon.
+                        </Text>
+
                         {!showContactForm ? (
-                            <View className="bg-gradient-to-br from-[#E95322] to-[#D94412] rounded-3xl p-6 mb-6"
-                                style={{
-                                    shadowColor: '#E95322',
-                                    shadowOpacity: 0.3,
-                                    shadowOffset: { width: 0, height: 8 },
-                                    shadowRadius: 16,
-                                    elevation: 8,
-                                }}
-                            >
-                                <Text className="text-white font-bold text-xl mb-2">Still need help?</Text>
-                                <Text className="text-white/90 text-sm mb-5 leading-5">
-                                    Can't find what you're looking for? Send us a message and we'll get back to you soon.
-                                </Text>
+                            <View className="border-2 border-[#E95322] rounded-3xl  bg-[#fff7f4] mb-6">
                                 <TouchableOpacity
-                                    className="bg-white rounded-full py-4 items-center flex-row justify-center"
+                                    className="bg-[#fff7f4] rounded-full items-center flex-row justify-center"
                                     activeOpacity={0.9}
                                     onPress={() => setShowContactForm(true)}
                                 >
                                     <Send size={20} color="#E95322" />
-                                    <Text className="text-[#E95322] font-bold text-base ml-2">Send Us a Message</Text>
+                                    <Text className="text-[#E95322] font-bold text-base ml-2 py-4">
+                                        Send Us a Message
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         ) : (
@@ -437,7 +456,6 @@ export default function HelpScreen() {
                             </View>
                         )}
 
-                        {/* Social Media Links */}
                         <View className="mb-6">
                             <Text className="text-[#070707] font-bold text-lg mb-4">Follow Us</Text>
                             <View className="flex-row justify-between">
@@ -448,7 +466,7 @@ export default function HelpScreen() {
                                         onPress={() => Linking.openURL(social.url)}
                                         className="flex-1 bg-white rounded-2xl p-4 items-center justify-center border border-[#E5E7EB] mx-1"
                                         style={{
-                                            shadowColor: '#000',
+                                            shadowColor: "#000",
                                             shadowOpacity: 0.05,
                                             shadowOffset: { width: 0, height: 2 },
                                             shadowRadius: 8,
@@ -462,11 +480,9 @@ export default function HelpScreen() {
                             </View>
                         </View>
 
-                        {/* App Info */}
                         <View className="bg-[#F9FAFB] rounded-2xl p-4 mb-6">
                             <Text className="text-[#6B7280] text-xs text-center leading-5">
-                                Food Delivery App v1.0.0{'\n'}
-                                © 2025 All rights reserved{'\n'}
+                                Food Delivery App v1.0.0{"\n"}© 2025 All rights reserved{"\n"}
                                 Terms of Service • Privacy Policy
                             </Text>
                         </View>

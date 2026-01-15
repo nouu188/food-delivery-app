@@ -8,8 +8,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forgotPasswordSchema, ForgotPasswordFormData } from "@/utils/validation/auth.schema";
 import authService from "@/services/api/auth.service";
-import { showErrorAlert } from "@/utils/error-handler";
 import { useToastStore } from "@/store/useToastStore";
+import { showErrorAlert } from "@/utils/error-handler";
 
 const ForgotPassword = () => {
     const router = useRouter();
@@ -42,7 +42,7 @@ const ForgotPassword = () => {
                 pathname: "/(auth)/VerifyOTP",
                 params: { email: data.email, type: "PASSWORD_RESET" },
             });
-        } catch (error: any) {
+        } catch (error) {
             showErrorAlert(error, "Failed to Send OTP");
         } finally {
             setIsLoading(false);

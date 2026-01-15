@@ -11,8 +11,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, RegisterFormData } from "@/utils/validation/auth.schema";
 import authService from "@/services/api/auth.service";
-import { showErrorAlert } from "@/utils/error-handler";
 import { useToastStore } from "@/store/useToastStore";
+import { showErrorAlert } from "@/utils/error-handler";
 
 export default function SignUp() {
     const router = useRouter();
@@ -74,7 +74,7 @@ export default function SignUp() {
                 pathname: "/(auth)/VerifyOTP",
                 params: { email: data.email, type: OtpType.EMAIL_VERIFY },
             });
-        } catch (error: any) {
+        } catch (error) {
             showErrorAlert(error, "Sign Up Failed");
         } finally {
             setIsLoading(false);

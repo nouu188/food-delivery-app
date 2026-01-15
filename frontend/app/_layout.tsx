@@ -9,11 +9,32 @@ import ToastHost from "@/components/common/ToastHost";
 import ConfirmHost from "@/components/common/ConfirmHost";
 import { LogBox } from "react-native";
 
-// Ignore keep awake warning in development
+// Ignore specific warnings and errors in development
 LogBox.ignoreLogs([
     'Unable to activate keep awake',
-    'SafeAreaView has been deprecated'
+    'SafeAreaView has been deprecated',
+    'Possible Unhandled Promise Rejection', // Handled by our error handlers
 ]);
+
+// Disable console.error from showing red screen for handled errors
+if (__DEV__) {
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+        // Filter out API errors (they're handled by our toast system)
+        const errorMessage = args[0]?.toString() || '';
+        if (
+            errorMessage.includes('[API Error]') ||
+            errorMessage.includes('Network Error') ||
+            errorMessage.includes('AxiosError')
+        ) {
+            // Log to console but don't trigger red screen
+            console.log('[Handled Error]', ...args);
+            return;
+        }
+        // For other errors, show them normally
+        originalConsoleError(...args);
+    };
+}
 
 export default function RootLayout() {
     return (

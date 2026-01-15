@@ -8,9 +8,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { verifyOtpSchema, VerifyOtpFormData } from "@/utils/validation/auth.schema";
 import authService from "@/services/api/auth.service";
-import { showErrorAlert } from "@/utils/error-handler";
 import { OtpType } from "@/types/api/auth";
 import { useToastStore } from "@/store/useToastStore";
+import { showErrorAlert } from "@/utils/error-handler";
 
 export default function VerifyOTP() {
     const router = useRouter();
@@ -61,7 +61,7 @@ export default function VerifyOTP() {
 
             showToast({ type: "success", title: "Success", message: "OTP verified successfully!" });
             router.replace("/(auth)/Login");
-        } catch (error: any) {
+        } catch (error) {
             showErrorAlert(error, "Verification Failed");
         } finally {
             setIsLoading(false);
@@ -82,7 +82,7 @@ export default function VerifyOTP() {
             });
 
             showToast({ type: "success", title: "Success", message: "New OTP has been sent to your email." });
-        } catch (error: any) {
+        } catch (error) {
             showErrorAlert(error, "Failed to Resend OTP");
         } finally {
             setResendLoading(false);

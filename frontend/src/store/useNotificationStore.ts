@@ -52,7 +52,7 @@ export const useNotificationStore = create<NotificationState>()(
               : [],
           }));
         } catch (error: any) {
-          console.error('Mark as read error:', error);
+          console.log('[Notification] Mark as read error:', error);
         }
       },
 
@@ -69,7 +69,7 @@ export const useNotificationStore = create<NotificationState>()(
               : [],
           }));
         } catch (error: any) {
-          console.error('Mark all as read error:', error);
+          console.log('[Notification] Mark all as read error:', error);
         }
       },
 
@@ -82,7 +82,7 @@ export const useNotificationStore = create<NotificationState>()(
               : [],
           }));
         } catch (error: any) {
-          console.error('Delete notification error:', error);
+          console.log('[Notification] Delete notification error:', error);
         }
       },
 
