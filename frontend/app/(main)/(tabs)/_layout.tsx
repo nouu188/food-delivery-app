@@ -6,6 +6,7 @@ import { View } from "react-native";
 import { SvgProps } from "react-native-svg";
 import { useCartStore } from "@/store/useCartStore";
 import { useOverlayStore } from "@/store/useOverlayStore";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 interface TabIconProps {
     focused: boolean;
@@ -35,6 +36,9 @@ const TabsLayout = () => {
     const isNotificationOpen = useOverlayStore((s) => s.isNotificationSidebarOpen);
     const isProfileOpen = useOverlayStore((s) => s.isProfileSidebarOpen);
     const isTabBarHidden = isCartOpen || isNotificationOpen || isProfileOpen;
+
+    const favoriteCount = useFavoritesStore((s) => s.favoriteRestaurantIds.length);
+    const favoriteBadge = favoriteCount > 0 ? (favoriteCount > 9 ? "9+" : favoriteCount) : undefined;
 
     return (
         <>
@@ -83,6 +87,13 @@ const TabsLayout = () => {
                         headerShown: false,
                         title: "Favourites",
                         tabBarIcon: ({ focused }) => <TabIcon focused={focused} Icon={FavourIcon} />,
+                        tabBarBadge: favoriteBadge,
+                        tabBarBadgeStyle: {
+                            backgroundColor: "#E95322",
+                            color: "#FFFFFF",
+                            fontSize: 12,
+                            fontWeight: "700",
+                        },
                     }}
                 />
                 <Tabs.Screen

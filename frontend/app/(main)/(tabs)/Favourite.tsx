@@ -9,12 +9,16 @@ import { FavoriteRestaurant } from "@/types/api/user";
 import { showErrorAlert } from "@/utils/error-handler";
 import { useFocusEffect } from "@react-navigation/native";
 import restaurantService from "@/services/api/restaurant.service";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 const FavoritesScreen = () => {
     const router = useRouter();
     const [favorites, setFavorites] = useState<FavoriteRestaurant[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const setFavoriteRestaurantIds = useFavoritesStore((s) => s.setFavoriteRestaurantIds);
+    const removeFavoriteRestaurantId = useFavoritesStore((s) => s.removeFavoriteRestaurantId);
 
     const enrichFavorites = useCallback(async (items: FavoriteRestaurant[]): Promise<FavoriteRestaurant[]> => {
         const missing = items
@@ -55,18 +59,21 @@ const FavoritesScreen = () => {
                 if (Array.isArray(response)) {
                     const enriched = await enrichFavorites(response);
                     setFavorites(enriched);
+                    setFavoriteRestaurantIds(response.map((f) => f.restaurant_id));
                 } else {
                     setFavorites([]);
+                    setFavoriteRestaurantIds([]);
                 }
             } catch (error) {
                 showErrorAlert(error, "Failed to Load Favorites");
                 setFavorites([]);
+                setFavoriteRestaurantIds([]);
             } finally {
                 setIsLoading(false);
                 setIsRefreshing(false);
             }
         },
-        [enrichFavorites]
+        [enrichFavorites, setFavoriteRestaurantIds]
     );
 
     useFocusEffect(
@@ -78,6 +85,7 @@ const FavoritesScreen = () => {
     const handleToggleLike = async (restaurantId: string) => {
         const updatedFavorites = favorites.filter((fav) => fav.restaurant_id !== restaurantId);
         setFavorites(updatedFavorites);
+        removeFavoriteRestaurantId(restaurantId);
 
         try {
             await userService.removeFavorite(restaurantId);

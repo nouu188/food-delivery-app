@@ -11,6 +11,7 @@ import { formatRating, parseNumeric } from "@/utils/format";
 import FloatingCartButton from "@/components/common/restaurant/FloatingCartButton";
 import { CartSidebar } from "@/components/common/cart";
 import { useCartStore } from "@/store/useCartStore";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 export default function RecommendScreen() {
     const { openDrawer } = useCartStore();
@@ -31,6 +32,10 @@ export default function RecommendScreen() {
     const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
     const [minRating, setMinRating] = useState<number>(0);
     const [activeFiltersCount, setActiveFiltersCount] = useState(0);
+
+    const setFavoriteRestaurantIds = useFavoritesStore((s) => s.setFavoriteRestaurantIds);
+    const addFavoriteRestaurantId = useFavoritesStore((s) => s.addFavoriteRestaurantId);
+    const removeFavoriteRestaurantId = useFavoritesStore((s) => s.removeFavoriteRestaurantId);
 
     useEffect(() => {
         fetchCategories();
@@ -109,9 +114,12 @@ export default function RecommendScreen() {
             }
 
             if (favoritesData && Array.isArray(favoritesData)) {
-                setFavorites(new Set(favoritesData.map(f => f.restaurant_id)));
+                const ids = favoritesData.map((f) => f.restaurant_id);
+                setFavorites(new Set(ids));
+                setFavoriteRestaurantIds(ids);
             } else {
                 setFavorites(new Set());
+                setFavoriteRestaurantIds([]);
             }
         } catch (error) {
             showErrorAlert(error, 'Failed to Load Recommendations');
@@ -119,6 +127,7 @@ export default function RecommendScreen() {
                 setRestaurants([]);
                 setFavorites(new Set());
             }
+            setFavoriteRestaurantIds([]);
             setHasMore(false);
         } finally {
             setIsLoading(false);
@@ -146,6 +155,12 @@ export default function RecommendScreen() {
             return newSet;
         });
 
+        if (wasFavorite) {
+            removeFavoriteRestaurantId(restaurantId);
+        } else {
+            addFavoriteRestaurantId(restaurantId);
+        }
+
         try {
             if (wasFavorite) {
                 await userService.removeFavorite(restaurantId);
@@ -162,6 +177,12 @@ export default function RecommendScreen() {
                 }
                 return newSet;
             });
+
+            if (wasFavorite) {
+                addFavoriteRestaurantId(restaurantId);
+            } else {
+                removeFavoriteRestaurantId(restaurantId);
+            }
             showErrorAlert(error, 'Failed to Update Favorite');
         }
     };

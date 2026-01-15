@@ -12,6 +12,7 @@ import FloatingCartButton from '@/components/common/restaurant/FloatingCartButto
 import { CartSidebar } from '@/components/common/cart';
 import { useCartStore } from '@/store/useCartStore';
 import { Star, TrendingUp, Filter, ChevronDown, X } from 'lucide-react-native';
+import { useFavoritesStore } from '@/store/useFavoritesStore';
 
 const BestSellerScreen = () => {
     const router = useRouter();
@@ -22,6 +23,10 @@ const BestSellerScreen = () => {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [sortBy, setSortBy] = useState<'rating' | 'popular'>('rating');
+
+    const setFavoriteRestaurantIds = useFavoritesStore((s) => s.setFavoriteRestaurantIds);
+    const addFavoriteRestaurantId = useFavoritesStore((s) => s.addFavoriteRestaurantId);
+    const removeFavoriteRestaurantId = useFavoritesStore((s) => s.removeFavoriteRestaurantId);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -114,9 +119,12 @@ const BestSellerScreen = () => {
             }
 
             if (favoritesData && Array.isArray(favoritesData)) {
-                setFavorites(new Set(favoritesData.map(f => f.restaurant_id)));
+                const ids = favoritesData.map((f) => f.restaurant_id);
+                setFavorites(new Set(ids));
+                setFavoriteRestaurantIds(ids);
             } else {
                 setFavorites(new Set());
+                setFavoriteRestaurantIds([]);
             }
         } catch (error) {
             showErrorAlert(error, 'Failed to Load Best Sellers');
@@ -124,6 +132,7 @@ const BestSellerScreen = () => {
                 setRestaurants([]);
                 setFavorites(new Set());
             }
+            setFavoriteRestaurantIds([]);
             setHasMore(false);
         } finally {
             setIsLoading(false);
@@ -174,6 +183,12 @@ const BestSellerScreen = () => {
             return newSet;
         });
 
+        if (wasFavorite) {
+            removeFavoriteRestaurantId(restaurantId);
+        } else {
+            addFavoriteRestaurantId(restaurantId);
+        }
+
         try {
             if (wasFavorite) {
                 await userService.removeFavorite(restaurantId);
@@ -191,6 +206,12 @@ const BestSellerScreen = () => {
                 }
                 return newSet;
             });
+
+            if (wasFavorite) {
+                addFavoriteRestaurantId(restaurantId);
+            } else {
+                removeFavoriteRestaurantId(restaurantId);
+            }
             showErrorAlert(error, 'Failed to Update Favorite');
         }
     };

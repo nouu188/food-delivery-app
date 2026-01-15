@@ -9,6 +9,7 @@ import { Restaurant } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
 import { formatRating } from "@/utils/format";
 import { Ionicons } from "@expo/vector-icons";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 export default function SearchScreen() {
     const router = useRouter();
@@ -24,6 +25,8 @@ export default function SearchScreen() {
     const [isLoading, setIsLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
+
+    const setFavoriteRestaurantIds = useFavoritesStore((s) => s.setFavoriteRestaurantIds);
 
     const categoryParam = params.category;
     const minRatingParam = params.minRating;
@@ -96,9 +99,12 @@ export default function SearchScreen() {
             setRestaurants(filteredRestaurants);
 
             if (favoritesData && Array.isArray(favoritesData)) {
-                setFavorites(new Set(favoritesData.map(f => f.restaurant_id)));
+                const ids = favoritesData.map((f) => f.restaurant_id);
+                setFavorites(new Set(ids));
+                setFavoriteRestaurantIds(ids);
             } else {
                 setFavorites(new Set());
+                setFavoriteRestaurantIds([]);
             }
 
             setHasSearched(true);
@@ -106,12 +112,13 @@ export default function SearchScreen() {
             showErrorAlert(error, 'Failed to Search Restaurants');
             setRestaurants([]);
             setFavorites(new Set());
+            setFavoriteRestaurantIds([]);
             setHasSearched(true);
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [filterCategory, filterMinRating, filterMaxPrice]);
+    }, [filterCategory, filterMinRating, filterMaxPrice, setFavoriteRestaurantIds]);
 
     useEffect(() => {
         const hasFilters = filterCategory || (filterMinRating && filterMinRating > 0) || (filterMaxPrice && filterMaxPrice < 100);

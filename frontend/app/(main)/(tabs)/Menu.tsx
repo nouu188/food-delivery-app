@@ -22,6 +22,7 @@ import { showErrorAlert } from "@/utils/error-handler";
 import { formatRating } from "@/utils/format";
 import FilterModal, { FilterOptions } from "../../../src/components/common/menu/FilterModal";
 import { useOverlayStore } from "@/store/useOverlayStore";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 type ViewMode = "list" | "grid";
 
@@ -50,6 +51,10 @@ export default function MenuScreen() {
         featured: false,
         topRated: false,
     });
+
+    const setFavoriteRestaurantIds = useFavoritesStore((s) => s.setFavoriteRestaurantIds);
+    const addFavoriteRestaurantId = useFavoritesStore((s) => s.addFavoriteRestaurantId);
+    const removeFavoriteRestaurantId = useFavoritesStore((s) => s.removeFavoriteRestaurantId);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -148,9 +153,12 @@ export default function MenuScreen() {
             }
 
             if (favoritesData && Array.isArray(favoritesData)) {
-                setFavorites(new Set(favoritesData.map((f) => f.restaurant_id)));
+                const ids = favoritesData.map((f) => f.restaurant_id);
+                setFavorites(new Set(ids));
+                setFavoriteRestaurantIds(ids);
             } else {
                 setFavorites(new Set());
+                setFavoriteRestaurantIds([]);
             }
         } catch (error) {
             showErrorAlert(error, "Failed to Load Restaurants");
@@ -159,6 +167,7 @@ export default function MenuScreen() {
                 setFilteredRestaurants([]);
             }
             setFavorites(new Set());
+            setFavoriteRestaurantIds([]);
             setHasMore(false);
         } finally {
             setIsLoading(false);
@@ -191,6 +200,12 @@ export default function MenuScreen() {
             return newSet;
         });
 
+        if (wasFavorite) {
+            removeFavoriteRestaurantId(restaurantId);
+        } else {
+            addFavoriteRestaurantId(restaurantId);
+        }
+
         try {
             if (wasFavorite) {
                 await userService.removeFavorite(restaurantId);
@@ -207,6 +222,12 @@ export default function MenuScreen() {
                 }
                 return newSet;
             });
+
+            if (wasFavorite) {
+                addFavoriteRestaurantId(restaurantId);
+            } else {
+                removeFavoriteRestaurantId(restaurantId);
+            }
             showErrorAlert(error, "Failed to Update Favorite");
         }
     };
