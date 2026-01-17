@@ -24,6 +24,7 @@ import { Restaurant } from "@/types/api/restaurant";
 import { showErrorAlert } from "@/utils/error-handler";
 import { formatRating } from "@/utils/format";
 import { useOverlayStore } from "@/store/useOverlayStore";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 const BANNERS = [
     {
@@ -58,6 +59,10 @@ const HomeScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
+    const setFavoriteRestaurantIds = useFavoritesStore((s) => s.setFavoriteRestaurantIds);
+    const addFavoriteRestaurantId = useFavoritesStore((s) => s.addFavoriteRestaurantId);
+    const removeFavoriteRestaurantId = useFavoritesStore((s) => s.removeFavoriteRestaurantId);
+
     const fetchData = async (showRefreshIndicator = false) => {
         try {
             if (showRefreshIndicator) {
@@ -76,9 +81,12 @@ const HomeScreen = () => {
             setRecommended(recommendedData?.data ?? []);
 
             if (favoritesData && Array.isArray(favoritesData)) {
-                setFavorites(new Set(favoritesData.map((f) => f.restaurant_id)));
+                const ids = favoritesData.map((f) => f.restaurant_id);
+                setFavorites(new Set(ids));
+                setFavoriteRestaurantIds(ids);
             } else {
                 setFavorites(new Set());
+                setFavoriteRestaurantIds([]);
             }
         } catch (error) {
             showErrorAlert(error, "Failed to Load Data");
@@ -86,6 +94,7 @@ const HomeScreen = () => {
             setBestSellers([]);
             setRecommended([]);
             setFavorites(new Set());
+            setFavoriteRestaurantIds([]);
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);
@@ -109,6 +118,12 @@ const HomeScreen = () => {
             return newSet;
         });
 
+        if (wasFavorite) {
+            removeFavoriteRestaurantId(restaurantId);
+        } else {
+            addFavoriteRestaurantId(restaurantId);
+        }
+
         try {
             if (wasFavorite) {
                 await userService.removeFavorite(restaurantId);
@@ -125,6 +140,12 @@ const HomeScreen = () => {
                 }
                 return newSet;
             });
+
+            if (wasFavorite) {
+                addFavoriteRestaurantId(restaurantId);
+            } else {
+                removeFavoriteRestaurantId(restaurantId);
+            }
             showErrorAlert(error, "Failed to Update Favorite");
         }
     };

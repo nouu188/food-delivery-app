@@ -2,7 +2,17 @@ import { Star, Heart, TrendingUp, Filter, Sparkles } from "lucide-react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, TouchableOpacity, View, ScrollView } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Pressable,
+    RefreshControl,
+    Text,
+    TouchableOpacity,
+    View,
+    ScrollView,
+} from "react-native";
 import restaurantService from "@/services/api/restaurant.service";
 import userService from "@/services/api/user.service";
 import { Restaurant, RestaurantCategory } from "@/types/api/restaurant";
@@ -11,6 +21,7 @@ import { formatRating, parseNumeric } from "@/utils/format";
 import FloatingCartButton from "@/components/common/restaurant/FloatingCartButton";
 import { CartSidebar } from "@/components/common/cart";
 import { useCartStore } from "@/store/useCartStore";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 export default function RecommendScreen() {
     const { openDrawer } = useCartStore();
@@ -31,6 +42,10 @@ export default function RecommendScreen() {
     const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
     const [minRating, setMinRating] = useState<number>(0);
     const [activeFiltersCount, setActiveFiltersCount] = useState(0);
+
+    const setFavoriteRestaurantIds = useFavoritesStore((s) => s.setFavoriteRestaurantIds);
+    const addFavoriteRestaurantId = useFavoritesStore((s) => s.addFavoriteRestaurantId);
+    const removeFavoriteRestaurantId = useFavoritesStore((s) => s.removeFavoriteRestaurantId);
 
     useEffect(() => {
         fetchCategories();
@@ -54,15 +69,11 @@ export default function RecommendScreen() {
                 setCategories(categoriesData);
             }
         } catch (error) {
-            console.error('Failed to load categories:', error);
+            console.error("Failed to load categories:", error);
         }
     };
 
-    const fetchRecommendations = async (
-        page = 1,
-        showRefreshIndicator = false,
-        append = false
-    ) => {
+    const fetchRecommendations = async (page = 1, showRefreshIndicator = false, append = false) => {
         try {
             if (showRefreshIndicator) {
                 setIsRefreshing(true);
@@ -73,12 +84,14 @@ export default function RecommendScreen() {
             }
 
             const [restaurantsData, favoritesData] = await Promise.all([
-                restaurantService.getRestaurants({
-                    page,
-                    limit: 20,
-                    sort_by: 'popular',
-                    category_id: selectedCategory,
-                }).catch(() => null),
+                restaurantService
+                    .getRestaurants({
+                        page,
+                        limit: 20,
+                        sort_by: "popular",
+                        category_id: selectedCategory,
+                    })
+                    .catch(() => null),
                 userService.getFavorites().catch(() => null),
             ]);
 
@@ -87,13 +100,11 @@ export default function RecommendScreen() {
                 let filteredData = restaurantsData.data;
 
                 if (minRating > 0) {
-                    filteredData = filteredData.filter(
-                        r => Number(r.average_rating) >= minRating
-                    );
+                    filteredData = filteredData.filter((r) => Number(r.average_rating) >= minRating);
                 }
 
                 if (append) {
-                    setRestaurants(prev => [...prev, ...filteredData]);
+                    setRestaurants((prev) => [...prev, ...filteredData]);
                 } else {
                     setRestaurants(filteredData);
                 }
@@ -109,16 +120,20 @@ export default function RecommendScreen() {
             }
 
             if (favoritesData && Array.isArray(favoritesData)) {
-                setFavorites(new Set(favoritesData.map(f => f.restaurant_id)));
+                const ids = favoritesData.map((f) => f.restaurant_id);
+                setFavorites(new Set(ids));
+                setFavoriteRestaurantIds(ids);
             } else {
                 setFavorites(new Set());
+                setFavoriteRestaurantIds([]);
             }
         } catch (error) {
-            showErrorAlert(error, 'Failed to Load Recommendations');
+            showErrorAlert(error, "Failed to Load Recommendations");
             if (!append) {
                 setRestaurants([]);
                 setFavorites(new Set());
             }
+            setFavoriteRestaurantIds([]);
             setHasMore(false);
         } finally {
             setIsLoading(false);
@@ -146,6 +161,12 @@ export default function RecommendScreen() {
             return newSet;
         });
 
+        if (wasFavorite) {
+            removeFavoriteRestaurantId(restaurantId);
+        } else {
+            addFavoriteRestaurantId(restaurantId);
+        }
+
         try {
             if (wasFavorite) {
                 await userService.removeFavorite(restaurantId);
@@ -162,7 +183,13 @@ export default function RecommendScreen() {
                 }
                 return newSet;
             });
-            showErrorAlert(error, 'Failed to Update Favorite');
+
+            if (wasFavorite) {
+                addFavoriteRestaurantId(restaurantId);
+            } else {
+                removeFavoriteRestaurantId(restaurantId);
+            }
+            showErrorAlert(error, "Failed to Update Favorite");
         }
     };
 
@@ -179,7 +206,7 @@ export default function RecommendScreen() {
     };
 
     const handleCategoryToggle = (categoryId: string) => {
-        setSelectedCategory(prev => prev === categoryId ? undefined : categoryId);
+        setSelectedCategory((prev) => (prev === categoryId ? undefined : categoryId));
     };
 
     const renderItem = ({ item }: { item: Restaurant }) => {
@@ -194,10 +221,12 @@ export default function RecommendScreen() {
                     shadowOffset: { width: 0, height: 4 },
                     shadowRadius: 8,
                 }}
-                onPress={() => router.push({
-                    pathname: "/restaurant/[id]",
-                    params: { id: item.id },
-                })}
+                onPress={() =>
+                    router.push({
+                        pathname: "/restaurant/[id]",
+                        params: { id: item.id },
+                    })
+                }
             >
                 <View className="relative">
                     {item.logo_url ? (
@@ -219,7 +248,7 @@ export default function RecommendScreen() {
                         <Heart
                             size={20}
                             color="#E95322"
-                            fill={isFavorite ? '#E95322' : 'transparent'}
+                            fill={isFavorite ? "#E95322" : "transparent"}
                             strokeWidth={2.5}
                         />
                     </TouchableOpacity>
@@ -234,12 +263,12 @@ export default function RecommendScreen() {
                     )}
 
                     {item.is_open !== undefined && (
-                        <View className={`absolute left-3 top-3 px-3 py-1 rounded-full ${
-                            item.is_open ? 'bg-green-500' : 'bg-red-500'
-                        }`}>
-                            <Text className="text-white text-xs font-semibold">
-                                {item.is_open ? 'OPEN' : 'CLOSED'}
-                            </Text>
+                        <View
+                            className={`absolute left-3 top-3 px-3 py-1 rounded-full ${
+                                item.is_open ? "bg-green-500" : "bg-red-500"
+                            }`}
+                        >
+                            <Text className="text-white text-xs font-semibold">{item.is_open ? "OPEN" : "CLOSED"}</Text>
                         </View>
                     )}
                 </View>
@@ -303,7 +332,7 @@ export default function RecommendScreen() {
                 </View>
             </View>
 
-            <View className="flex-1 bg-white rounded-t-3xl -mt-2 pt-6" style={{ position: 'relative' }}>
+            <View className="flex-1 bg-white rounded-t-3xl -mt-2 pt-6" style={{ position: "relative" }}>
                 <View className="px-5 mb-4">
                     <View className="flex-row items-center mb-2">
                         <TrendingUp size={20} color="#E95322" />
@@ -324,12 +353,16 @@ export default function RecommendScreen() {
                                                 onPress={() => handleCategoryToggle(category.id)}
                                                 activeOpacity={0.8}
                                                 className={`px-4 py-2 rounded-full ${
-                                                    selectedCategory === category.id ? 'bg-[#E95322]' : 'bg-white'
+                                                    selectedCategory === category.id ? "bg-[#E95322]" : "bg-white"
                                                 }`}
                                             >
-                                                <Text className={`text-sm font-semibold ${
-                                                    selectedCategory === category.id ? 'text-white' : 'text-[#E95322]'
-                                                }`}>
+                                                <Text
+                                                    className={`text-sm font-semibold ${
+                                                        selectedCategory === category.id
+                                                            ? "text-white"
+                                                            : "text-[#E95322]"
+                                                    }`}
+                                                >
                                                     {category.name}
                                                 </Text>
                                             </TouchableOpacity>
@@ -347,18 +380,20 @@ export default function RecommendScreen() {
                                             onPress={() => setMinRating(rating)}
                                             activeOpacity={0.8}
                                             className={`flex-1 flex-row items-center justify-center py-2 rounded-full ${
-                                                minRating === rating ? 'bg-[#E95322]' : 'bg-white'
+                                                minRating === rating ? "bg-[#E95322]" : "bg-white"
                                             }`}
                                         >
                                             <Star
                                                 size={14}
-                                                color={minRating === rating ? '#FFFFFF' : '#E95322'}
-                                                fill={minRating === rating ? '#FFFFFF' : '#E95322'}
+                                                color={minRating === rating ? "#FFFFFF" : "#E95322"}
+                                                fill={minRating === rating ? "#FFFFFF" : "#E95322"}
                                             />
-                                            <Text className={`ml-1 text-xs font-semibold ${
-                                                minRating === rating ? 'text-white' : 'text-[#E95322]'
-                                            }`}>
-                                                {rating === 0 ? 'All' : `${rating}+`}
+                                            <Text
+                                                className={`ml-1 text-xs font-semibold ${
+                                                    minRating === rating ? "text-white" : "text-[#E95322]"
+                                                }`}
+                                            >
+                                                {rating === 0 ? "All" : `${rating}+`}
                                             </Text>
                                         </TouchableOpacity>
                                     ))}
@@ -378,7 +413,9 @@ export default function RecommendScreen() {
                                 <TouchableOpacity
                                     onPress={handleApplyFilters}
                                     activeOpacity={0.8}
-                                    className={`${activeFiltersCount > 0 ? 'flex-1' : 'flex-1'} py-2 rounded-full bg-[#E95322] items-center`}
+                                    className={`${
+                                        activeFiltersCount > 0 ? "flex-1" : "flex-1"
+                                    } py-2 rounded-full bg-[#E95322] items-center`}
                                 >
                                     <Text className="text-white font-semibold text-sm">Apply</Text>
                                 </TouchableOpacity>
@@ -389,7 +426,7 @@ export default function RecommendScreen() {
                     {!isLoading && restaurants.length > 0 && (
                         <View className="flex-row justify-between items-center mt-3">
                             <Text className="text-gray-500 text-sm">
-                                {restaurants.length} restaurant{restaurants.length !== 1 ? 's' : ''}
+                                {restaurants.length} restaurant{restaurants.length !== 1 ? "s" : ""}
                             </Text>
                             <Text className="text-gray-500 text-xs">
                                 Page {currentPage} of {totalPages}
@@ -412,7 +449,9 @@ export default function RecommendScreen() {
                             No recommendations available
                         </Text>
                         <Text className="text-gray-500 text-center mt-2">
-                            {activeFiltersCount > 0 ? 'Try adjusting your filters' : 'Check back later for our top picks'}
+                            {activeFiltersCount > 0
+                                ? "Try adjusting your filters"
+                                : "Check back later for our top picks"}
                         </Text>
                         {activeFiltersCount > 0 ? (
                             <TouchableOpacity
@@ -424,7 +463,7 @@ export default function RecommendScreen() {
                             </TouchableOpacity>
                         ) : (
                             <TouchableOpacity
-                                onPress={() => router.push('/(main)/(tabs)/Home')}
+                                onPress={() => router.push("/(main)/(tabs)/Home")}
                                 className="mt-6 px-8 py-3 bg-[#E95322] rounded-full"
                                 activeOpacity={0.8}
                             >
@@ -452,7 +491,7 @@ export default function RecommendScreen() {
                         }
                         onEndReached={loadMore}
                         onEndReachedThreshold={0.5}
-                        ListFooterComponent={() => (
+                        ListFooterComponent={() =>
                             isLoadingMore ? (
                                 <View className="py-4 items-center">
                                     <ActivityIndicator size="small" color="#E95322" />
@@ -463,7 +502,7 @@ export default function RecommendScreen() {
                                     <Text className="text-gray-500 text-xs">No more restaurants</Text>
                                 </View>
                             ) : null
-                        )}
+                        }
                     />
                 )}
 

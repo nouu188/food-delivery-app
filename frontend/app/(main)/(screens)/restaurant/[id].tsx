@@ -24,6 +24,7 @@ import { formatPrice, formatRating } from "@/utils/format";
 import { CartSidebar } from "@/components/common/cart";
 import { useToastStore } from "@/store/useToastStore";
 import { confirm } from "@/utils/confirm";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -53,6 +54,10 @@ export default function RestaurantDetailsScreen() {
 
     const { addToCart, clearCart, openDrawer } = useCartStore();
     const showToast = useToastStore((s) => s.show);
+
+    const setFavoriteRestaurantIds = useFavoritesStore((s) => s.setFavoriteRestaurantIds);
+    const addFavoriteRestaurantId = useFavoritesStore((s) => s.addFavoriteRestaurantId);
+    const removeFavoriteRestaurantId = useFavoritesStore((s) => s.removeFavoriteRestaurantId);
 
     const fetchData = async (showRefreshIndicator = false) => {
         if (!id) return;
@@ -92,9 +97,12 @@ export default function RestaurantDetailsScreen() {
             }
 
             if (favoritesData && Array.isArray(favoritesData)) {
-                setIsFavorite(favoritesData.some((f) => f.restaurant_id === id));
+                const ids = favoritesData.map((f) => f.restaurant_id);
+                setFavoriteRestaurantIds(ids);
+                setIsFavorite(ids.includes(id));
             } else {
                 setIsFavorite(false);
+                setFavoriteRestaurantIds([]);
             }
         } catch (error) {
             showErrorAlert(error, "Failed to Load Restaurant");
@@ -149,6 +157,12 @@ export default function RestaurantDetailsScreen() {
         const wasFavorite = isFavorite;
         setIsFavorite(!wasFavorite);
 
+        if (wasFavorite) {
+            removeFavoriteRestaurantId(id);
+        } else {
+            addFavoriteRestaurantId(id);
+        }
+
         try {
             if (wasFavorite) {
                 await userService.removeFavorite(id);
@@ -157,6 +171,12 @@ export default function RestaurantDetailsScreen() {
             }
         } catch (error) {
             setIsFavorite(wasFavorite);
+
+            if (wasFavorite) {
+                addFavoriteRestaurantId(id);
+            } else {
+                removeFavoriteRestaurantId(id);
+            }
             showErrorAlert(error, "Failed to Update Favorite");
         }
     };
@@ -165,9 +185,9 @@ export default function RestaurantDetailsScreen() {
         // Check if restaurant is closed
         if (restaurant && !restaurant.is_open) {
             showToast({
-                type: 'error',
-                title: 'Restaurant Closed',
-                message: 'This restaurant is currently closed. Please try again later.',
+                type: "error",
+                title: "Restaurant Closed",
+                message: "This restaurant is currently closed. Please try again later.",
             });
             return;
         }
@@ -175,9 +195,9 @@ export default function RestaurantDetailsScreen() {
         // Check if item is available
         if (!item.is_available) {
             showToast({
-                type: 'error',
-                title: 'Cannot Add to Cart',
-                message: 'This menu item is currently unavailable. Please try another item.',
+                type: "error",
+                title: "Cannot Add to Cart",
+                message: "This menu item is currently unavailable. Please try another item.",
             });
             return;
         }
@@ -194,9 +214,9 @@ export default function RestaurantDetailsScreen() {
         // Check if restaurant is closed
         if (restaurant && !restaurant.is_open) {
             showToast({
-                type: 'error',
-                title: 'Restaurant Closed',
-                message: 'This restaurant is currently closed. Please try again later.',
+                type: "error",
+                title: "Restaurant Closed",
+                message: "This restaurant is currently closed. Please try again later.",
             });
             return;
         }
@@ -260,9 +280,9 @@ export default function RestaurantDetailsScreen() {
         // Check if restaurant is closed
         if (restaurant && !restaurant.is_open) {
             showToast({
-                type: 'error',
-                title: 'Restaurant Closed',
-                message: 'This restaurant is currently closed. Please try again later.',
+                type: "error",
+                title: "Restaurant Closed",
+                message: "This restaurant is currently closed. Please try again later.",
             });
             return;
         }
