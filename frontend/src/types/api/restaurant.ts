@@ -113,6 +113,7 @@ export interface GetRestaurantsRequest {
   limit?: number;
   sort_by?: 'popular' | 'rating' | 'name';
   category_id?: string;
+  search?: string;
 }
 
 export interface GetRestaurantsResponse {

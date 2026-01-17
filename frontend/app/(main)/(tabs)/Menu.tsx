@@ -53,23 +53,21 @@ export default function MenuScreen() {
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
+            setPage(1);
+            fetchRestaurants(1, true);
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
             applyFilters();
         }, 300);
         return () => clearTimeout(timeoutId);
-    }, [searchQuery, restaurants, filters, activeQuickFilters]);
+    }, [restaurants, filters, activeQuickFilters]);
 
     const applyFilters = useCallback(() => {
         let filtered = [...restaurants];
-
-        if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(
-                (r) =>
-                    r.name.toLowerCase().includes(query) ||
-                    r.address?.toLowerCase().includes(query) ||
-                    r.description?.toLowerCase().includes(query)
-            );
-        }
 
         if (filters.minRating) {
             filtered = filtered.filter((r) => Number(r.average_rating) >= filters.minRating!);
@@ -126,6 +124,7 @@ export default function MenuScreen() {
                         page: pageNum,
                         limit: 20,
                         sort_by: sortBy,
+                        search: searchQuery.trim() || undefined,
                     })
                     .catch(() => null),
                 userService.getFavorites().catch(() => null),
@@ -456,7 +455,7 @@ export default function MenuScreen() {
                                     <Search size={20} color="#6B7280" />
                                     <TextInput
                                         className="flex-1 py-1 px-3 text-[#070707]"
-                                        placeholder="Search restaurants..."
+                                        placeholder="Search restaurants or food..."
                                         value={searchQuery}
                                         onChangeText={setSearchQuery}
                                         autoFocus

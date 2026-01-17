@@ -209,7 +209,7 @@ export default function SearchScreen() {
                         isSearchPage={true}
                         value={query}
                         onChangeText={setQuery}
-                        placeholder="Search restaurants..."
+                        placeholder="Search restaurants or food..."
                     />
                 </View>
             </View>
@@ -251,15 +251,15 @@ export default function SearchScreen() {
                 {isLoading ? (
                     <View className="flex-1 items-center justify-center">
                         <ActivityIndicator size="large" color="#E95322" />
-                        <Text className="text-gray-500 mt-4">Searching restaurants...</Text>
+                        <Text className="text-gray-500 mt-4">Searching...</Text>
                     </View>
                 ) : !hasSearched ? (
                     <View className="flex-1 items-center justify-center px-8">
                         <Text className="text-xl font-medium text-gray-600 text-center">
-                            Search for your favorite restaurants
+                            Search for your favorite food or restaurants
                         </Text>
                         <Text className="text-gray-500 text-center mt-2">
-                            Enter restaurant name or cuisine type above
+                            Enter restaurant or food name above
                         </Text>
                     </View>
                 ) : restaurants.length === 0 ? (
