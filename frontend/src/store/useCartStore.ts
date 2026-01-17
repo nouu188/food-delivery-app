@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import orderService from '@/services/api/order.service';
 import voucherService from '@/services/api/voucher.service';
 import { Cart, AddToCartRequest } from '@/types/api/order';
@@ -44,281 +46,298 @@ interface CartState {
     selectedCount: () => number;
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
-    cart: null,
-    isDrawerOpen: false,
-    isLoading: false,
-    error: null,
-    selectedItemIds: new Set<string>(),
+export const useCartStore = create<CartState>()(
+    persist(
+        (set, get) => ({
+            cart: null,
+            isDrawerOpen: false,
+            isLoading: false,
+            error: null,
+            selectedItemIds: new Set<string>(),
 
-    appliedVoucher: null,
-    voucherValidating: false,
-    voucherError: null,
+            appliedVoucher: null,
+            voucherValidating: false,
+            voucherError: null,
 
-    openDrawer: () => set({ isDrawerOpen: true }),
-    closeDrawer: () => set({ isDrawerOpen: false }),
-    toggleDrawer: () => set((s) => ({ isDrawerOpen: !s.isDrawerOpen })),
-    setDrawerOpen: (open) => set({ isDrawerOpen: open }),
+            openDrawer: () => set({ isDrawerOpen: true }),
+            closeDrawer: () => set({ isDrawerOpen: false }),
+            toggleDrawer: () => set((s) => ({ isDrawerOpen: !s.isDrawerOpen })),
+            setDrawerOpen: (open) => set({ isDrawerOpen: open }),
 
-    fetchCart: async () => {
-        set({ isLoading: true, error: null });
-        try {
-            const cart = await orderService.getCart();
+            fetchCart: async () => {
+                set({ isLoading: true, error: null });
+                try {
+                    const cart = await orderService.getCart();
 
-            const itemIds = cart?.items?.map((item) => item.id) || [];
-            set({ cart, isLoading: false, selectedItemIds: new Set(itemIds) });
-        } catch (error: any) {
-            if (error.response?.status === 404) {
-                set({ cart: null, isLoading: false, selectedItemIds: new Set() });
-            } else {
-                set({ error: error.message, isLoading: false });
-            }
-        }
-    },
+                    const itemIds = cart?.items?.map((item) => item.id) || [];
+                    set({ cart, isLoading: false, selectedItemIds: new Set(itemIds) });
+                } catch (error: any) {
+                    if (error.response?.status === 404) {
+                        set({ cart: null, isLoading: false, selectedItemIds: new Set() });
+                    } else {
+                        set({ error: error.message, isLoading: false });
+                    }
+                }
+            },
 
-    addToCart: async (data) => {
-        set({ isLoading: true, error: null });
-        try {
-            await orderService.addToCart(data);
-            const cart = await orderService.getCart();
-            set({ cart, isLoading: false });
-        } catch (error: any) {
-            set({ isLoading: false });
+            addToCart: async (data) => {
+                set({ isLoading: true, error: null });
+                try {
+                    await orderService.addToCart(data);
+                    const cart = await orderService.getCart();
+                    set({ cart, isLoading: false });
+                } catch (error: any) {
+                    set({ isLoading: false });
 
-            const { useToastStore } = await import('@/store/useToastStore');
+                    const { useToastStore } = await import('@/store/useToastStore');
 
-            // Handle menu item unavailable
-            if (error.response?.status === 400) {
-                useToastStore.getState().show({
-                    type: 'error',
-                    title: 'Cannot Add to Cart',
-                    message:
-                        error.response?.data?.message ||
-                        'This menu item is currently unavailable. Please try another item.',
-                });
-                return;
-            }
+                    // Handle menu item unavailable
+                    if (error.response?.status === 400) {
+                        useToastStore.getState().show({
+                            type: 'error',
+                            title: 'Cannot Add to Cart',
+                            message:
+                                error.response?.data?.message ||
+                                'This menu item is currently unavailable. Please try another item.',
+                        });
+                        return;
+                    }
 
-            // Handle restaurant conflict
-            if (error.response?.status === 409) {
-                useToastStore.getState().show({
-                    type: 'error',
-                    title: 'Cannot Add to Cart',
-                    message:
-                        'You can only add items from one restaurant. Please clear your cart to order from a different restaurant.',
-                });
-                throw { isConflict: true, ...error };
-            }
+                    if (error.response?.status === 409) {
+                        useToastStore.getState().show({
+                            type: 'error',
+                            title: 'Cannot Add to Cart',
+                            message:
+                                'You can only add items from one restaurant. Please clear your cart to order from a different restaurant.',
+                        });
+                        throw { isConflict: true, ...error };
+                    }
 
-            // Handle other errors
-            useToastStore.getState().show({
-                type: 'error',
-                title: 'Cannot Add to Cart',
-                message: error.response?.data?.message || 'An error occurred. Please try again.',
-            });
+                    useToastStore.getState().show({
+                        type: 'error',
+                        title: 'Cannot Add to Cart',
+                        message: error.response?.data?.message || 'An error occurred. Please try again.',
+                    });
 
-            set({ error: error.message });
-            throw error;
-        }
-    },
-
-    updateQuantity: async (itemId, quantity) => {
-        set({ isLoading: true, error: null });
-        try {
-            await orderService.updateCartItem(itemId, { quantity });
-
-            const cart = await orderService.getCart();
-            set({ cart, isLoading: false });
-        } catch (error: any) {
-            set({ error: error.message, isLoading: false });
-            throw error;
-        }
-    },
-
-    removeItem: async (itemId) => {
-        set({ isLoading: true, error: null });
-        try {
-            await orderService.removeCartItem(itemId);
-
-            try {
-                const cart = await orderService.getCart();
-                set({ cart, isLoading: false });
-            } catch (error: any) {
-                if (error.response?.status === 404) {
-                    set({ cart: null, isLoading: false });
-                } else {
+                    set({ error: error.message });
                     throw error;
                 }
-            }
-        } catch (error: any) {
-            set({ error: error.message, isLoading: false });
-            throw error;
-        }
-    },
+            },
 
-    clearCart: async () => {
-        set({ isLoading: true, error: null });
-        try {
-            await orderService.clearCart();
-            set({ cart: null, isLoading: false, selectedItemIds: new Set() });
-        } catch (error: any) {
-            set({ error: error.message, isLoading: false });
-            throw error;
-        }
-    },
+            updateQuantity: async (itemId, quantity) => {
+                set({ isLoading: true, error: null });
+                try {
+                    await orderService.updateCartItem(itemId, { quantity });
 
-    removeBulkItems: async (itemIds: string[], silent: boolean = false) => {
-        if (itemIds.length === 0) return;
+                    const cart = await orderService.getCart();
+                    set({ cart, isLoading: false });
+                } catch (error: any) {
+                    set({ error: error.message, isLoading: false });
+                    throw error;
+                }
+            },
 
-        set({ isLoading: true, error: null });
-        try {
-            // Remove items sequentially
-            for (const itemId of itemIds) {
-                await orderService.removeCartItem(itemId, silent);
-            }
+            removeItem: async (itemId) => {
+                set({ isLoading: true, error: null });
+                try {
+                    await orderService.removeCartItem(itemId);
 
-            // Fetch updated cart
-            try {
-                const cart = await orderService.getCart();
-                // Remove deleted items from selection
-                const newSelection = new Set(get().selectedItemIds);
-                itemIds.forEach((id) => newSelection.delete(id));
-                set({ cart, isLoading: false, selectedItemIds: newSelection });
-            } catch (error: any) {
-                if (error.response?.status === 404) {
+                    try {
+                        const cart = await orderService.getCart();
+                        set({ cart, isLoading: false });
+                    } catch (error: any) {
+                        if (error.response?.status === 404) {
+                            set({ cart: null, isLoading: false });
+                        } else {
+                            throw error;
+                        }
+                    }
+                } catch (error: any) {
+                    set({ error: error.message, isLoading: false });
+                    throw error;
+                }
+            },
+
+            clearCart: async () => {
+                set({ isLoading: true, error: null });
+                try {
+                    await orderService.clearCart();
                     set({ cart: null, isLoading: false, selectedItemIds: new Set() });
-                } else {
+                } catch (error: any) {
+                    set({ error: error.message, isLoading: false });
                     throw error;
                 }
-            }
-        } catch (error: any) {
-            set({ error: error.message, isLoading: false });
-            throw error;
-        }
-    },
+            },
 
-    toggleItemSelection: (itemId: string) => {
-        const selectedItemIds = new Set(get().selectedItemIds);
-        if (selectedItemIds.has(itemId)) {
-            selectedItemIds.delete(itemId);
-        } else {
-            selectedItemIds.add(itemId);
-        }
-        set({ selectedItemIds });
-    },
+            removeBulkItems: async (itemIds: string[], silent: boolean = false) => {
+                if (itemIds.length === 0) return;
 
-    selectAllItems: () => {
-        const cart = get().cart;
-        if (!cart?.items) return;
-        const allItemIds = new Set(cart.items.map((item) => item.id));
-        set({ selectedItemIds: allItemIds });
-    },
+                set({ isLoading: true, error: null });
+                try {
+                    // Remove items sequentially
+                    for (const itemId of itemIds) {
+                        await orderService.removeCartItem(itemId, silent);
+                    }
 
-    deselectAllItems: () => {
-        set({ selectedItemIds: new Set() });
-    },
+                    // Fetch updated cart
+                    try {
+                        const cart = await orderService.getCart();
+                        // Remove deleted items from selection
+                        const newSelection = new Set(get().selectedItemIds);
+                        itemIds.forEach((id) => newSelection.delete(id));
+                        set({ cart, isLoading: false, selectedItemIds: newSelection });
+                    } catch (error: any) {
+                        if (error.response?.status === 404) {
+                            set({ cart: null, isLoading: false, selectedItemIds: new Set() });
+                        } else {
+                            throw error;
+                        }
+                    }
+                } catch (error: any) {
+                    set({ error: error.message, isLoading: false });
+                    throw error;
+                }
+            },
 
-    clearSelection: () => {
-        set({ selectedItemIds: new Set() });
-    },
+            toggleItemSelection: (itemId: string) => {
+                const selectedItemIds = new Set(get().selectedItemIds);
+                if (selectedItemIds.has(itemId)) {
+                    selectedItemIds.delete(itemId);
+                } else {
+                    selectedItemIds.add(itemId);
+                }
+                set({ selectedItemIds });
+            },
 
-    subtotal: () => {
-        return get().cart?.subtotal || 0;
-    },
+            selectAllItems: () => {
+                const cart = get().cart;
+                if (!cart?.items) return;
+                const allItemIds = new Set(cart.items.map((item) => item.id));
+                set({ selectedItemIds: allItemIds });
+            },
 
-    total: () => {
-        return get().cart?.total || 0;
-    },
+            deselectAllItems: () => {
+                set({ selectedItemIds: new Set() });
+            },
 
-    itemCount: () => {
-        const cart = get().cart;
-        if (!cart?.items || !Array.isArray(cart.items)) return 0;
-        return cart.items.reduce((sum, item) => sum + item.quantity, 0);
-    },
+            clearSelection: () => {
+                set({ selectedItemIds: new Set() });
+            },
 
-    selectedSubtotal: () => {
-        const cart = get().cart;
-        const selectedIds = get().selectedItemIds;
-        if (!cart?.items || !Array.isArray(cart.items)) return 0;
+            subtotal: () => {
+                return get().cart?.subtotal || 0;
+            },
 
-        return cart.items
-            .filter((item) => selectedIds.has(item.id))
-            .reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
-    },
+            total: () => {
+                return get().cart?.total || 0;
+            },
 
-    selectedTotal: () => {
-        return get().selectedSubtotal();
-    },
+            itemCount: () => {
+                const cart = get().cart;
+                if (!cart?.items || !Array.isArray(cart.items)) return 0;
+                return cart.items.reduce((sum, item) => sum + item.quantity, 0);
+            },
 
-    selectedCount: () => {
-        const cart = get().cart;
-        const selectedIds = get().selectedItemIds;
-        if (!cart?.items || !Array.isArray(cart.items)) return 0;
+            selectedSubtotal: () => {
+                const cart = get().cart;
+                const selectedIds = get().selectedItemIds;
+                if (!cart?.items || !Array.isArray(cart.items)) return 0;
 
-        return cart.items.filter((item) => selectedIds.has(item.id)).reduce((sum, item) => sum + item.quantity, 0);
-    },
+                return cart.items
+                    .filter((item) => selectedIds.has(item.id))
+                    .reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
+            },
 
-    applyVoucher: async (code: string, restaurantId: string) => {
-        set({ voucherValidating: true, voucherError: null });
-        try {
-            const orderAmount = get().total();
+            selectedTotal: () => {
+                return get().selectedSubtotal();
+            },
 
-            const validation = await voucherService.validateVoucher({
-                code,
-                restaurant_id: restaurantId,
-                order_amount: orderAmount,
-            });
+            selectedCount: () => {
+                const cart = get().cart;
+                const selectedIds = get().selectedItemIds;
+                if (!cart?.items || !Array.isArray(cart.items)) return 0;
 
-            if (
-                validation.is_valid &&
-                validation.voucher &&
-                validation.discount_amount !== undefined &&
-                validation.final_amount !== undefined
-            ) {
-                set({
-                    appliedVoucher: {
-                        voucher: validation.voucher,
-                        discount_amount: validation.discount_amount,
-                        final_amount: validation.final_amount,
-                    },
-                    voucherValidating: false,
-                    voucherError: null,
-                });
-            } else {
+                return cart.items.filter((item) => selectedIds.has(item.id)).reduce((sum, item) => sum + item.quantity, 0);
+            },
+
+            applyVoucher: async (code: string, restaurantId: string) => {
+                set({ voucherValidating: true, voucherError: null });
+                try {
+                    const orderAmount = get().total();
+
+                    const validation = await voucherService.validateVoucher({
+                        code,
+                        restaurant_id: restaurantId,
+                        order_amount: orderAmount,
+                    });
+
+                    if (
+                        validation.is_valid &&
+                        validation.voucher &&
+                        validation.discount_amount !== undefined &&
+                        validation.final_amount !== undefined
+                    ) {
+                        set({
+                            appliedVoucher: {
+                                voucher: validation.voucher,
+                                discount_amount: validation.discount_amount,
+                                final_amount: validation.final_amount,
+                            },
+                            voucherValidating: false,
+                            voucherError: null,
+                        });
+                    } else {
+                        set({
+                            appliedVoucher: null,
+                            voucherValidating: false,
+                            voucherError: validation.message || 'Invalid voucher',
+                        });
+                    }
+
+                    return validation;
+                } catch (error: any) {
+                    const errorMessage = error.response?.data?.message || error.message || 'Failed to validate voucher';
+                    set({
+                        appliedVoucher: null,
+                        voucherValidating: false,
+                        voucherError: errorMessage,
+                    });
+                    throw error;
+                }
+            },
+
+            removeVoucher: () => {
                 set({
                     appliedVoucher: null,
-                    voucherValidating: false,
-                    voucherError: validation.message || 'Invalid voucher',
+                    voucherError: null,
                 });
-            }
+            },
 
-            return validation;
-        } catch (error: any) {
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to validate voucher';
-            set({
-                appliedVoucher: null,
-                voucherValidating: false,
-                voucherError: errorMessage,
-            });
-            throw error;
+            getDiscountedTotal: () => {
+                const total = get().total();
+                const appliedVoucher = get().appliedVoucher;
+
+                if (appliedVoucher) {
+                    return total - appliedVoucher.discount_amount;
+                }
+
+                return total;
+            },
+        }),
+        {
+            name: 'cart_storage',
+            storage: createJSONStorage(() => AsyncStorage),
+            partialize: (state) => ({
+                cart: state.cart,
+                appliedVoucher: state.appliedVoucher,
+            }),
+            version: 1,
+            onRehydrateStorage: () => (state) => {
+                if (state?.cart?.items) {
+                    const itemIds = state.cart.items.map((item) => item.id);
+                    state.selectedItemIds = new Set(itemIds);
+                }
+            },
         }
-    },
-
-    removeVoucher: () => {
-        set({
-            appliedVoucher: null,
-            voucherError: null,
-        });
-    },
-
-    getDiscountedTotal: () => {
-        const total = get().total();
-        const appliedVoucher = get().appliedVoucher;
-
-        if (appliedVoucher) {
-            return total - appliedVoucher.discount_amount;
-        }
-
-        return total;
-    },
-}));
+    )
+);

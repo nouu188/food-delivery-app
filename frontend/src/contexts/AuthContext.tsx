@@ -4,6 +4,7 @@ import { useRouter, useSegments } from "expo-router";
 import { getAccessToken, clearTokens } from "@/services/api/client";
 import userService from "@/services/api/user.service";
 import { useUserStore } from "@/store/useUserStore";
+import { useCartStore } from "@/store/useCartStore";
 import { UserProfile } from "@/types/api/user";
 
 interface AuthContextType {
@@ -102,6 +103,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await clearTokens();
         await AsyncStorage.removeItem(GUEST_MODE_KEY);
         clearProfile();
+
+        useCartStore.setState({
+            cart: null,
+            appliedVoucher: null,
+            selectedItemIds: new Set(),
+        });
+
         setIsAuthenticated(false);
         setIsGuest(false);
         setUser(null);
@@ -112,6 +120,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await clearTokens();
         await AsyncStorage.setItem(GUEST_MODE_KEY, "true");
         clearProfile();
+
+        useCartStore.setState({
+            cart: null,
+            appliedVoucher: null,
+            selectedItemIds: new Set(),
+        });
+
         setIsAuthenticated(false);
         setIsGuest(true);
         setUser(null);

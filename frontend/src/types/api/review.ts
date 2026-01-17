@@ -3,7 +3,7 @@ export interface Review {
   order_id: string;
   user_id: string;
   restaurant_id: string;
-  rating: number; // 1-5
+  food_rating: number; // 1-5
   comment: string | null;
   photos: string[];
   response: string | null; // Restaurant's response
@@ -14,14 +14,13 @@ export interface Review {
 
 export interface CreateReviewRequest {
   order_id: string;
-  restaurant_id: string;
-  rating: number;
+  food_rating: number;
   comment?: string;
   photos?: string[];
 }
 
 export interface UpdateReviewRequest {
-  rating?: number;
+  food_rating?: number; // 1-5
   comment?: string;
   photos?: string[];
 }

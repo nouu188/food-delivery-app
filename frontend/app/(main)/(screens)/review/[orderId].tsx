@@ -56,8 +56,7 @@ export default function ReviewScreen() {
         try {
             await reviewService.createReview({
                 order_id: order.id,
-                restaurant_id: order.restaurant_id,
-                rating,
+                food_rating: rating,
                 comment: comment.trim() || undefined,
             });
 

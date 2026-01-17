@@ -15,6 +15,8 @@ export default function HistoryScreen() {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
 
+    const SHOW_ALL_ORDERS = false;
+
     const fetchOrders = async (pageNum = 1, showRefreshIndicator = false) => {
         try {
             if (showRefreshIndicator) {
@@ -28,13 +30,43 @@ export default function HistoryScreen() {
                 limit: 20,
             });
 
-            let historyOrders: Order[] = [];
-            const orderData = response?.data || [];
+            console.log('[Order History] API Response:', JSON.stringify(response, null, 2));
 
-            if (Array.isArray(orderData)) {
-                historyOrders = orderData.filter(order =>
-                    [OrderStatus.DELIVERED, OrderStatus.COMPLETED, OrderStatus.CANCELLED, OrderStatus.REFUNDED].includes(order.status)
-                );
+            const orderData = response?.data || [];
+            console.log('[Order History] Order data array:', orderData);
+            console.log('[Order History] Number of orders:', orderData.length);
+
+            let historyOrders: Order[] = [];
+
+            if (Array.isArray(orderData) && orderData.length > 0) {
+                if (SHOW_ALL_ORDERS) {
+                    console.log('[Order History] DEBUG MODE: Showing all orders');
+                    historyOrders = orderData;
+                } else {
+                    historyOrders = orderData.filter(order => {
+                        const isHistory = [
+                            OrderStatus.DELIVERED,
+                            OrderStatus.COMPLETED,
+                            OrderStatus.CANCELLED,
+                            OrderStatus.REFUNDED
+                        ].includes(order.status);
+
+                        console.log(`[Order History] Order ${order.id} - Status: ${order.status} - Is History: ${isHistory}`);
+                        return isHistory;
+                    });
+                }
+
+                console.log('[Order History] Filtered history orders:', historyOrders.length);
+
+                if (historyOrders.length === 0 && orderData.length > 0) {
+                    console.warn('[Order History] No history orders found, but there are active orders:',
+                        orderData.map(o => ({ id: o.id, status: o.status }))
+                    );
+                }
+            } else if (!Array.isArray(orderData)) {
+                console.warn('[Order History] orderData is not an array:', typeof orderData, orderData);
+            } else {
+                console.log('[Order History] orderData is empty array');
             }
 
             if (pageNum === 1) {
@@ -46,7 +78,10 @@ export default function HistoryScreen() {
             const currentPage = response?.page || pageNum;
             const totalPages = response?.total_pages || 1;
             setHasMore(currentPage < totalPages);
+
+            console.log('[Order History] Pagination:', { currentPage, totalPages, hasMore: currentPage < totalPages });
         } catch (error) {
+            console.error('[Order History] Fetch error:', error);
             showErrorAlert(error, 'Failed to Load Order History');
             if (pageNum === 1) {
                 setOrders([]);
